@@ -279,8 +279,8 @@ def saveoutput():
     newfieldname = app.outputname.get().upper()
     newfieldvalue = app.outputvalue.get(1.0,END)
     newfieldtype = app.fieldtype.get().upper()
-    newfieldlen = app.fieldlen.get()
-    newfielddec = app.fielddec.get()
+    newfieldlen = int(app.fieldlen.get())
+    newfielddec = int(app.fielddec.get())
     # if the name changed, check that new name isn't already in use
     if newfieldname != oldfieldname:
         if newfieldname in outputfields:
@@ -307,8 +307,8 @@ def addoutput():
     newfieldname = app.outputname.get().upper()
     newfieldvalue = app.outputvalue.get(1.0,END)
     newfieldtype = app.fieldtype.get().upper()
-    newfieldlen = app.fieldlen.get()
-    newfielddec = app.fielddec.get()
+    newfieldlen = int(app.fieldlen.get())
+    newfielddec = int(app.fielddec.get())
     if outputfields.has_key(newfieldname):
         print 'field name already in use'
     elif len(newfieldname) > 10:
@@ -433,12 +433,15 @@ def dojoin():
                 # detect expressions by looking for '+-*/' operators
                 # can't do '/' until i implement aliases instead of absolute paths
                 if re.search('\+|-|==', fieldvalue):
+                    print 'original:',fieldvalue
                     fieldtype = outputfields[field][1]
                     # extract fields
-                    fieldcomponents = re.findall('[^+\-= ]+', fieldvalue)
+                    fieldcomponents = re.findall('[^+\-=\n ]+', fieldvalue)
                     # number fields
                     if fieldtype == 'N':
                         for component in fieldcomponents:
+                            print 'component:',component
+                            print 'inputvalues[component]:',inputvalues[component]
                             try:
                                 fieldvalue = re.sub(component, str(inputvalues[component]), fieldvalue)
                             except KeyError:
@@ -449,11 +452,14 @@ def dojoin():
                                     # didn't get a join for this field. insert blank value
                                     fieldvalue = re.sub(component, '0', fieldvalue)
 #                                fieldvalue = re.sub(component, component, fieldvalue)
+                            print 'component subbed:',fieldvalue
                         # check if it's an integer (vs a float)
+                        print 'subbed:',fieldvalue
                         if outputfields[field][3] == 0:
                             fieldvalue = int(eval(fieldvalue))
                         else:
                             fieldvalue = eval(fieldvalue)
+                        print 'final:',fieldvalue
                     # character fields
                     elif fieldtype == 'C':
                         for component in fieldcomponents:
