@@ -9,6 +9,7 @@ import demdbf
 import pickle
 # used for writing dbf files
 from dbfpy import dbf
+import combobox
 
 # [(fieldname, fieldtype, length, decimalplaces), ...]
 fields = {}
@@ -19,7 +20,8 @@ oldfieldname = ''
 oldfieldindex = -1
 # [join_dbf_filename] = [targetindex, joinindex]
 # joinfields = {}
-# joinalis[alias] = join_dbf_filename, joinalis[join_dbf_filename] = alias
+# joinalias[alias] = join_dbf_filename, joinalis[join_dbf_filename] = alias
+joinaliases = {}
 # outputfields['fieldname'] = (fieldvalue, fieldtype, fieldlen, fielddec)
 # fieldvalue = filename.fieldname
 # fieldvalue is meant to support simple operations. 'f1.f1 + f2.f2' for example
@@ -40,6 +42,7 @@ def opentarget():
         return
     app.dbftargetlist.insert(END, target)
     app.dbfjoinlist.insert(END, target)
+    createalias(target)
     readfields(target)
 
 # 'add dbf' button
@@ -51,6 +54,7 @@ def openjoin():
         return
     app.dbftargetlist.insert(END, filename)
     app.dbfjoinlist.insert(END, filename)
+    createalias(filename)
     readfields(filename)
 
 # util function used by opentarget() and openjoin()
@@ -64,16 +68,34 @@ def readfields(filename):
     fields[filename] = tempdbf.fields
 #    print [items[0] for items in fields[filename]]
 
+# util function used by opentarget and add_dbf
+def createalias(filename):
+    global joinaliases
+    filenamesplit = re.findall('[a-zA-Z0-9]+',filename)
+    tempalias = filenamesplit[-2]
+    duplicates = {}
+    while tempalias in joinaliases:
+        try:
+            dupecount = duplicates[tempalias]
+        except KeyError: # first duplicate, didn't have entry in duplicates{}
+            dupecount = 1
+        duplicates[tempalias] = dupecount + 1
+        tempalias = tempalias+str(dupecount)
+    joinaliases[filename] = tempalias
+    joinaliases[tempalias] = filename
+    return tempalias
+
 # 'remove dbf' button
 def removejoin():
     global app
     global fields
     global target
     # get filename of file selected to be removed
-    selected = app.dbf_list.curselection()[0]
-    filename = app.dbf_list.get(selected)
+    selected = app.dbftargetlist.curselection()[0]
+    filename = app.dbftargetlist.get(selected)
     # remove from gui list and from the fields dictionary
-    app.dbf_list.delete(app.dbf_list.curselection()[0])
+    app.dbftargetlist.delete(selected)
+    app.dbfjoinlist.delete(selected)
     del fields[filename]
     # call recursive function to remove all joins that depend on the file
     remfromjoins(target, filename)
@@ -185,6 +207,7 @@ def initoutput():
     global joins
     global outputfields
     global fields
+    global joinaliases
     duplicates = {}
     # delete any fields already entered
     outputfields.clear()
@@ -194,6 +217,7 @@ def initoutput():
     joinfiles = joinsdfs(target)
 
     for joinfile in joinfiles:
+        filealias = joinaliases[joinfile]
         for field in fields[joinfile]:
             # ensure field names are unique. field names are not case sensitive
             fieldname = field[0].upper()
@@ -212,7 +236,7 @@ def initoutput():
                 else:
                     fieldname = fieldname+str(dupecount)
             app.output_list.insert(END, fieldname)
-            outputfields[fieldname] = [joinfile+'.'+fieldname, field[1], field[2], field[3]]
+            outputfields[fieldname] = [filealias+'.'+fieldname, field[1], field[2], field[3]]
 
 # util function to recursively get all filenames from joins{}
 # used in initoutput() and dojoin()
@@ -221,7 +245,6 @@ def joinsdfs(start):
     yield start
     try:
         for entry in joins[start]:
-
             temp = joinsdfs(entry[1])
             for entry2 in temp:
                 yield entry2
@@ -326,6 +349,7 @@ def moveup():
         app.output_list.delete(selected)
         app.output_list.insert(int(selected)-1, fieldname)
         app.output_list.selection_set(int(selected)-1)
+        app.output_list.see(int(selected)-2)
 
 # 'move down' button
 def movedown():
@@ -336,6 +360,7 @@ def movedown():
         app.output_list.delete(selected)
         app.output_list.insert(int(selected)+1, fieldname)
         app.output_list.selection_set(int(selected)+1)
+        app.output_list.see(int(selected)+2)
 
 # 'execute join' button
 def dojoin():
@@ -345,6 +370,7 @@ def dojoin():
     global joins
     global target
     global fileindexes
+    global joinaliases
     joinfiles = {}
 
     # build indexes of the join fields and open all the join files
@@ -376,7 +402,7 @@ def dojoin():
             inputvalues = {}
             targetrecord = joinfiles[target].read(i)
             for field in targetrecord.keys():
-                inputvalues[target+'.'+field] = targetrecord[field]
+                inputvalues[joinaliases[target]+'.'+field] = targetrecord[field]
 
             # get the records that join with the current target record
             for targetfile in joinsdfs(target):
@@ -388,11 +414,11 @@ def dojoin():
                         joinfield = join[2]
                         joinindex = join[3]
                 # get the value to join on. this should always be a valid key
-                        targetvalue = inputvalues[targetfile+'.'+targetfield]
+                        targetvalue = inputvalues[joinaliases[targetfile]+'.'+targetfield]
                         try:
                             joinrecord = joinfiles[joinfile].read(joinindex[targetvalue])
                             for field in joinrecord.keys():
-                                inputvalues[joinfile+'.'+field] = joinrecord[field]
+                                inputvalues[joinaliases[joinfile]+'.'+field] = joinrecord[field]
                         # will result in inputvalues[] misses later
                         except KeyError:
                             print joinfield+':', targetvalue, '- not found'
@@ -416,10 +442,13 @@ def dojoin():
                             try:
                                 fieldvalue = re.sub(component, str(inputvalues[component]), fieldvalue)
                             except KeyError:
-                                if component.split('.')[0] in outputfieldnames:
+                                # this is a non-foolproof way of checking if we got here because of
+                                # a failed join or if component is a literal like the number 2
+                                # former: replace it with 0. latter, leave it alone
+                                if component.split('.')[0] in joinaliases:
                                     # didn't get a join for this field. insert blank value
                                     fieldvalue = re.sub(component, '0', fieldvalue)
-                                fieldvalue = re.sub(component, component, fieldvalue)
+#                                fieldvalue = re.sub(component, component, fieldvalue)
                         # check if it's an integer (vs a float)
                         if outputfields[field][3] == 0:
                             fieldvalue = int(eval(fieldvalue))
