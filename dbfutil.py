@@ -237,7 +237,7 @@ def configoutput():
     oldfieldindex = app.output_list.curselection()[0]
     oldfieldname = app.output_list.get(oldfieldindex)
     app.outputname.delete(0,END)
-    app.outputvalue.delete(0,END)
+    app.outputvalue.delete(1.0,END)
     app.fieldtype.delete(0,END)
     app.fieldlen.delete(0,END)
     app.fielddec.delete(0,END)
@@ -254,8 +254,8 @@ def saveoutput():
     global oldfieldindex
     global outputfields
     newfieldname = app.outputname.get().upper()
-    newfieldvalue = app.outputvalue.get()
-    newfieldtype = app.fieldtype.get()
+    newfieldvalue = app.outputvalue.get(1.0,END)
+    newfieldtype = app.fieldtype.get().upper()
     newfieldlen = app.fieldlen.get()
     newfielddec = app.fielddec.get()
     # if the name changed, check that new name isn't already in use
@@ -265,14 +265,14 @@ def saveoutput():
             return
     # store new field properties
     del outputfields[oldfieldname]
-    outputfields[newfieldname] = (newfieldvalue, newfieldtype, newfieldlen, newfielddec)
+    outputfields[newfieldname] = (newfieldvalue, newfieldtype, int(newfieldlen), int(newfielddec))
     app.output_list.delete(oldfieldindex)
     app.output_list.insert(oldfieldindex,newfieldname)
     app.output_list.selection_clear(0,END)
     app.output_list.selection_set(oldfieldindex)
     app.output_list.see(oldfieldindex)
     app.outputname.delete(0,END)
-    app.outputvalue.delete(0,END)
+    app.outputvalue.delete(1.0,END)
     app.fieldtype.delete(0,END)
     app.fieldlen.delete(0,END)
     app.fielddec.delete(0,END)
@@ -281,12 +281,16 @@ def saveoutput():
 def addoutput():
     global app
     global outputfields
-    newfieldname = app.outputname.get()
-    newfieldvalue = app.outputvalue.get()
-    newfieldtype = app.fieldtype.get()
+    newfieldname = app.outputname.get().upper()
+    newfieldvalue = app.outputvalue.get(1.0,END)
+    newfieldtype = app.fieldtype.get().upper()
     newfieldlen = app.fieldlen.get()
     newfielddec = app.fielddec.get()
-    if outputfields.has_key(newfieldname) == False:
+    if outputfields.has_key(newfieldname):
+        print 'field name already in use'
+    elif len(newfieldname) > 10:
+        print 'field name limited to 10 characters'
+    else:
 #debateable whether this line should go in or out of the if statement
         outputfields[newfieldname] = (newfieldvalue, newfieldtype, newfieldlen, newfielddec)
         app.output_list.insert(END,newfieldname)
@@ -295,6 +299,11 @@ def addoutput():
         app.output_list.selection_clear(0,END)
         app.output_list.selection_set(fieldindex)
         app.output_list.see(fieldindex)
+        app.outputname.delete(0,END)
+        app.outputvalue.delete(1.0,END)
+        app.fieldtype.delete(0,END)
+        app.fieldlen.delete(0,END)
+        app.fielddec.delete(0,END)
 
 # 'del field' button
 def removeoutput():
@@ -397,10 +406,10 @@ def dojoin():
                 fieldvalue = outputfields[field][0]
                 # detect expressions by looking for '+-*/' operators
                 # can't do '/' until i implement aliases instead of absolute paths
-                if re.search('\+|-', fieldvalue):
+                if re.search('\+|-|==', fieldvalue):
                     fieldtype = outputfields[field][1]
                     # extract fields
-                    fieldcomponents = re.findall('[^+\- ]+', fieldvalue)
+                    fieldcomponents = re.findall('[^+\-= ]+', fieldvalue)
                     # number fields
                     if fieldtype == 'N':
                         for component in fieldcomponents:
@@ -412,13 +421,10 @@ def dojoin():
                                     fieldvalue = re.sub(component, '0', fieldvalue)
                                 fieldvalue = re.sub(component, component, fieldvalue)
                         # check if it's an integer (vs a float)
-                        print outputfields[field]
-                        print 'before:', fieldvalue
                         if outputfields[field][3] == 0:
                             fieldvalue = int(eval(fieldvalue))
                         else:
                             fieldvalue = eval(fieldvalue)
-                        print 'after:', fieldvalue
                     # character fields
                     elif fieldtype == 'C':
                         for component in fieldcomponents:
@@ -543,6 +549,8 @@ class App:
         self.dbfframe.pack()
         self.dbftargetframe = Frame(self.dbfframe)
         self.dbftargetframe.pack(side=LEFT)
+        self.dbftargetlabel = Label(self.dbftargetframe, text='target file')
+        self.dbftargetlabel.pack()
         self.dbftargetyscroll = Scrollbar(self.dbftargetframe, orient=VERTICAL)
         self.dbftargetxscroll = Scrollbar(self.dbftargetframe, orient=HORIZONTAL)
         self.dbftargetlist = Listbox(self.dbftargetframe, width=50, yscrollcommand=self.dbftargetyscroll.set, xscrollcommand=self.dbftargetxscroll.set, exportselection=0)
@@ -553,6 +561,8 @@ class App:
         self.dbftargetlist.pack(fill=BOTH, expand=Y)
         self.dbfjoinframe = Frame(self.dbfframe)
         self.dbfjoinframe.pack(side=RIGHT)
+        self.dbfjoinlabel = Label(self.dbfjoinframe, text='join file')
+        self.dbfjoinlabel.pack()
         self.dbfjoinyscroll = Scrollbar(self.dbfjoinframe, orient=VERTICAL)
         self.dbfjoinxscroll = Scrollbar(self.dbfjoinframe, orient=HORIZONTAL)
         self.dbfjoinlist = Listbox(self.dbfjoinframe, width=50, yscrollcommand=self.dbfjoinyscroll.set, xscrollcommand=self.dbfjoinxscroll.set, exportselection=0)
@@ -569,7 +579,7 @@ class App:
         self.targetjoinframe.pack()
         self.targetframe = Frame(self.targetjoinframe)
         self.targetframe.pack(side=LEFT)
-        self.targetlabel = Label(self.targetframe, text="target attributes")
+        self.targetlabel = Label(self.targetframe, text="target field")
         self.targetlabel.pack()
         self.target_yscroll = Scrollbar(self.targetframe, orient=VERTICAL)
         self.target_xscroll = Scrollbar(self.targetframe, orient=HORIZONTAL)
@@ -582,7 +592,7 @@ class App:
 
         self.joinframe = Frame(self.targetjoinframe)
         self.joinframe.pack(side=RIGHT)
-        self.joinlabel = Label(self.joinframe, text="join attributes")
+        self.joinlabel = Label(self.joinframe, text="join field")
         self.joinlabel.pack()
         self.join_yscroll = Scrollbar(self.joinframe, orient=VERTICAL)
         self.join_xscroll = Scrollbar(self.joinframe, orient=HORIZONTAL)
@@ -593,7 +603,7 @@ class App:
         self.join_xscroll.pack(side=BOTTOM, fill=Y)
         self.join_list.pack(fill=BOTH, expand=1)
 
-        self.savejoin = Button(frame, text="apply", command=savejoinchoice)
+        self.savejoin = Button(frame, text="save field selection", command=savejoinchoice)
         self.savejoin.pack()
 
         self.outputframe = Frame(frame)
@@ -615,10 +625,8 @@ class App:
         self.output_xscroll.pack(side=BOTTOM, fill=Y)
         self.output_list.pack(fill=BOTH, expand=1)
 
-        self.saveoutput = Button(self.outputbuttonsframe, text='save field', command=saveoutput)
-        self.saveoutput.pack()
-        self.addoutput = Button(self.outputbuttonsframe, text='add field', command=addoutput)
-        self.addoutput.pack()
+        self.initoutput = Button(self.outputbuttonsframe, text='init output', command=initoutput)
+        self.initoutput.pack()
         self.removeoutput = Button(self.outputbuttonsframe, text='del field', command=removeoutput)
         self.removeoutput.pack()
         self.moveup = Button(self.outputbuttonsframe, text='move up', command=moveup)
@@ -628,10 +636,12 @@ class App:
 
         self.outputbuttonframe = Frame(frame)
         self.outputbuttonframe.pack()
-        self.initoutput = Button(self.outputbuttonframe, text='init output', command=initoutput)
-        self.initoutput.pack(side=LEFT)
         self.configoutput = Button(self.outputbuttonframe, text='config selected field', command=configoutput)
-        self.configoutput.pack(side=RIGHT)
+        self.configoutput.pack(side=LEFT)
+        self.saveoutput = Button(self.outputbuttonframe, text='save field', command=saveoutput)
+        self.saveoutput.pack(side=LEFT)
+        self.addoutput = Button(self.outputbuttonframe, text='add field', command=addoutput)
+        self.addoutput.pack(side=LEFT)
 
         self.outputfieldframe = Frame(frame)
         self.outputfieldframe.pack()
@@ -649,7 +659,7 @@ class App:
         self.outputname.pack(side=RIGHT)
         self.outputvaluelabel = Label(self.outputvalueframe, text='value')
         self.outputvaluelabel.pack(side=LEFT)
-        self.outputvalue = Entry(self.outputvalueframe)
+        self.outputvalue = Text(self.outputvalueframe, width=30, height=4)
         self.outputvalue.pack(side=RIGHT)
 
         self.fieldattframe = Frame(self.outputfieldframe)

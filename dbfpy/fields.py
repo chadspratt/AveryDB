@@ -247,7 +247,7 @@ class DbfNumericFieldDef(DbfFieldDef):
 
     def encodeValue(self, value):
         """Return string containing encoded ``value``."""
-        _rv = ("%*.*f" % (self.length, self.decimalCount, float(value)))
+        _rv = ("%*.*f" % (self.length, self.decimalCount, value))
         if len(_rv) > self.length:
             _ppos = _rv.find(".")
             if 0 <= _ppos <= self.length:
