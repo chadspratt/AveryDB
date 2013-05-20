@@ -3,7 +3,6 @@
 
 import dbfpy
 import genericfile
-import field
 
 class DBFFile(genericfile.GenericFile):
     def __init__(self, filename):
@@ -14,7 +13,7 @@ class DBFFile(genericfile.GenericFile):
         fieldlist = []
         for f in self.fh.fieldDefs:
             # use a simpler field object for storing the relevant attributes
-            newField = field.Field(f.name, f.typeCode, f.length, f.decimalCount)
+            newField = genericfile.field.Field(f.name, f.typeCode, f.length, f.decimalCount)
             fieldlist.append(newField)
         return fieldlist
          

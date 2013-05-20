@@ -3,11 +3,9 @@
 import re
 # import all filetypes even if unreadable (arcpy)?
 # test for ability to read/write gis databases with arcpy
-import genericfile
 import dbffile
-import field
 
-class JoinFile(genericfile.GenericFile):
+class JoinFile():
     def __init__(self, filename=''):
         self.filename = filename
         self.indices = {} #not reimplemented yet
@@ -16,7 +14,6 @@ class JoinFile(genericfile.GenericFile):
         else:
             self.status = 'not set'
             # self.fields = [Field0, Field1, ...]
-            self.fields = []
             
     # not inherited
     def openfile(self, filename):
@@ -29,14 +26,12 @@ class JoinFile(genericfile.GenericFile):
         else:            
             self.status = 'invalid file type'
             return self.status
-            
-        self.fields = self.fh.getfields()
         
         self.status = 'open'
         return self.status
    
     def getfields(self):
-        return self.fields
+        return self.fh.getfields()
         
     # generate and return an alias for the file. Each time a file is opened
     def getalias(self):

@@ -2,15 +2,9 @@
 # GUI window config
 
 from Tkinter import *
-import filemanager
-import joinmanager
-import guiactions
 
 class App:
-    def __init__(self, master):
-        self.files = filemanager.FileManager()
-        self.joins = joinmanager
-        
+    def __init__(self, master, main):        
         # GUI definition
         frame = Frame(master)
         frame.pack()
@@ -19,11 +13,11 @@ class App:
         #self.dbflistlabel.pack()
         self.filebuttonsframe = Frame(frame)
         self.filebuttonsframe.pack()
-        self.button = Button(self.filebuttonsframe, text='Select target dbf', command=guiactions.opentarget)
+        self.button = Button(self.filebuttonsframe, text='Select target dbf', command=main.opentarget)
         self.button.pack(side=LEFT)
-        self.add_dbf = Button(self.filebuttonsframe, text='add dbf', command=guiactions.openjoin)
+        self.add_dbf = Button(self.filebuttonsframe, text='add dbf', command=main.openjoin)
         self.add_dbf.pack(side=LEFT)
-        self.remove_dbf = Button(self.filebuttonsframe, text='remove dbf', command=guiactions.removejoin)
+        self.remove_dbf = Button(self.filebuttonsframe, text='remove dbf', command=main.removejoin)
         self.remove_dbf.pack(side=LEFT)
 
         self.targetframe = Frame(frame)
@@ -64,7 +58,7 @@ class App:
         self.dbfjoinxscroll.grid(row=2, column=0, columnspan=5, sticky=E+W)
         self.dbfjoinlist.grid(row=1, column=0, columnspan=5)
 
-        self.configjoin = Button(frame, text="config selected", command=guiactions.loadjoinchoices)
+        self.configjoin = Button(frame, text="config selected", command=main.loadjoinchoices)
         self.configjoin.pack()
 
         self.targetjoinframe = Frame(frame)
@@ -98,7 +92,7 @@ class App:
         #self.join_xscroll.grid(row=2, column=0, columnspan=5, sticky=E+W)
         self.join_list.grid(row=1, column=0, columnspan=5)
 
-        self.savejoin = Button(frame, text="save field selection", command=guiactions.savejoinchoice)
+        self.savejoin = Button(frame, text="save field selection", command=main.savejoinchoice)
         self.savejoin.pack()
 
         self.outputframe = Frame(frame)
@@ -120,22 +114,22 @@ class App:
         #self.output_xscroll.grid(row=2, column=0, columnspan=5, sticky=E+W)
         self.output_list.grid(row=1, column=0, columnspan=5)
 
-        self.initoutput = Button(self.outputbuttonsframe, text='init output', command=guiactions.initoutput)
+        self.initoutput = Button(self.outputbuttonsframe, text='init output', command=main.initoutput)
         self.initoutput.pack()
-        self.removeoutput = Button(self.outputbuttonsframe, text='del field', command=guiactions.removeoutput)
+        self.removeoutput = Button(self.outputbuttonsframe, text='del field', command=main.removeoutput)
         self.removeoutput.pack()
-        self.moveup = Button(self.outputbuttonsframe, text='move up', command=guiactions.moveup)
+        self.moveup = Button(self.outputbuttonsframe, text='move up', command=main.moveup)
         self.moveup.pack()
-        self.movedown = Button(self.outputbuttonsframe, text='move down', command=guiactions.movedown)
+        self.movedown = Button(self.outputbuttonsframe, text='move down', command=main.movedown)
         self.movedown.pack()
 
         self.outputbuttonframe = Frame(frame)
         self.outputbuttonframe.pack()
-        self.configoutput = Button(self.outputbuttonframe, text='config selected field', command=guiactions.configoutput)
+        self.configoutput = Button(self.outputbuttonframe, text='config selected field', command=main.configoutput)
         self.configoutput.pack(side=LEFT)
-        self.saveoutput = Button(self.outputbuttonframe, text='save field', command=guiactions.saveoutput)
+        self.saveoutput = Button(self.outputbuttonframe, text='save field', command=main.saveoutput)
         self.saveoutput.pack(side=LEFT)
-        self.addoutput = Button(self.outputbuttonframe, text='add field', command=guiactions.addoutput)
+        self.addoutput = Button(self.outputbuttonframe, text='add field', command=main.addoutput)
         self.addoutput.pack(side=LEFT)
 
         self.outputfieldframe = Frame(frame)
@@ -186,12 +180,12 @@ class App:
         self.outputfilename = Entry(self.outputfilenameframe, text='output.dbf')
         self.outputfilename.pack(side=LEFT)
         self.outputfilename.insert(0,'output.dbf')
-        self.dojoin = Button(frame, text='execute join', command=guiactions.dojoin)
+        self.dojoin = Button(frame, text='execute join', command=main.dojoin)
         self.dojoin.pack()
 
-def initapp():
+def initapp(main):
     root = Tk()
-    app = App(root)
+    app = App(root, main)
     root.title('DBF Utility')
     root.mainloop()
     return app

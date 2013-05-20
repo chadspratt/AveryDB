@@ -43,104 +43,8 @@ def printjoins(target):
 
 
 
-# 'init output' button
-# populate the list of output fields with all the input fields
-def initoutput():
-    global app
-    global target
-    global joins
-    global outputfields
-    global fields
-    global joinaliases
-    duplicates = {}
-    # delete any fields already entered
-    outputfields.clear()
-    app.output_list.delete(0,END)
-    
-    # create generator
-    joinfiles = joinsdfs(target)
 
-    for joinfile in joinfiles:
-        filealias = joinaliases[joinfile]
-        for field in fields[joinfile]:
-            # ensure field names are unique. field names are not case sensitive
-            fieldname = field[0].upper()
-            while fieldname in outputfields:
-                if fieldname in duplicates:
-                    dupecount = duplicates[fieldname]
-                else: # first duplicate, didn't have entry in duplicates{}
-                    dupecount = 1
-                duplicates[fieldname] = dupecount + 1
-                countlen = len(str(dupecount))
-                fieldlen = len(field[0])
-                # dbf files have max field name len of 10
-                trimlen = 10 - countlen - fieldlen
-                if trimlen < 0:
-                    fieldname = fieldname[:trimlen]+str(dupecount)
-                else:
-                    fieldname = fieldname+str(dupecount)
-            app.output_list.insert(END, fieldname)
-            outputfields[fieldname] = [filealias+'.'+fieldname, field[1], int(field[2]), int(field[3])]
 
-# util function to recursively get all filenames from joins{}
-# used in initoutput() and dojoin()
-def joinsdfs(start):
-    global joins
-    yield start
-    if start in joins:
-        for entry in joins[start]:
-            temp = joinsdfs(entry[1])
-            for entry2 in temp:
-                yield entry2
-
-# 'config selected field' button
-def configoutput():
-    global app
-    global oldfieldname
-    global oldfieldindex
-    global outputfields
-    oldfieldindex = app.output_list.curselection()[0]
-    oldfieldname = app.output_list.get(oldfieldindex)
-    app.outputname.delete(0,END)
-    app.outputvalue.delete(1.0,END)
-    app.fieldtype.delete(0,END)
-    app.fieldlen.delete(0,END)
-    app.fielddec.delete(0,END)
-    app.outputname.insert(END, oldfieldname)
-    app.outputvalue.insert(END, outputfields[oldfieldname][0])
-    app.fieldtype.insert(END, outputfields[oldfieldname][1])
-    app.fieldlen.insert(END, outputfields[oldfieldname][2])
-    app.fielddec.insert(END, outputfields[oldfieldname][3])
-
-# 'save field' button
-def saveoutput():
-    global app
-    global oldfieldname
-    global oldfieldindex
-    global outputfields
-    newfieldname = app.outputname.get().upper()
-    newfieldvalue = app.outputvalue.get(1.0,END).strip()
-    newfieldtype = app.fieldtype.get().upper()
-    newfieldlen = int(app.fieldlen.get())
-    newfielddec = int(app.fielddec.get())
-    # if the name changed, check that new name isn't already in use
-    if newfieldname != oldfieldname:
-        if newfieldname in outputfields:
-            print 'field name already in use'
-            return
-    # store new field properties
-    del outputfields[oldfieldname]
-    outputfields[newfieldname] = (newfieldvalue, newfieldtype, newfieldlen, newfielddec)
-    app.output_list.delete(oldfieldindex)
-    app.output_list.insert(oldfieldindex,newfieldname)
-    app.output_list.selection_clear(0,END)
-    app.output_list.selection_set(oldfieldindex)
-    app.output_list.see(oldfieldindex)
-    app.outputname.delete(0,END)
-    app.outputvalue.delete(1.0,END)
-    app.fieldtype.delete(0,END)
-    app.fieldlen.delete(0,END)
-    app.fielddec.delete(0,END)
 
 # 'add field' button
 def addoutput():
@@ -169,50 +73,7 @@ def addoutput():
         app.fieldlen.delete(0,END)
         app.fielddec.delete(0,END)
 
-# 'del field' button
-def removeoutput():
-    global app
-    global outputfields
-    
-    selected = [int(item) for item in app.output_list.curselection()]
-    # remove from outputfields
-    for index in selected:
-        fieldname = app.output_list.get(index)
-        del outputfields[fieldname]
-    # reverse the list to delete from the back so the indices don't get messed 
-    # up as we go
-    selected.reverse()
-    for index in selected:
-        app.output_list.delete(index)
 
-# 'move up' button
-def moveup():
-    global app
-    selected = [int(item) for item in app.output_list.curselection()]
-    for entry in selected:
-        if entry > 0:
-            fieldname = app.output_list.get(entry)
-            app.output_list.delete(entry)
-            app.output_list.insert(entry-1, fieldname)
-    new_selection = [x-1 for x in selected]
-    for entry in new_selection:
-        app.output_list.selection_set(entry)
-    app.output_list.see(int(selected[0])-2)
-
-# 'move down' button
-def movedown():
-    global app
-    selected = [int(item) for item in app.output_list.curselection()]
-    selected.reverse()
-    for entry in selected:
-        if int(entry) < app.output_list.size() - 1:
-            fieldname = app.output_list.get(entry)
-            app.output_list.delete(entry)
-            app.output_list.insert(entry+1, fieldname)
-    new_selection = [x+1 for x in selected]
-    for entry in new_selection:
-        app.output_list.selection_set(entry)
-    app.output_list.see(int(selected[0])+2)
 
 # 'execute join' button
 def dojoin():

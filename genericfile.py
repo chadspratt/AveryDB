@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Template for different filetype wrappers so that JoinFile can treat them all the same
 
+import field
+
 class GenericFile:
     def __init__(self):
         return 'define __init__'

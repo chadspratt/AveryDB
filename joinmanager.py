@@ -3,13 +3,12 @@
 # should I seperate output? i think i can do it
 
 import join
-import joinfile
 
 class JoinManager:
     def __init__(self):
         # joins[alias] = [Join0, Join1, ...]
         self.joins = {}
-        self.targetFile = joinfile.JoinFile()
+        self.targetalias = ''
         # stores the join currently being configured in the gui
         self.curtarget = ''
         self.curjoin = ''
@@ -52,12 +51,23 @@ class JoinManager:
         return False
     
     def addjoin(self, targetfield, joinfield):
+        """Create a Join and add it to the dictionary of all Joins."""
         newJoin = join.Join(self.curtarget, targetfield, self.curjoin, joinfield)
         if self.curtarget in self.joins:
             self.joins[self.curtarget].append(newJoin)
         else:
             self.joins[self.curtarget] = [newJoin]
-        
+            
+    # util function to recursively get all filenames from joins{}
+    # used in initoutput() and dojoin()
+    def getjoinedaliases(self, start='target'):
+        """Recursively generates all aliases joined to a target, starting with the target itself, using depth-first search."""
+        if start == 'target':
+            start = self.targetalias
+        yield start
+        if start in self.joins:
+            for entry in self.joins[start]:
+                 self.joinsdfs(entry.joinalias)
         
     # not used
     def __contains__(self, value):
