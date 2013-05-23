@@ -3,9 +3,10 @@
 
 from Tkinter import *
 
-class App:
+class App(object):
     def __init__(self, master, main):        
         # GUI definition
+        self.master = master
         frame = Frame(master)
         frame.pack()
 
@@ -187,5 +188,7 @@ def initapp(main):
     root = Tk()
     app = App(root, main)
     root.title('DBF Utility')
-    root.mainloop()
     return app
+    
+def startapp(app):
+    app.master.mainloop()

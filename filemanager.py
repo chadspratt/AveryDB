@@ -6,7 +6,6 @@ import tkFileDialog
 
 import joinfile
 
-
 # TO DO: arcpy, csv, sqlite
 #try:
 #    import arcpy
@@ -16,10 +15,11 @@ import joinfile
 #    pass
 
 
-class FileManager:
+class FileManager(object):
     def __init__(self):
         # all variables are meant to be accessed through functions
         # filesbyfilename[filename] = JoinFile
+        # XXX does the '':'' need to be in there for something?
         self.filesbyfilename = {'' : ''}
         # filenamesbyalias[alias] = filename
         self.filenamesbyalias = {}
@@ -43,18 +43,19 @@ class FileManager:
             # save the directory so that it defaults there next time a file dialog is opened
             pathsplit = re.findall('[a-zA-Z0-9\.]+',filename)
             self.askopenfiletype['initialdir'] = filename[:-len(pathsplit[-1])]
-            # check that the file isn't already opened
-            if self._isnew(filename):
+            
+            # check if file is already opened
+            if filename in self.filesbyfilename:
+                newFile = self.filesbyfilename[filename]
+            else:
                 # open the file. need to catch exceptions in JoinFile
                 newFile = joinfile.JoinFile(filename)
                 self.filesbyfilename[filename] = newFile
-            else:
-                newFile = self.filesbyfilename[filename]
                 
             # get a unique alias (in case another loaded file has the same name)
-            filealias = newFile.getalias()
+            filealias = newFile.generatealias()
             while filealias in self.filenamesbyalias:
-                filealias = newFile.getalias()
+                filealias = newFile.generatealias()
             self.filenamesbyalias[filealias] = filename
                 
             return filealias
@@ -69,6 +70,9 @@ class FileManager:
         if filename not in self.filenamesbyalias.keys():
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
+            
+    def openoutputfile(self, filename):
+        return joinfile.JoinFile(filename)
         
     def __getitem__(self, key):
         """Return a file object given either a file name or alias"""
@@ -77,4 +81,7 @@ class FileManager:
         # not sure if this will be useful
         elif key in self.filesbyfilename:
             return self.filesbyfilename[key]
+            
+    def __iter__(self):
+        return iter(self.filesbyfilename.values)
             

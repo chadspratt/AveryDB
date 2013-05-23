@@ -2,14 +2,17 @@
 # handles the initialization and configuration of the output
 # this just leaves dojoin(), the actual execution, needing a home
 
-class OutputManager:
+import field
+
+class OutputManager(object):
     def __init__(self):
         #place holder
         self.outputfilename = ''
         self.outputtype = 'dbf'
         self.outputfields = {}      # stores Field objects by their uppercase output name
         self.outputorder = []       # output names, stores order of the fields
-        self.curfieldindex = -1
+        self.editindex = -1
+        self.editField = ''
         
     def clear(self):
         self.output = ''
@@ -17,15 +20,26 @@ class OutputManager:
     def setoutputtype(self, outputtype):
         self.outputtype = outputtype
         
-    def addfield(self, filealias, field):
+    # existing fields will come with a filealias. new fields may come with an index
+    def addfield(self, field, filealias = None, index = -1):
+        """Add an existing field from a file or field created in this program"""
         # dbf is not case sensitive (won't allow 'objectID' and 'objectid')
         # outputfields uses uppercase names to facilitate checking for duplicates
         while field.outputname.upper() in self.outputfields:
             field.createnewoutputname()
         # this format will change when a better field calculator is implemented
-        field.outputvalue = filealias + '.' + field.name
+        if filealias:
+            field.value = filealias + '.' + field.name
         self.outputfields[field.outputname.upper()] = field
-        self.outputorder.append(field.outputname)
+        if index > 0:
+            self.outputorder.insert(index, field.outputname)
+        else:
+            self.outputorder.append(field.outputname)
+#    
+#    def addnewfield(self, field, index):
+#        while field.outputname.upper() in self.outputfields:
+#            field.createnewoutputname()
+#        self.outputfields[field.outputname.upper()] = field
     
     def removefields(self, fieldnames):
         for fn in fieldnames:
@@ -55,23 +69,48 @@ class OutputManager:
                 bottom = fi - 1
         return self.outputorder
         
-    def updatefield(self, fieldname, fieldvalue, fieldtype, fieldlen, fielddec):
-        field = self.outputfields[self.outputorder[self.curfieldindex].upper()]
-        if fieldname != field.name:
-            if fieldname.upper() in self.outputfields:
-                return 'duplicate name'
-            self.outputorder[self.curfieldindex] = fieldname
-            del self.outputfields[field.name.upper()]
-            self.outputfields[fieldname.upper()] = field
-        field.outputname = fieldname
-        field.value = fieldvalue
-        field.type = fieldtype
-        field.len = fieldlen
-        field.dec = fielddec
+    def loadfield(self, fieldindex):
+        self.editindex = fieldindex
+        self.editField = self[fieldindex]
         
+    def savefield(self, fieldname, fieldvalue, fieldtype, fieldlen, fielddec):
+        returnval = 'ok'
+        if self.editField:
+            if fieldname != self.editField.outputname:
+                if fieldname.upper() in self.outputfields:
+                    return 'duplicate name'
+                self.outputorder[self.curfieldindex] = fieldname
+                del self.outputfields[self.editField.name.upper()]
+                self.outputfields[fieldname.upper()] = self.editField
+            self.editField.outputname = fieldname
+            self.editField.value = fieldvalue
+            self.editField.type = fieldtype
+            self.editField.len = fieldlen
+            self.editField.dec = fielddec
+            self.editField = ''
+        else:
+            return 'no field loaded'
+        return returnval
+        
+    def createfield(self, fieldname, fieldvalue, fieldtype, fieldlen, fielddec, fieldindex):
+        newfield = field.Field(fieldname, fieldtype, fieldlen, fielddec)
+        newfield.value = fieldvalue
+        if fieldindex > 0:
+            self.addfield(newfield, index=fieldindex)
+        else:
+            self.addfield(newfield)
+            
+    def getindex(self, field):
+        return self.outputorder.index(field.outputname)
+    
     def __getitem__(self, key):
         """Retrieve a Field object by output name or by index"""
         if type(key) == str:
             return self.outputfields[key.upper()]
         elif type(key) == int:
             return self.outputfields[self.outputorder[key].upper()]
+            
+    def __iter__(self):
+        """Return all output fields in order"""
+        for fieldname in self.outputorder:
+            yield self.outputfields[fieldname.upper()]

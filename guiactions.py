@@ -5,18 +5,22 @@
 #import Tkinter #imported via gui via filemanager
 #import re #imported via gui via filemanager
 import Tkinter
+import re
+
 import gui
 import filemanager
 import joinmanager
 import outputmanager
 #import joinfile #imported via gui via filemanager
 
-class DBFUtil:
+class DBFUtil(object):
     def __init__(self):
         self.app = gui.initapp(self)
         self.files = filemanager.FileManager()
         self.joins = joinmanager.JoinManager()
         self.outputs = outputmanager.OutputManager()
+        # needs to be last because it stays in the gui mainloop
+        gui.startapp(self.app)
 
     # 'add dbf' button
     def openjoin(self):
@@ -59,7 +63,7 @@ class DBFUtil:
     # 'config selected' button
     def loadjoinchoices(self):
         """Populate the second set of listboxes with the fields from the selected files."""
-        target = self.files.gettarget()
+        target = self.joins.gettarget()
     #   clear the lists before adding fields of selected table and join table
         self.app.target_list.delete(0,Tkinter.END)
         self.app.join_list.delete(0,Tkinter.END)
@@ -110,12 +114,14 @@ class DBFUtil:
         self.app.output_list.delete(0,Tkinter.END)
         
         # get the aliases of all files that are set up to be used
-        joinaliases = self.joins.getjoinedaliases()
+        joinaliases = self.joins.generatejoinedaliases()
     
         # add all the fields in those files
-        for alias in joinaliases:
-            for field in self.files[alias].getfields():
-                self.outputs.addfield(alias, field)
+        for filealias in joinaliases:
+            print filealias
+            for field in self.files[filealias].getfields():
+                print field
+                self.outputs.addfield(field, filealias)
                 self.app.output_list.insert(Tkinter.END, field.outputname)
 
     # 'del field' button
@@ -176,8 +182,8 @@ class DBFUtil:
     def configoutput(self):
         """Load field data into the GUI for editing."""
         # save the pos of the first selected field, which will be the one loaded for editing
-        self.outputs.curfieldindex = self.app.output_list.curselection()[0]
-        curfield = self.outputs[self.outputs.curfieldindex]
+        self.outputs.loadfield(self.app.output_list.curselection()[0])
+        curfield = self.outputs.editField
         
         # Clear then load the GUI field with the values
         self.app.outputname.delete(0,Tkinter.END)
@@ -194,32 +200,136 @@ class DBFUtil:
     # 'save field' button
     def saveoutput(self):
         """Save the modified attributes of a field."""
-        newfieldname = self.app.outputname.get()
-        # don't remember why this call is different, i guess because it gets parsed and calculated
-        newfieldvalue = self.app.outputvalue.get(1.0,Tkinter.END).strip()
-        newfieldtype = self.app.fieldtype.get().upper()
-        newfieldlen = int(self.app.fieldlen.get())
-        newfielddec = int(self.app.fielddec.get())
-        # if the name changed, check that new name isn't already in use
-        result = self.outputs.updatefield(newfieldname, newfieldvalue, newfieldtype, newfieldlen, newfielddec)
-        if result == 'duplicate name':
-            print 'field name already in use'
-            return
-        if newfieldname != oldfieldname:
-            if newfieldname in outputfields:
-                return
-                
-        app.output_list.delete(oldfieldindex)
-        app.output_list.insert(oldfieldindex,newfieldname)
-        app.output_list.selection_clear(0,END)
-        app.output_list.selection_set(oldfieldindex)
-        app.output_list.see(oldfieldindex)
-        app.outputname.delete(0,END)
-        app.outputvalue.delete(1.0,END)
-        app.fieldtype.delete(0,END)
-        app.fieldlen.delete(0,END)
-        app.fielddec.delete(0,END)
+        newname = self.app.outputname.get()
+        newvalue = self.app.outputvalue.get(1.0,Tkinter.END).strip()
+        newtype = self.app.fieldtype.get().upper()
+        newlen = int(self.app.fieldlen.get())
+        newdec = int(self.app.fielddec.get())
         
+        # this should be resilient to loading a field, moving fields around, then saving the field
+        fieldindex = self.outputs.getindex(self.outputs.editField)
+        
+        # save the new field attributes
+        result = self.outputs.savefield(newname, newvalue, newtype, newlen, newdec)
+        if result != 'ok':
+            print result
+            return
+                
+        # refresh the field name in the gui then select and scroll to it
+        self.app.output_list.delete(fieldindex)
+        self.app.output_list.insert(fieldindex,newname)
+        self.app.output_list.selection_clear(0,Tkinter.END)
+        self.app.output_list.selection_set(fieldindex)
+        self.app.output_list.see(fieldindex)
+        # clear the gui field attribute fields
+        self.app.outputname.delete(0,Tkinter.END)
+        self.app.outputvalue.delete(1.0,Tkinter.END)
+        self.app.fieldtype.delete(0,Tkinter.END)
+        self.app.fieldlen.delete(0,Tkinter.END)
+        self.app.fielddec.delete(0,Tkinter.END)
+        
+    # 'add field' button
+    def addoutput(self):
+        newname = self.app.outputname.get().upper()
+        newvalue = self.app.outputvalue.get(1.0,Tkinter.END).strip()
+        newtype = self.app.fieldtype.get().upper()
+        newlen = int(self.app.fieldlen.get())
+        newdec = int(self.app.fielddec.get())
+        
+        # if a field is selected, insert the new field after it. otherwise insert it at the end
+        selected = self.app.output_list.curselection()
+        if len(selected) > 0:
+            newindex = selected[0] + 1
+        else:
+            newindex = 'end'
+        # add the field. If newfieldname is already in use, it will generate a unique name instead
+        newfieldname = self.outputs.addfield(newname, newvalue, newtype, newlen, newdec, newindex)
+        
+        # add the fiel
+        self.app.output_list.insert(newindex,newfieldname)
+        self.app.output_list.selection_clear(0,Tkinter.END)
+        self.app.output_list.selection_set(newindex)
+        self.app.output_list.see(newindex)
+        # not clearing will allow adding lots of similar fields more quickly
+#        app.outputname.delete(0,END)
+#        app.outputvalue.delete(1.0,END)
+#        app.fieldtype.delete(0,END)
+#        app.fieldlen.delete(0,END)
+#        app.fielddec.delete(0,END)
+
+    # 'execute join' button
+    def dojoin(self):
+        """Execute the join and output the result"""
+        # build indexes of the join fields
+        self.buildindexes()
+    
+        targetalias = self.joins.gettarget()
+        targetfile = self.files[targetalias]
+        
+        # create output file. I think it will cleanly overwrite the file if it already exists
+        outputfilename = self.app.outputfilename.get()
+        outputfile = self.files.openoutputfile(outputfilename)
+        
+        # create fields
+        for fieldname in self.outputs.outputorder:
+            outputfile.addfield(self.outputs[fieldname])
+    
+        # loop through target file
+        i = 0
+        recordcount = targetfile.getrecordcount()
+        print 'total records:', recordcount
+        while i < recordcount:
+            print 'processing record: ', i, '%f%%'%(float(i)/recordcount*100)
+            # process however many records before updating status
+            for i in range(i, min(i+1000,recordcount)):
+                # inputvalues[filealias][fieldname] = value
+                inputvalues = {}
+                inputvalues[targetalias] = targetfile[i]
+                
+                allaliases = self.joins.generatejoinedaliases()
+                # FIXME getjoinedaliases needs to be adjusted to not return the root target
+                for filealias in allaliases:
+                    for joinlist in self.joins[filealias]:
+                        for join in joinlist:
+                            targetvalue = inputvalues[filealias][join.targetfield]
+                            joinFile = self.files[join.joinalias]
+                            # Will be None if there isn't a matching record to join
+                            inputvalues[filealias] = joinFile.getjoinrecord(join.joinfield, targetvalue)
+                            if inputvalues[filealias] == None:
+                                print join.joinfield+':', targetvalue, '- not found'
+    
+                newrec = {}
+                for field in self.outputs:
+                    # field.value ex: '!file0.field0! + !file1.field1!'
+                    fieldrefs = re.findall('!([^!]+)!', field.value)
+                    # Replace eacy file.field reference with the actual value
+                    for fieldref in fieldrefs:
+                        refsplit = fieldref.split('.')
+                        refvalue = inputvalues[refsplit[0]][refsplit[1]]
+                        field.value = re.sub(fieldref, str(refvalue), field.value)
+                    # Apply any calculating. Want to make compatible with the arcmap field calculator.
+                    # That is extra functionality, with a second input field for the code block
+                    newrec[field.outputname] = eval(field.value)
+                
+                outputfile.addrecord(newrec)
+                                
+                i = i + 1
+                
+        outputfile.close()
+        print 'processing complete'
+        for joinfile in self.files:
+            joinfile.close()
+        
+    # util function used in dojoin()
+    # building an index for each join dbf file is better than trying to sort the files
+    # an index is needed so that, as it goes through the target table, record by record,
+    # we can quickly find the correct record with the index and jump straight to it
+    def buildindexes(self):
+        for filealias in self.joins.getjoinedaliases():
+            for join in self.joins[filealias]:
+                self.files[join.joinfile].buildindex(join.joinfield)
+
+
 dbfUtil = DBFUtil()
 
 

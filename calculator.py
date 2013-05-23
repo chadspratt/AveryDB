@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-class Calculator:
+class Calculator(object):
     def __init__(self):
         # filealiases[alias] = 
-        filealiases = {}
+        self.filealiases = {}

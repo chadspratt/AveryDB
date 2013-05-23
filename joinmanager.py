@@ -4,7 +4,7 @@
 
 import join
 
-class JoinManager:
+class JoinManager(object):
     def __init__(self):
         # joins[alias] = [Join0, Join1, ...]
         self.joins = {}
@@ -13,11 +13,11 @@ class JoinManager:
         self.curtarget = ''
         self.curjoin = ''
         
-    def settarget(self, targetFile):
-        self.targetFile = targetFile
+    def settarget(self, targetalias):
+        self.targetalias = targetalias
     
     def gettarget(self):
-        return self.target        
+        return self.targetalias        
         
     def removefile(self, alias):
         """Remove all joins that depend on this file."""
@@ -60,15 +60,23 @@ class JoinManager:
             
     # util function to recursively get all filenames from joins{}
     # used in initoutput() and dojoin()
-    def getjoinedaliases(self, start='target'):
+    def generatejoinedaliases(self, start='target'):
         """Recursively generates all aliases joined to a target, starting with the target itself, using depth-first search."""
+        print self.joins
         if start == 'target':
             start = self.targetalias
         yield start
         if start in self.joins:
             for entry in self.joins[start]:
-                 self.joinsdfs(entry.joinalias)
+                 self.generatejoinedaliases(entry.joinalias)
+                 
+    def __getitem__(self, key):
+        return self.joins[key]
         
     # not used
     def __contains__(self, value):
         return value in self.joins
+    
+    # untested
+    def __iter__(self):
+        return self.generatejoinedaliases()

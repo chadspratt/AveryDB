@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-class Field:
+class Field(object):
+    # there's something off about using the same fields for input and output
     def __init__(self, fieldname, fieldtype, fieldlen, fielddec):
         # permanent references to the field source
         self.name = fieldname
