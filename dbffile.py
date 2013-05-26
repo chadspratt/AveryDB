@@ -7,9 +7,14 @@ import genericfile
 import field
 
 class DBFFile(genericfile.GenericFile):
-    def __init__(self, filename):
+    def __init__(self, filename, mode='r'):
         self.filename = filename
-        self.fh = dbf.Dbf(filename, readOnly=True)
+        if mode == 'r':
+            self.fh = dbf.Dbf(filename, readOnly=True)
+        else:
+            self.fh = dbf.Dbf(filename, new=True)
+        # not used from here, but I'd like for it to be
+        self.fieldtypes = ['C','N','F','I','Y','L','M','D','T']
         
     def getfields(self):
         fieldlist = []
@@ -25,7 +30,7 @@ class DBFFile(genericfile.GenericFile):
             yield record
             
     def addfield(self, field):
-        self.fh.addField((field.name, field.type, field.len, field.dec))
+        self.fh.addField((field.outputname, field.type, field.len, field.dec))
         
     def getrecordcount(self):
         return self.fh.recordCount

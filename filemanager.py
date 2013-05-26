@@ -19,8 +19,7 @@ class FileManager(object):
     def __init__(self):
         # all variables are meant to be accessed through functions
         # filesbyfilename[filename] = JoinFile
-        # XXX does the '':'' need to be in there for something?
-        self.filesbyfilename = {'' : ''}
+        self.filesbyfilename = {}
         # filenamesbyalias[alias] = filename
         self.filenamesbyalias = {}
         # JoinFile
@@ -72,7 +71,7 @@ class FileManager(object):
             del self.filesbyfilename[filename]
             
     def openoutputfile(self, filename):
-        return joinfile.JoinFile(filename)
+        return joinfile.JoinFile(filename, mode='w')
         
     def __getitem__(self, key):
         """Return a file object given either a file name or alias"""
@@ -83,5 +82,5 @@ class FileManager(object):
             return self.filesbyfilename[key]
             
     def __iter__(self):
-        return iter(self.filesbyfilename.values)
+        return iter([self.filesbyfilename[fn] for fn in self.filesbyfilename])
             

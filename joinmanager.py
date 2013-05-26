@@ -58,20 +58,24 @@ class JoinManager(object):
         else:
             self.joins[self.curtarget] = [newJoin]
             
-    # util function to recursively get all filenames from joins{}
+    # If I have __iter__ do I need this?
     # used in initoutput() and dojoin()
-    def generatejoinedaliases(self, start='target'):
-        """Recursively generates all aliases joined to a target, starting with the target itself, using depth-first search."""
-        print self.joins
+    def getjoinedaliases(self, start='target'):
+        """Return a list of the target and everything joined to it, in depth-first search order."""
         if start == 'target':
             start = self.targetalias
-        yield start
+        return self.joinsdfs(start)
+                
+    def joinsdfs(self, start):
+        joinlist = [start]
         if start in self.joins:
             for entry in self.joins[start]:
-                 self.generatejoinedaliases(entry.joinalias)
+                joinlist.extend(self.joinsdfs(entry.joinalias))
+        return joinlist
                  
     def __getitem__(self, key):
-        return self.joins[key]
+        if key in self.joins:
+            return self.joins[key]
         
     # not used
     def __contains__(self, value):
@@ -79,4 +83,8 @@ class JoinManager(object):
     
     # untested
     def __iter__(self):
-        return self.generatejoinedaliases()
+        joinlists = []
+        for filealias in self.getjoinedaliases():
+            if filealias in self.joins:
+                joinlists.append(self.joins[filealias])
+        return iter(joinlists)

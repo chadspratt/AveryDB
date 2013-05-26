@@ -6,21 +6,21 @@ import re
 import dbffile
 
 class JoinFile(object):
-    def __init__(self, filename=''):
+    def __init__(self, filename='', mode='r'):
         self.filename = filename
         self.indices = {} #not reimplemented yet
         if filename != '':
-            self.status = self.openfile(filename)
+            self.status = self.openfile(filename, mode=mode)
         else:
             self.status = 'not set'
             # self.fields = [Field0, Field1, ...]
         self.aliasgenerator = self._generatealias()
             
     # not inherited
-    def openfile(self, filename):
+    def openfile(self, filename, mode='r'):
         filetype = filename.split('.')[-1].lower()
         if filetype == 'dbf':
-                self.fh = dbffile.DBFFile(filename)
+                self.fh = dbffile.DBFFile(filename, mode=mode)
             # other cases will go here if/when other files are supported. from here it is filetype agnostic
             # read field names/types
         #this return can't happen unless selecting invalid files is allowed in the first place

@@ -39,29 +39,7 @@ fileindexes = {}
 
 
 
-# util function used in dojoin()
-# this is all arbitrary
-def blankvalue(field):
-    fieldtype = field[1]
-    if fieldtype == 'N':
-        return 0
-    elif fieldtype == 'F':
-        return 0.0
-    elif fieldtype == 'C':
-        return ''
-    # i don't know for this one what a good nonvalue would be
-    elif fieldtype == 'D':
-        return (0,0,0)
-    elif fieldtype == 'I':
-        return 0
-    elif fieldtype == 'Y':
-        return 0.0
-    elif fieldtype == 'L':
-        return -1
-    elif fieldtype == 'M':
-        return " " * 10
-    elif fieldtype == 'T':
-        return
+
 
 
 
