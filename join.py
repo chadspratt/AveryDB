@@ -7,3 +7,4 @@ class Join(object):
         self.targetfield = targetfield
         self.joinalias = joinalias
         self.joinfield = joinfield
+        

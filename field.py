@@ -40,3 +40,4 @@ class Field(object):
         fieldCopy.outputname = self.outputname
         fieldCopy.value = self.value
         return fieldCopy
+        

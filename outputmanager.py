@@ -125,7 +125,7 @@ class OutputManager(object):
     def __getitem__(self, key):
         """Retrieve a Field object by index or by output name"""
         # since field names can't be just a number, interpret all numbers as indices
-        if type(key) == int or key.isdigit():
+        if isinstance(key, int) or key.isdigit():
             return self.outputfields[self.outputorder[int(key)].upper()]
         else:
             return self.outputfields[key.upper()]
@@ -137,3 +137,4 @@ class OutputManager(object):
             
     def __len__(self):
         return len(self.outputfields)
+        

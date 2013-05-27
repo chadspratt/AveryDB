@@ -88,3 +88,4 @@ class JoinManager(object):
             if filealias in self.joins:
                 joinlists.append(self.joins[filealias])
         return iter(joinlists)
+        

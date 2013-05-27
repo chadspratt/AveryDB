@@ -47,3 +47,4 @@ class DBFFile(genericfile.GenericFile):
     # returns record at given index as a dictionary of field name:value
     def __getitem__(self, index):
         return self.fh[index].asDict()
+        

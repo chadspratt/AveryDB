@@ -18,8 +18,8 @@ class JoinFile(object):
             
     # not inherited
     def openfile(self, filename, mode='r'):
-        filetype = filename.split('.')[-1].lower()
-        if filetype == 'dbf':
+        lc_filename = filename.lower()
+        if lc_filename.endswith('dbf'):
                 self.fh = dbffile.DBFFile(filename, mode=mode)
             # other cases will go here if/when other files are supported. from here it is filetype agnostic
             # read field names/types
