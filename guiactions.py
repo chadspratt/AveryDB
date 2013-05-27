@@ -329,26 +329,31 @@ class DBFUtil(object):
                         joinvalue = inputvalues[join.targetalias][join.targetfield]
                         joinFile = self.files[join.joinalias]
                         # Will be None if there isn't a matching record to join
-                        inputvalues[join.joinalias] = joinFile.getjoinrecord(join.joinfield, joinvalue)
-                        if inputvalues[join.joinalias] == None:
+                        temprecord = joinFile.getjoinrecord(join.joinfield, joinvalue)
+                        if temprecord is None:                            
                             print join.joinfield+':', joinvalue, '- not found'
+                        else:
+                            inputvalues[join.joinalias] = temprecord
     
 #                print 'inputvalues', inputvalues
                 newrec = {}
                 for field in self.outputs:
                     # field.value ex: '!file0.field0! + !file1.field1!'
                     fieldrefs = re.findall('!([^!]+)!', field.value)
+                    fieldvalue = str(field.value)
                     # Replace eacy file.field reference with the actual value
                     for fieldref in fieldrefs:
-                        refsplit = fieldref.split('.')
+                        filealias, fieldname = fieldref.split('.')
 #                        print refsplit
                         # check that each referenced file was successfully joined
-                        if refsplit[0] in inputvalues:
-                            refvalue = inputvalues[refsplit[0]][refsplit[1]]
-                            fieldvalue = re.sub('!'+fieldref+'!', str(refvalue), field.value)
+                        if filealias in inputvalues:
+                            refvalue = inputvalues[filealias][fieldname]
+                            fieldvalue = re.sub('!'+fieldref+'!', str(refvalue), fieldvalue)
                         # if it didn't join, use a blank value
                         else:
-                            fieldvalue = self.blankvalue(field)
+                            # insert a blank value for the reference that matches the type of the output field
+                            # with more effort, it could match the type of the field that didn't get joined
+                            fieldvalue = re.sub('!'+fieldref+'!', str(self.blankvalue(field)), fieldvalue)
                         
                     # Apply any calculating. Want to make compatible with the arcmap field calculator.
                     # That is extra functionality, with a second input field for the code block
@@ -357,6 +362,8 @@ class DBFUtil(object):
                     except NameError:
                         newrec[field.outputname] = fieldvalue
                     except SyntaxError:
+                        newrec[field.outputname] = fieldvalue
+                    except TypeError:
                         newrec[field.outputname] = fieldvalue
                 
                 outputfile.addrecord(newrec)
