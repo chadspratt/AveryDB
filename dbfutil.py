@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # methods that respond to and update the GUI and pass the rest off as much as possible
-# I'm also going to try to limit access to App's allfiles and targetfile attributes
 
 #import Tkinter #imported via gui via filemanager
 #import re #imported via gui via filemanager
@@ -15,42 +14,42 @@ import outputmanager
 
 class DBFUtil(object):
     def __init__(self):
-        self.app = gui.initapp(self)
+        self.gui = gui.creategui(self)
         self.files = filemanager.FileManager()
         self.joins = joinmanager.JoinManager()
         self.outputs = outputmanager.OutputManager()
-        # needs to be last because it stays in the gui mainloop
-        gui.startapp(self.app)
+        # needs to be last because control goes to the gui once it's called
+        gui.startgui(self.gui)
 
     # 'add dbf' button
-    def openjoin(self):
+    def openjoin(self, widget, data=None):
         """Open a new file for joining to the target."""
         newfilealias = self.files.addfile()
         # checks that a file was selected
         if newfilealias:
             # check if file is in the lists already
-            if newfilealias not in self.app.dbftargetlist.get(0, Tkinter.END):
-                self.app.dbftargetlist.insert(Tkinter.END, newfilealias)
-                self.app.dbfjoinlist.insert(Tkinter.END, newfilealias)
+            if newfilealias not in self.gui.dbftargetlist.get(0, Tkinter.END):
+                self.gui.dbftargetlist.insert(Tkinter.END, newfilealias)
+                self.gui.dbfjoinlist.insert(Tkinter.END, newfilealias)
         return newfilealias
     
     # 'select target dbf' button. remove opening a new file and instead just set it to an already open file?
-    def opentarget(self):
+    def opentarget(self, widget, data=None):
         """Open a new file or set an already open file as the target for joining."""
         newfilealias = self.openjoin()
         if newfilealias:
             # set target
             self.joins.settarget(newfilealias)
             # set the gui label for showing the full path to the target
-            self.app.target.__setitem__('text',newfilealias)
+            self.gui.target.__setitem__('text',newfilealias)
     
     # 'remove dbf' button
-    def removejoin(self):
+    def removejoin(self, widget, data=None):
         """Close a file and remove all joins that depend on it."""
         # get filename of file selected to be removed
-        selected = self.app.dbftargetlist.curselection()
+        selected = self.gui.dbftargetlist.curselection()
         if selected:
-            filename =self. app.dbftargetlist.get(selected[0])
+            filename =self. gui.dbftargetlist.get(selected[0])
             
             # remove file
             self.files.removefile(filename)
@@ -58,22 +57,22 @@ class DBFUtil(object):
             self.joins.removefile(self.files[filename].alias)
             
             # remove from gui list and from the fields dictionary
-            self.app.dbftargetlist.delete(selected[0])
-            self.app.dbfjoinlist.delete(selected[0])
+            self.gui.dbftargetlist.delete(selected[0])
+            self.gui.dbfjoinlist.delete(selected[0])
         
     # 'config selected' button
-    def loadjoinchoices(self):
+    def loadjoinchoices(self, widget, data=None):
         """Populate the second set of listboxes with the fields from the selected files."""
         target = self.joins.gettarget()
     #   clear the lists before adding fields of selected table and join table
-        self.app.target_list.delete(0,Tkinter.END)
-        self.app.join_list.delete(0,Tkinter.END)
+        self.gui.target_list.delete(0,Tkinter.END)
+        self.gui.join_list.delete(0,Tkinter.END)
     
-        targetindex = self.app.dbftargetlist.curselection()
-        joinindex = self.app.dbfjoinlist.curselection()
+        targetindex = self.gui.dbftargetlist.curselection()
+        joinindex = self.gui.dbfjoinlist.curselection()
         if targetindex and joinindex:
-            targetalias = self.app.dbftargetlist.get(targetindex)
-            joinalias = self.app.dbfjoinlist.get(joinindex)
+            targetalias = self.gui.dbftargetlist.get(targetindex)
+            joinalias = self.gui.dbfjoinlist.get(joinindex)
         
             # verify that the selectedtarget is joined to the overall target
             if self.joins.checkjoin(target, targetalias) == False:
@@ -87,34 +86,34 @@ class DBFUtil(object):
                 self.joins.curtarget = targetalias
                 self.joins.curjoin = joinalias
                 for field in self.files[targetalias].getfields():
-                    self.app.target_list.insert(Tkinter.END, field.name)
+                    self.gui.target_list.insert(Tkinter.END, field.name)
                 for field in self.files[joinalias].getfields():
-                    self.app.join_list.insert(Tkinter.END, field.name)
+                    self.gui.join_list.insert(Tkinter.END, field.name)
                 
     # 'apply' join choice button
-    def savejoinchoice(self):
+    def savejoinchoice(self, widget, data=None):
         """Save join using the selected fields in the gui."""
         # get join field names
-        targetindex = self.app.target_list.curselection()
-        joinindex = self.app.join_list.curselection()
+        targetindex = self.gui.target_list.curselection()
+        joinindex = self.gui.join_list.curselection()
         if targetindex and joinindex:
-            targetfield = self.app.target_list.get(targetindex[0])
-            joinfield = self.app.join_list.get(joinindex[0])
+            targetfield = self.gui.target_list.get(targetindex[0])
+            joinfield = self.gui.join_list.get(joinindex[0])
         
             # save to joins
             self.joins.addjoin(targetfield, joinfield)
         
             # clear boxes to show that the join is applied
-            self.app.target_list.delete(0,Tkinter.END)
-            self.app.join_list.delete(0,Tkinter.END)
+            self.gui.target_list.delete(0,Tkinter.END)
+            self.gui.join_list.delete(0,Tkinter.END)
 
     # 'init output' button
     # populate the list of output fields with all the input fields
-    def initoutput(self):
+    def initoutput(self, widget, data=None):
         """Initialize the list of output fields and add all fields to the OutputManager."""
         # delete any fields already entered
         self.outputs.clear()
-        self.app.output_list.delete(0,Tkinter.END)
+        self.gui.output_list.delete(0,Tkinter.END)
         
         # check that a target file has been opened
         if self.joins.targetalias:
@@ -122,108 +121,108 @@ class DBFUtil(object):
             for filealias in self.joins.getjoinedaliases():
                 for field in self.files[filealias].getfields():
                     newField = self.outputs.addfield(field, filealias)
-                    self.app.output_list.insert(Tkinter.END, newField.outputname)
+                    self.gui.output_list.insert(Tkinter.END, newField.outputname)
 
     # 'del field' button
-    def removeoutput(self):
+    def removeoutput(self, widget, data=None):
         """Remove a field from the output."""
         # get the indices of the selected fields
-        selected = [int(item) for item in self.app.output_list.curselection()]
-        selectednames = [self.app.output_list.get(i) for i in selected]
+        selected = [int(item) for item in self.gui.output_list.curselection()]
+        selectednames = [self.gui.output_list.get(i) for i in selected]
 
         ef = self.outputs.editField
         self.outputs.removefields(selectednames)
         
         # clear the fields if the field loaded for editing was just removed
         if ef and not self.outputs.editField:
-            self.app.outputname.delete(0,Tkinter.END)
-            self.app.outputvalue.delete(1.0,Tkinter.END)
-            self.app.fieldtype.delete(0,Tkinter.END)
-            self.app.fieldlen.delete(0,Tkinter.END)
-            self.app.fielddec.delete(0,Tkinter.END)
+            self.gui.outputname.delete(0,Tkinter.END)
+            self.gui.outputvalue.delete(1.0,Tkinter.END)
+            self.gui.fieldtype.delete(0,Tkinter.END)
+            self.gui.fieldlen.delete(0,Tkinter.END)
+            self.gui.fielddec.delete(0,Tkinter.END)
         
         # reverse the list to delete from the back so the indices don't get messed up as we go
         selected.reverse()
         for index in selected:
-            self.app.output_list.delete(index)
+            self.gui.output_list.delete(index)
 
     # 'move up' button
-    def moveup(self):
+    def moveup(self, widget, data=None):
         """Move the selected items up in the list of output fields."""
         # get the indices of the selected fields
-        selected = [int(item) for item in self.app.output_list.curselection()]
+        selected = [int(item) for item in self.gui.output_list.curselection()]
         if len(selected) > 0:
             newselection = self.outputs.movefieldsup(selected)
     
             # update gui list with new order
-            self.app.output_list.delete(0,Tkinter.END)
+            self.gui.output_list.delete(0,Tkinter.END)
             for field in self.outputs:
-                self.app.output_list.insert(Tkinter.END, field.outputname)
+                self.gui.output_list.insert(Tkinter.END, field.outputname)
             
             # keep the same entiries in the list highlighted after moving them
-            self.app.output_list.selection_clear(0, Tkinter.END)
+            self.gui.output_list.selection_clear(0, Tkinter.END)
             for index in newselection:
-                self.app.output_list.selection_set(index)
-            self.app.output_list.see(newselection[0]-1)
+                self.gui.output_list.selection_set(index)
+            self.gui.output_list.see(newselection[0]-1)
 
     # 'move down' button
-    def movedown(self):
+    def movedown(self, widget, data=None):
         """Move the selected items up in the list of output fields."""
         # get the indices of the selected fields
-        selected = [int(item) for item in self.app.output_list.curselection()]
+        selected = [int(item) for item in self.gui.output_list.curselection()]
         if len(selected) > 0:
             newselection = self.outputs.movefieldsdown(selected)
             
             # update gui list with new order
-            self.app.output_list.delete(0,Tkinter.END)
+            self.gui.output_list.delete(0,Tkinter.END)
             for field in self.outputs:
-                self.app.output_list.insert(Tkinter.END, field.outputname)
+                self.gui.output_list.insert(Tkinter.END, field.outputname)
                     
             # keep the same entiries in the list highlighted after moving them
-            self.app.output_list.selection_clear(0, Tkinter.END)
+            self.gui.output_list.selection_clear(0, Tkinter.END)
             for index in newselection:
-                self.app.output_list.selection_set(index)
-            self.app.output_list.see(newselection[-1]+1)
+                self.gui.output_list.selection_set(index)
+            self.gui.output_list.see(newselection[-1]+1)
         
 
     # 'config selected field' button
-    def configoutput(self):
+    def configoutput(self, widget, data=None):
         """Load field data into the GUI for editing."""
         # save the pos of the first selected field, which will be the one loaded for editing
-        selection = self.app.output_list.curselection()
+        selection = self.gui.output_list.curselection()
         if selection:
             self.outputs.seteditfield(selection[0])
             curfield = self.outputs.editField
             
             # Clear then load the GUI field with the values
-            self.app.outputname.delete(0,Tkinter.END)
-            self.app.outputvalue.delete(1.0,Tkinter.END)
-            self.app.fieldtype.delete(0,Tkinter.END)
-            self.app.fieldlen.delete(0,Tkinter.END)
-            self.app.fielddec.delete(0,Tkinter.END)
-            self.app.outputname.insert(Tkinter.END, curfield.outputname)
-            self.app.outputvalue.insert(Tkinter.END, curfield.value)
-            self.app.fieldtype.insert(Tkinter.END, curfield.type)
-            self.app.fieldlen.insert(Tkinter.END, curfield.len)
-            self.app.fielddec.insert(Tkinter.END, curfield.dec)
+            self.gui.outputname.delete(0,Tkinter.END)
+            self.gui.outputvalue.delete(1.0,Tkinter.END)
+            self.gui.fieldtype.delete(0,Tkinter.END)
+            self.gui.fieldlen.delete(0,Tkinter.END)
+            self.gui.fielddec.delete(0,Tkinter.END)
+            self.gui.outputname.insert(Tkinter.END, curfield.outputname)
+            self.gui.outputvalue.insert(Tkinter.END, curfield.value)
+            self.gui.fieldtype.insert(Tkinter.END, curfield.type)
+            self.gui.fieldlen.insert(Tkinter.END, curfield.len)
+            self.gui.fielddec.insert(Tkinter.END, curfield.dec)
         
     # 'save field' button
-    def saveoutput(self):
+    def saveoutput(self, widget, data=None):
         """Save the modified attributes of a field."""
         # get the new values and do basic tests for validity
-        newname = self.app.outputname.get()
+        newname = self.gui.outputname.get()
         if newname == '' or newname[0].isdigit():
             return
-        newvalue = self.app.outputvalue.get(1.0,Tkinter.END).strip()
-        newtype = self.app.fieldtype.get().upper()
+        newvalue = self.gui.outputvalue.get(1.0,Tkinter.END).strip()
+        newtype = self.gui.fieldtype.get().upper()
         if newtype.upper() not in self.outputs.fieldtypes:
             return
-        newlen = self.app.fieldlen.get()
+        newlen = self.gui.fieldlen.get()
         if newlen.isdigit():
             newlen = int(newlen)
         else:
             return
-        newdec = self.app.fielddec.get()
+        newdec = self.gui.fielddec.get()
         if newdec.isdigit():
             newdec = int(newdec)
         else:
@@ -239,41 +238,41 @@ class DBFUtil(object):
             return
                 
         # refresh the field name in the gui then select and scroll to it
-        self.app.output_list.delete(fieldindex)
-        self.app.output_list.insert(fieldindex,newname)
-        self.app.output_list.selection_clear(0,Tkinter.END)
-        self.app.output_list.selection_set(fieldindex)
-        self.app.output_list.see(fieldindex)
+        self.gui.output_list.delete(fieldindex)
+        self.gui.output_list.insert(fieldindex,newname)
+        self.gui.output_list.selection_clear(0,Tkinter.END)
+        self.gui.output_list.selection_set(fieldindex)
+        self.gui.output_list.see(fieldindex)
         # clear the gui field attribute fields
-        self.app.outputname.delete(0,Tkinter.END)
-        self.app.outputvalue.delete(1.0,Tkinter.END)
-        self.app.fieldtype.delete(0,Tkinter.END)
-        self.app.fieldlen.delete(0,Tkinter.END)
-        self.app.fielddec.delete(0,Tkinter.END)
+        self.gui.outputname.delete(0,Tkinter.END)
+        self.gui.outputvalue.delete(1.0,Tkinter.END)
+        self.gui.fieldtype.delete(0,Tkinter.END)
+        self.gui.fieldlen.delete(0,Tkinter.END)
+        self.gui.fielddec.delete(0,Tkinter.END)
         
     # 'add field' button
-    def addoutput(self):
+    def addoutput(self, widget, data=None):
         # get the new values and do basic tests for validity
-        newname = self.app.outputname.get()
+        newname = self.gui.outputname.get()
         if newname == '' or newname[0].isdigit():
             return
-        newvalue = self.app.outputvalue.get(1.0,Tkinter.END).strip()
-        newtype = self.app.fieldtype.get().upper()
+        newvalue = self.gui.outputvalue.get(1.0,Tkinter.END).strip()
+        newtype = self.gui.fieldtype.get().upper()
         if newtype.upper() not in self.outputs.fieldtypes:
             return
-        newlen = self.app.fieldlen.get()
+        newlen = self.gui.fieldlen.get()
         if newlen.isdigit():
             newlen = int(newlen)
         else:
             return
-        newdec = self.app.fielddec.get()
+        newdec = self.gui.fielddec.get()
         if newdec.isdigit():
             newdec = int(newdec)
         else:
             return
         
         # if a field is selected, insert the new field after it. otherwise insert it at the end
-        selected = self.app.output_list.curselection()
+        selected = self.gui.output_list.curselection()
         if len(selected) > 0:
             newindex = int(selected[0]) + 1
         else:
@@ -282,19 +281,19 @@ class DBFUtil(object):
         newfieldname = self.outputs.addnewfield(newname, newvalue, newtype, newlen, newdec, newindex)
         
         # add the fiel
-        self.app.output_list.insert(newindex,newfieldname)
-        self.app.output_list.selection_clear(0,Tkinter.END)
-        self.app.output_list.selection_set(newindex)
-        self.app.output_list.see(newindex)
+        self.gui.output_list.insert(newindex,newfieldname)
+        self.gui.output_list.selection_clear(0,Tkinter.END)
+        self.gui.output_list.selection_set(newindex)
+        self.gui.output_list.see(newindex)
         # not clearing will allow adding lots of similar fields more quickly
-#        app.outputname.delete(0,END)
-#        app.outputvalue.delete(1.0,END)
-#        app.fieldtype.delete(0,END)
-#        app.fieldlen.delete(0,END)
-#        app.fielddec.delete(0,END)
+#        gui.outputname.delete(0,END)
+#        gui.outputvalue.delete(1.0,END)
+#        gui.fieldtype.delete(0,END)
+#        gui.fieldlen.delete(0,END)
+#        gui.fielddec.delete(0,END)
 
     # 'execute join' button
-    def dojoin(self):
+    def dojoin(self, widget, data=None):
         """Execute the join and output the result"""
         if len(self.outputs) == 0:
             return
@@ -305,7 +304,7 @@ class DBFUtil(object):
         targetfile = self.files[targetalias]
         
         # create output file. I think it will cleanly overwrite the file if it already exists
-        outputfilename = self.app.outputfilename.get()
+        outputfilename = self.gui.outputfilename.get()
         outputfile = self.files.openoutputfile(outputfilename)
         
         # create fields
