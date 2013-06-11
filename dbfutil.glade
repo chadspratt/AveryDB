@@ -2,16 +2,114 @@
 <interface>
   <requires lib="gtk+" version="2.24"/>
   <!-- interface-naming-policy project-wide -->
+  <object class="GtkFileChooserDialog" id="filechooserdialog1">
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="role">GtkFileChooserDialog</property>
+    <property name="type_hint">dialog</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="cancelfilebutton">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="openfilebutton">
+                <property name="label">gtk-open</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hbox6">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkEntry" id="entry2">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">•</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="filetypescombo">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="pack_type">end</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">cancelfilebutton</action-widget>
+      <action-widget response="1">openfilebutton</action-widget>
+    </action-widgets>
+  </object>
   <object class="GtkListStore" id="filelist">
     <columns>
       <!-- column-name filealias -->
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkTreeStore" id="jointree"/>
   <object class="GtkListStore" id="joinfieldlist"/>
-  <object class="GtkListStore" id="outputlist"/>
-  <object class="GtkListStore" id="sampleoutputlist"/>
+  <object class="GtkTreeStore" id="jointree"/>
   <object class="GtkWindow" id="mainwindow">
     <property name="width_request">640</property>
     <property name="height_request">480</property>
@@ -236,6 +334,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="toolbar_style">icons</property>
+                            <property name="show_arrow">False</property>
                             <property name="icon_size">0</property>
                             <child>
                               <object class="GtkToolButton" id="addfilebutton">
@@ -244,11 +343,11 @@
                                 <property name="use_action_appearance">False</property>
                                 <property name="is_important">True</property>
                                 <property name="use_underline">True</property>
-                                <property name="stock_id">gtk-add</property>
                                 <signal name="clicked" handler="addfilebutton_clicked_cb" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
                               </packing>
                             </child>
                             <child>
@@ -524,6 +623,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="toolbar_style">icons</property>
+                            <property name="show_arrow">False</property>
                             <child>
                               <object class="GtkToolButton" id="addjoinbutton">
                                 <property name="visible">True</property>
@@ -805,6 +905,7 @@ File:</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="toolbar_style">icons</property>
+                            <property name="show_arrow">False</property>
                             <property name="icon_size">0</property>
                             <child>
                               <object class="GtkToolButton" id="removejoinbutton">
@@ -907,5 +1008,7 @@ File:</property>
       </object>
     </child>
   </object>
+  <object class="GtkListStore" id="outputlist"/>
+  <object class="GtkListStore" id="sampleoutputlist"/>
   <object class="GtkListStore" id="targetfieldlist"/>
 </interface>

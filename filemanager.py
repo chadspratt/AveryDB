@@ -33,33 +33,27 @@ class FileManager(object):
     def _isnew(self, filename):
         return filename not in self.filesbyfilename
         
-    def addfile(self):
+    def addfile(self, filename):
         """Open a new file. If the file is already open, add an alias for it"""
-        filename = tkFileDialog.askopenfilename(**self.askopenfiletype)
+        # save the directory so that it defaults there next time a file dialog is opened
+        pathsplit = re.findall('[a-zA-Z0-9\.]+',filename)
+        self.askopenfiletype['initialdir'] = filename[:-len(pathsplit[-1])]
         
-        # check that a file was selected
-        if filename:
-            # save the directory so that it defaults there next time a file dialog is opened
-            pathsplit = re.findall('[a-zA-Z0-9\.]+',filename)
-            self.askopenfiletype['initialdir'] = filename[:-len(pathsplit[-1])]
+        # check if file is already opened
+        if filename in self.filesbyfilename:
+            newFile = self.filesbyfilename[filename]
+        else:
+            # open the file. need to catch exceptions in JoinFile
+            newFile = joinfile.JoinFile(filename)
+            self.filesbyfilename[filename] = newFile
             
-            # check if file is already opened
-            if filename in self.filesbyfilename:
-                newFile = self.filesbyfilename[filename]
-            else:
-                # open the file. need to catch exceptions in JoinFile
-                newFile = joinfile.JoinFile(filename)
-                self.filesbyfilename[filename] = newFile
-                
-            # get a unique alias (in case another loaded file has the same name)
+        # get a unique alias (in case another loaded file has the same name)
+        filealias = newFile.generatealias()
+        while filealias in self.filenamesbyalias:
             filealias = newFile.generatealias()
-            while filealias in self.filenamesbyalias:
-                filealias = newFile.generatealias()
-            self.filenamesbyalias[filealias] = filename
-                
-            return filealias
-        # return empty string if no file was selected
-        return ''
+        self.filenamesbyalias[filealias] = filename
+            
+        return filealias
         
     def removefile(self, alias):
         """Remove an alias for a file and remove/close the file if it has no other alias"""
