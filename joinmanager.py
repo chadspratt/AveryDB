@@ -28,6 +28,8 @@ class JoinManager(object):
             for joinDefinition in self.joins[targetalias]:
                 if joinDefinition.joinfile == alias:
                     self.joins[targetalias].remove(joinDefinition)
+        if alias == self.targetalias:
+            self.targetalias = ''
 
     def _removejoin(self, alias):
         """Recursively remove joins to this alias and child joins."""

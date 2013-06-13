@@ -46,6 +46,24 @@ class GUI(object):
         self.window = self.builder.get_object('mainwindow')
         self.window.show_all()
         
+    def filedialog(self, filetypes):
+        dialog = gtk.FileChooserDialog("Open..",
+                                                          None,
+                                                          gtk.FILE_CHOOSER_ACTION_OPEN,
+                                                          (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                                           gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.set_default_response(gtk.RESPONSE_OK)
+        for filetype in filetypes:
+            filefilter = gtk.FileFilter()
+            filefilter.set_name(filetype)
+            for mimetype in filetypes[filetype]['mimes']:
+                filefilter.add_mime_type(mimetype)
+            for pattern in filetypes[filetype]['patterns']:
+                filefilter.add_pattern(pattern)
+            dialog.add_filter(filefilter)
+            
+        return dialog
+        
     def __getitem__(self, value):
         return self.builder.get_object(value)
 #class GUI(object):

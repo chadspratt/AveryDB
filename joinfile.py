@@ -32,6 +32,7 @@ class JoinFile(object):
         return self.status
    
     def getfields(self):
+        """Returns a list of fields. The fields are stored as dictionaries that contain their attributes."""
         return self.fh.getfields()
         
     # generate and return an alias for the file. Each time a file is opened

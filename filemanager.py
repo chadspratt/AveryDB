@@ -26,8 +26,10 @@ class FileManager(object):
 #        self.targetFile = joinfile.JoinFile()
         
         # usable filetypes (and initial directory)
-        self.askopenfiletype = {}
-        self.askopenfiletype['filetypes'] = [('dbf files','.dbf'), ('dbf files','.DBF')]
+        self.filetypes = {}
+        self.filetypes['All files'] = {'mimes' : [], 'patterns' : ['*']}
+        self.filetypes['dbf files'] = {'mimes' : ['application/dbase', 'application/x-dbase', 'application/dbf', 'application/x-dbf'],
+                                                    'patterns' : ['*.dbf']}
         
         
     def _isnew(self, filename):
@@ -36,8 +38,7 @@ class FileManager(object):
     def addfile(self, filename):
         """Open a new file. If the file is already open, add an alias for it"""
         # save the directory so that it defaults there next time a file dialog is opened
-        pathsplit = re.findall('[a-zA-Z0-9\.]+',filename)
-        self.askopenfiletype['initialdir'] = filename[:-len(pathsplit[-1])]
+        # pathsplit = re.findall('[a-zA-Z0-9\.]+',filename)
         
         # check if file is already opened
         if filename in self.filesbyfilename:

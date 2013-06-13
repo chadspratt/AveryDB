@@ -20,7 +20,10 @@ class DBFFile(genericfile.GenericFile):
         fieldlist = []
         for f in self.fh.fieldDefs:
             # use a simpler field object for storing the relevant attributes
-            newField = field.Field(f.name, f.typeCode, f.length, f.decimalCount)
+            newField = {'name' : f.name,
+                                'type' : f.typeCode,
+                                'length' : f.length,
+                                'dec' : f.decimalCount}
             fieldlist.append(newField)
         return fieldlist
          

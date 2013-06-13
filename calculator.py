@@ -5,3 +5,6 @@ class Calculator(object):
         # filealiases[alias] = 
         self.filealiases = {}
         
+    def calculate(self, inputrecords, outputvalue, outputcode=''):
+        return 'not implemented yet'
+        

@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # methods that respond to and update the GUI and pass the rest off as much as possible
-
-#import Tkinter #imported via gui via filemanager
-#import re #imported via gui via filemanager
-import Tkinter
 import re
+import gtk
 
 import gui
 import filemanager
 import joinmanager
 import outputmanager
+import calculator
 #import joinfile #imported via gui via filemanager
 
 class DBFUtil(object):
@@ -18,40 +16,56 @@ class DBFUtil(object):
         self.files = filemanager.FileManager()
         self.joins = joinmanager.JoinManager()
         self.outputs = outputmanager.OutputManager()
+        self.calc = calculator.Calculator()
+            
         # needs to be last because control goes to the gui once it's called
         gui.startgui(self.gui)
 
     # 'add dbf' button
     def addfile(self, widget, data=None):
         """Open a new file for joining to the target."""
-        newfilealias = self.files.addfile()
-        # checks that a file was selected
-        if newfilealias:
+        addfiledialog = self.gui.filedialog(self.files.filetypes)
+        response = addfiledialog.run()
+        # check that a file was selected
+        if response == gtk.RESPONSE_OK:
+            newfilename = addfiledialog.get_filename()
+            newfilealias = self.files.addfile(newfilename)
             # add to the file list
             filelist = self.gui['filelist']
             newrow = filelist.append()
             filelist.set_value(newrow, column=0, value=newfilealias)
             
-            # set as target if it's the first file opened
+            # set as target if no target is set
             if self.joins.gettarget() == '':
                 self.joins.settarget(newfilealias)
+                self.gui['targetcombo'].set_active_iter(newrow)
+        
+        addfiledialog.destroy()
     
     # 'remove dbf' button
     def removefile(self, widget, data=None):
         """Close a file and remove all joins that depend on it."""
-        # get filename of file selected to be removed
-        selected = self.gui.dbftargetlist.curselection()
+        # get the selection from the list of files
+        fileview = self.gui['fileview']
+        fileselection = fileview.get_selection()
+        (filelist, selected) = fileselection.get_selected()
         if selected:
-            filename =self. gui.dbftargetlist.get(selected[0])
+            filealias = filelist.get_value(selected, 0)
             
-            # remove file
-            self.files.removefile(filename)
             # remove joins that depend on the file
-            self.joins.removefile(self.files[filename].alias)
+            self.joins.removefile(filealias)
+            # remove the file
+            self.files.removefile(filealias)
             
             # remove from gui list and from the fields dictionary
-            self.gui.dbftargetlist.delete(selected[0])
-            self.gui.dbfjoinlist.delete(selected[0])
+            filelist.remove(selected)
+            fileselection.unselect_all()
+                        
+            # check if target was cleared and default it to the first file remaining in the list, if any
+            if self.joins.gettarget() == '':
+                if len(filelist) > 0:
+                    newtargetiter = filelist.get_iter(0)
+                    self.gui['targetcombo'].set_active_iter(newtargetiter)
             
     # 'select target dbf' button. remove opening a new file and instead just set it to an already open file?
     def changetarget(self, widget, data=None):
@@ -65,62 +79,64 @@ class DBFUtil(object):
     # 'config selected' button
     def joinaliaschanged(self, widget, data=None):
         """Populate the second set of listboxes with the fields from the selected files."""
-        target = self.joins.gettarget()
-    #   clear the lists before adding fields of selected table and join table
-        self.gui.target_list.delete(0,Tkinter.END)
-        self.gui.join_list.delete(0,Tkinter.END)
-    
-        targetindex = self.gui.dbftargetlist.curselection()
-        joinindex = self.gui.dbfjoinlist.curselection()
-        if targetindex and joinindex:
-            targetalias = self.gui.dbftargetlist.get(targetindex)
-            joinalias = self.gui.dbfjoinlist.get(joinindex)
+        # clear the liststore and add the new items
+        joinfieldlist = self.gui['joinfieldlist']
+        joinfieldlist.clear()
         
-            # verify that the selectedtarget is joined to the overall target
-            if self.joins.checkjoin(target, targetalias) == False:
-                print 'Join to the global target first.'
-            # Check that selected target  ISN'T joined to selected join
-            # this would create a problematic circular join. 
-            # If it needs to be done, open the file again to get another alias and use that
-            elif self.joins.checkjoin(joinalias, targetalias):
-                print 'Cannot create circular join. Reopen the file to use a different alias.'
-            else:
-                self.joins.curtarget = targetalias
-                self.joins.curjoin = joinalias
-                for field in self.files[targetalias].getfields():
-                    self.gui.target_list.insert(Tkinter.END, field.name)
-                for field in self.files[joinalias].getfields():
-                    self.gui.join_list.insert(Tkinter.END, field.name)
-                    # 'config selected' button
+        # get the selected file alias
+        joiniter = self.gui['joinaliascombo'].get_active_iter()
+        if joiniter:
+            joinalias = self.gui['filelist'].get_value(joiniter, 0)
+            
+            # Add the fields from the file to the joinfieldcombo's model (joinfieldlist).
+            joinfields = self.files[joinalias].getfields()
+            for joinfield in joinfields:
+                newrow = joinfieldlist.append()
+                joinfieldlist.set_value(newrow, column=0, value=joinfield['name'])
                     
     def targetaliaschanged(self, widget, data=None):
         """Populate the second set of listboxes with the fields from the selected files."""
-        target = self.joins.gettarget()
-    #   clear the lists before adding fields of selected table and join table
-        self.gui.target_list.delete(0,Tkinter.END)
-        self.gui.join_list.delete(0,Tkinter.END)
-    
-        targetindex = self.gui.dbftargetlist.curselection()
-        joinindex = self.gui.dbfjoinlist.curselection()
-        if targetindex and joinindex:
-            targetalias = self.gui.dbftargetlist.get(targetindex)
-            joinalias = self.gui.dbfjoinlist.get(joinindex)
+        # clear the liststore and add the new items
+        targetfieldlist = self.gui['targetfieldlist']
+        targetfieldlist.clear()
         
-            # verify that the selectedtarget is joined to the overall target
-            if self.joins.checkjoin(target, targetalias) == False:
-                print 'Join to the global target first.'
-            # Check that selected target  ISN'T joined to selected join
-            # this would create a problematic circular join. 
-            # If it needs to be done, open the file again to get another alias and use that
-            elif self.joins.checkjoin(joinalias, targetalias):
-                print 'Cannot create circular join. Reopen the file to use a different alias.'
-            else:
-                self.joins.curtarget = targetalias
-                self.joins.curjoin = joinalias
-                for field in self.files[targetalias].getfields():
-                    self.gui.target_list.insert(Tkinter.END, field.name)
-                for field in self.files[joinalias].getfields():
-                    self.gui.join_list.insert(Tkinter.END, field.name)
+        # get the selected file alias
+        targetiter = self.gui['targetaliascombo'].get_active_iter()
+        if targetiter:
+            targetalias = self.gui['filelist'].get_value(targetiter, 0)
+            
+            # Add the fields from the file to the joinfieldcombo's model (joinfieldlist).
+            targetfields = self.files[targetalias].getfields()
+            for targetfield in targetfields:
+                newrow = targetfieldlist.append()
+                targetfieldlist.set_value(newrow, column=0, value=targetfield['name'])
+                
+#        target = self.joins.gettarget()
+#    #   clear the lists before adding fields of selected table and join table
+#        self.gui.target_list.delete(0,Tkinter.END)
+#        self.gui.join_list.delete(0,Tkinter.END)
+#    
+#        targetindex = self.gui.dbftargetlist.curselection()
+#        joinindex = self.gui.dbfjoinlist.curselection()
+#        if targetindex and joinindex:
+#            targetalias = self.gui.dbftargetlist.get(targetindex)
+#            joinalias = self.gui.dbfjoinlist.get(joinindex)
+#        
+#            # verify that the selectedtarget is joined to the overall target
+#            if self.joins.checkjoin(target, targetalias) == False:
+#                print 'Join to the global target first.'
+#            # Check that selected target  ISN'T joined to selected join
+#            # this would create a problematic circular join. 
+#            # If it needs to be done, open the file again to get another alias and use that
+#            elif self.joins.checkjoin(joinalias, targetalias):
+#                print 'Cannot create circular join. Reopen the file to use a different alias.'
+#            else:
+#                self.joins.curtarget = targetalias
+#                self.joins.curjoin = joinalias
+#                for field in self.files[targetalias].getfields():
+#                    self.gui.target_list.insert(Tkinter.END, field.name)
+#                for field in self.files[joinalias].getfields():
+#                    self.gui.join_list.insert(Tkinter.END, field.name)
                     
     # 'apply' join choice button
     def addjoin(self, widget, data=None):
