@@ -2,7 +2,6 @@
 # handles all adding, removing, and delivery of files
 # it doesn't work with the files beyond that
 import re
-import tkFileDialog
 
 import joinfile
 
