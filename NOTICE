@@ -1,0 +1,17 @@
+DBF Utility
+Copyright 2013 Chad Spratt
+
+Library: dbfpy
+License: public domain
+Use: Providing support for reading and writing to .dbf files
+URL: http://dbfpy.sourceforge.net/
+
+Library: PyGTK
+License: GNU LGPL
+Use: Python interface to GTK+
+URL: http://www.pygtk.org
+
+Library: GTK+
+License: GNU LGPL
+Use: Providing the GUI
+URL: http://www.gtk.org
