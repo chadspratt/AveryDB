@@ -2,9 +2,9 @@
 #  just a struct
 
 class Join(object):
-    def __init__(self, targetalias='', targetfield='', joinalias='', joinfield=''):
-        self.targetalias = targetalias #probably not necessary
-        self.targetfield = targetfield
+    def __init__(self, joinalias='', joinfield='', targetalias='', targetfield=''):
         self.joinalias = joinalias
         self.joinfield = joinfield
+        self.targetalias = targetalias #probably not needed
+        self.targetfield = targetfield
         

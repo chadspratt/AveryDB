@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 # GUI window config
 import sys
-try:
-    import pygtk
-    pygtk.require20()
-except:
-    pass
-try:
-    import gtk
-    import gtk.glade
-except:
-    sys.exit(1)
+import gtk
+#try:
+#    import gtk
+#except:
+#    sys.exit(1)
 
 class GUI(object):
     def main(self):
@@ -23,8 +18,8 @@ class GUI(object):
             
         handlers = {}
         handlers['mainwindow_destroy_cb'] = gtk.main_quit
-        handlers['addfilebutton_clicked_cb'] = main.addfile #openjoin
-        handlers['removefilebutton_clicked_cb'] = main.removefile # removejoin
+        handlers['addfilebutton_clicked_cb'] = main.addfile
+        handlers['removefilebutton_clicked_cb'] = main.removefile
         handlers['targetcombo_changed_cb'] = main.changetarget
         handlers['joinaliascombo_changed_cb'] = main.joinaliaschanged
         handlers['targetaliascombo_changed_cb'] = main.targetaliaschanged
@@ -38,7 +33,7 @@ class GUI(object):
         handlers['addoutputbutton_clicked_cb'] = main.addoutput
         handlers['copyoutputbutton_clicked_cb'] = main.copyoutput
         handlers['removeoutputbutton_clicked_cb'] = main.removeoutput
-        handlers['executejoinbutton_clicked_cb'] = main.executejoin # dojoin
+        handlers['executejoinbutton_clicked_cb'] = main.executejoin
         handlers['removejoinbutton_clicked_cb'] = main.removejoin
 
         self.builder.connect_signals(handlers)
@@ -63,6 +58,14 @@ class GUI(object):
             dialog.add_filter(filefilter)
             
         return dialog
+        
+    def messagedialog(self, message):
+        dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_OK,)
+        dialog.set_markup(message)
+        dialog.set_default_response(gtk.RESPONSE_OK)
+        dialog.run()
+        dialog.destroy()
+        
         
     def __getitem__(self, value):
         return self.builder.get_object(value)

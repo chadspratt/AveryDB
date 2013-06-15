@@ -21,7 +21,6 @@ class DBFUtil(object):
         # needs to be last because control goes to the gui once it's called
         gui.startgui(self.gui)
 
-    # 'add dbf' button
     def addfile(self, widget, data=None):
         """Open a new file for joining to the target."""
         addfiledialog = self.gui.filedialog(self.files.filetypes)
@@ -32,22 +31,19 @@ class DBFUtil(object):
             newfilealias = self.files.addfile(newfilename)
             # add to the file list
             filelist = self.gui['filelist']
-            newrow = filelist.append()
-            filelist.set_value(newrow, column=0, value=newfilealias)
+            newrow = filelist.append([newfilealias])
             
             # set as target if no target is set
             if self.joins.gettarget() == '':
                 self.joins.settarget(newfilealias)
                 self.gui['targetcombo'].set_active_iter(newrow)
-        
+#                self.refreshjoinlists() # setting the combobox active item will cause this to get called
         addfiledialog.destroy()
     
-    # 'remove dbf' button
     def removefile(self, widget, data=None):
         """Close a file and remove all joins that depend on it."""
         # get the selection from the list of files
-        fileview = self.gui['fileview']
-        fileselection = fileview.get_selection()
+        fileselection = self.gui['fileview'].get_selection()
         (filelist, selected) = fileselection.get_selected()
         if selected:
             filealias = filelist.get_value(selected, 0)
@@ -66,17 +62,34 @@ class DBFUtil(object):
                 if len(filelist) > 0:
                     newtargetiter = filelist.get_iter(0)
                     self.gui['targetcombo'].set_active_iter(newtargetiter)
+                    
+            # refresh join lists in case the removed file was in one of them
+            self.refreshjoinlists()
             
-    # 'select target dbf' button. remove opening a new file and instead just set it to an already open file?
     def changetarget(self, widget, data=None):
         """Open a new file or set an already open file as the target for joining."""
-        targetcombo = self.gui['targetcombo']
-        filelist = self.gui['filelist']
-        selectedrow = targetcombo.get_active_iter()
-        newtarget = filelist.get_value(selectedrow, 0)
+        newtarget = self.gui['targetcombo'].get_active_text()
         self.joins.settarget(newtarget)
+        self.refreshjoinlists()
+        
+    def refreshjoinlists(self):
+        # refresh the target alias combobox list
+        targetfilelist = self.gui['targetfilelist']
+        targetfilelist.clear()
+        
+        for alias in self.joins.getjoinedaliases():
+            targetfilelist.append([alias])
+                    
+        # refresh the list of joins
+        self.gui['jointree'].clear()
+        self.rebuildjointree(None, self.joins.gettarget())
+        
+    # recursive function to fill jointree from
+    def rebuildjointree(self, parentiter, alias):
+        newparent = self.gui['jointree'].append(parentiter, [alias])
+        for childjoin in self.joins[alias]:
+            self.rebuildjointree(newparent, childjoin.joinalias)
             
-    # 'config selected' button
     def joinaliaschanged(self, widget, data=None):
         """Populate the second set of listboxes with the fields from the selected files."""
         # clear the liststore and add the new items
@@ -84,15 +97,12 @@ class DBFUtil(object):
         joinfieldlist.clear()
         
         # get the selected file alias
-        joiniter = self.gui['joinaliascombo'].get_active_iter()
-        if joiniter:
-            joinalias = self.gui['filelist'].get_value(joiniter, 0)
-            
+        joinalias = self.gui['joinaliascombo'].get_active_text()
+        if joinalias != None:            
             # Add the fields from the file to the joinfieldcombo's model (joinfieldlist).
             joinfields = self.files[joinalias].getfields()
             for joinfield in joinfields:
-                newrow = joinfieldlist.append()
-                joinfieldlist.set_value(newrow, column=0, value=joinfield['name'])
+                joinfieldlist.append([joinfield['name']])
                     
     def targetaliaschanged(self, widget, data=None):
         """Populate the second set of listboxes with the fields from the selected files."""
@@ -101,59 +111,30 @@ class DBFUtil(object):
         targetfieldlist.clear()
         
         # get the selected file alias
-        targetiter = self.gui['targetaliascombo'].get_active_iter()
-        if targetiter:
-            targetalias = self.gui['filelist'].get_value(targetiter, 0)
-            
+        targetalias = self.gui['targetaliascombo'].get_active_text()
+        if targetalias != None:
             # Add the fields from the file to the joinfieldcombo's model (joinfieldlist).
             targetfields = self.files[targetalias].getfields()
             for targetfield in targetfields:
-                newrow = targetfieldlist.append()
-                targetfieldlist.set_value(newrow, column=0, value=targetfield['name'])
-                
-#        target = self.joins.gettarget()
-#    #   clear the lists before adding fields of selected table and join table
-#        self.gui.target_list.delete(0,Tkinter.END)
-#        self.gui.join_list.delete(0,Tkinter.END)
-#    
-#        targetindex = self.gui.dbftargetlist.curselection()
-#        joinindex = self.gui.dbfjoinlist.curselection()
-#        if targetindex and joinindex:
-#            targetalias = self.gui.dbftargetlist.get(targetindex)
-#            joinalias = self.gui.dbfjoinlist.get(joinindex)
-#        
-#            # verify that the selectedtarget is joined to the overall target
-#            if self.joins.checkjoin(target, targetalias) == False:
-#                print 'Join to the global target first.'
-#            # Check that selected target  ISN'T joined to selected join
-#            # this would create a problematic circular join. 
-#            # If it needs to be done, open the file again to get another alias and use that
-#            elif self.joins.checkjoin(joinalias, targetalias):
-#                print 'Cannot create circular join. Reopen the file to use a different alias.'
-#            else:
-#                self.joins.curtarget = targetalias
-#                self.joins.curjoin = joinalias
-#                for field in self.files[targetalias].getfields():
-#                    self.gui.target_list.insert(Tkinter.END, field.name)
-#                for field in self.files[joinalias].getfields():
-#                    self.gui.join_list.insert(Tkinter.END, field.name)
+                targetfieldlist.append([targetfield['name']])
+
                     
     # 'apply' join choice button
     def addjoin(self, widget, data=None):
         """Save join using the selected fields in the gui."""
-        # get join field names
-        targetindex = self.gui.target_list.curselection()
-        joinindex = self.gui.join_list.curselection()
-        if targetindex and joinindex:
-            targetfield = self.gui.target_list.get(targetindex[0])
-            joinfield = self.gui.join_list.get(joinindex[0])
+        # get combobox selections
+        joinalias = self.gui['joinaliascombo'].get_active_text()
+        joinfield = self.gui['joinfieldcombo'].get_active_text()
+        targetalias = self.gui['targetaliascombo'].get_active_text()
+        targetfield = self.gui['targetfieldcombo'].get_active_text()
         
+        if joinfield != None and targetfield != None:
             # save to joins
-            self.joins.addjoin(targetfield, joinfield)
-        
-            # clear boxes to show that the join is applied
-            self.gui.target_list.delete(0,Tkinter.END)
-            self.gui.join_list.delete(0,Tkinter.END)
+            result = self.joins.addjoin(joinalias, joinfield, targetalias, targetfield)
+            if result:
+                self.gui.messagedialog(result)
+            else:
+                self.refreshjoinlists()
             
     def removejoin(self, widget, data=None):
         pass

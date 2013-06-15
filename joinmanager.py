@@ -14,7 +14,9 @@ class JoinManager(object):
         self.curjoin = ''
         
     def settarget(self, targetalias):
-        self.targetalias = targetalias
+        if targetalias != self.targetalias:
+            self.targetalias = targetalias
+            self.joins = {}
     
     def gettarget(self):
         return self.targetalias        
@@ -38,7 +40,7 @@ class JoinManager(object):
         del self.joins[alias]
         
     # Check that joinalias is joined to targetalias, either directly or through intermediate files
-    def checkjoin(self, targetalias, joinalias):
+    def checkjoin(self, joinalias, targetalias):
         """Check that a file is joined to the primary target and can therefore be used as a target."""
         if targetalias == joinalias:
             return True
@@ -52,13 +54,17 @@ class JoinManager(object):
                 return True
         return False
     
-    def addjoin(self, targetfield, joinfield):
+    def addjoin(self, joinalias, joinfield, targetalias, targetfield):
         """Create a Join and add it to the dictionary of all Joins."""
-        newJoin = join.Join(self.curtarget, targetfield, self.curjoin, joinfield)
-        if self.curtarget in self.joins:
-            self.joins[self.curtarget].append(newJoin)
+        # check that the target isn't a child of the file being joined
+        if self.checkjoin(targetalias, joinalias):
+            return 'Cannot create circular join. Reopen the file to use a different alias.'
+        newJoin = join.Join(joinalias, joinfield, targetalias, targetfield)
+        if targetalias in self.joins:
+            self.joins[targetalias].append(newJoin)
         else:
-            self.joins[self.curtarget] = [newJoin]
+            self.joins[targetalias] = [newJoin]
+        return ''
             
     # If I have __iter__ do I need this?
     # used in initoutput() and dojoin()
@@ -67,6 +73,16 @@ class JoinManager(object):
         if start == 'target':
             start = self.targetalias
         return self.joinsdfs(start)
+    
+#    def getjoindepth(self, start='target', depth=0):
+#        if start == 'target':
+#            start = self.targetalias
+#        fulldepth = depth
+#        if start in self.joins:
+#            for entry in self.joins[start]:
+#                fulldepth = max(fulldepth, self.getjoindepth(entry.joinalias, depth+1))
+#        return fulldepth
+        
                 
     def joinsdfs(self, start):
         joinlist = [start]
@@ -75,9 +91,10 @@ class JoinManager(object):
                 joinlist.extend(self.joinsdfs(entry.joinalias))
         return joinlist
                  
-    def __getitem__(self, key):
-        if key in self.joins:
-            return self.joins[key]
+    def __getitem__(self, target):
+        if target in self.joins:
+            return self.joins[target]
+        return []
         
     # not used
     def __contains__(self, value):
