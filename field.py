@@ -16,42 +16,77 @@
 
 class Field(object):
     # there's something off about using the same fields for input and output
-    def __init__(self, fieldname, fieldtype, fieldlen, fielddec):
-        # permanent references to the field source
+    def __init__(self, fieldname, fieldattributes={}, fieldvalue=''):
+        # used this for resetting a field
+        self.originalname = fieldname
+        self.originalvalue = fieldvalue
+        # name and value that will be used in the output
         self.name = fieldname
-        self.outputname = fieldname
-        # for input fields, this will be "!filealias.fieldname!"
-        self.value = fieldname
-        self.type = fieldtype
-        self.len = fieldlen
-        self.dec = fielddec
+        self.value = fieldvalue
+        # dictionary of attribute names and values
+        self.attributes = fieldattributes
         self.namegen = self.namegenerator()
         
     # it yields the new name, but I'm not using that and just checking the variable directly
     def namegenerator(self, lenlimit=10):
         """Generate an alternate filename to deal with duplicates when initiating the output."""
-        namelen = len(self.name) #store original length
+        namelen = len(self.originalname) #store original length
         # append a number to create a different name
         dupecount = 1
         countlen = 1
         namelen = lenlimit - countlen
         while True:
             # append next number to original alias
-            self.outputname = self.name[:namelen] + str(dupecount)
-            yield self.outputname
+            self.name = self.originalname[:namelen] + str(dupecount)
+            yield self.name
             dupecount += 1
             countlen = len(str(dupecount))
             namelen = lenlimit - countlen
             
-    def createnewoutputname(self):
+    def createnewname(self):
         self.namegen.next()
             
     def resetname(self):
+        self.name = self.originalname
         self.namegen = self.namegenerator()
+        
+    def resetvalue(self):
+        self.value = self.originalvalue
             
     def copy(self):
-        fieldCopy = Field(self.name, self.type, self.len, self.dec)
-        fieldCopy.outputname = self.outputname
-        fieldCopy.value = self.value
+        fieldCopy = Field(self.name, self.attributes, self.value)
+        
+        fieldCopy.originalvalue = self.originalvalue
         return fieldCopy
+        
+    def getattributelist(self, order=None):
+        attrlist = [self.name]
+        if order:
+            attrlist.extend([self.attributes[attr] for attr in order])
+        else:
+            attrlist.extend(self.attributes.values())
+        attrlist.append(self.value)
+        return attrlist
+        
+    def __getitem__(self, key):
+        if key == 'name' or key == 0:
+            return self.name
+        elif key == 'value' or key == len(self.attributes) + 1:
+            return self.value
+        elif key in self.attributes:
+            return self.attributes[key]
+        return self.attributes.values()[key]
+        
+    def __setitem__(self, key, value):
+        if key == 'name' or key == 0:
+            self.name = value
+            print value, value
+        elif key == 'value' or key == len(self.attributes) + 1:
+            self.value = value
+            print value
+        elif key in self.attributes:
+            self.attributes[key] = value
+        else:
+            attrname = self.attributes.keys()[key]
+            self.attributes[attrname] = value
         

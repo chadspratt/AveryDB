@@ -17,16 +17,19 @@
 # this just leaves dojoin(), the actual execution, needing a home
 
 import field
+from filetypes import dbffile
 
 class OutputManager(object):
     def __init__(self):
-        #place holder
+        # hard-coded for dbf for now
         self.outputfilename = ''
         self.outputtype = 'dbf'
         self.fieldtypes = ['C','N','F','I','Y','L','M','D','T']
         self.outputfields = {}      # stores Field objects by their uppercase output name
         self.outputorder = []       # output names, stores order of the fields
         self.editField = ''
+        self.fieldattr = ['Name', 'Type', 'Length', 'Decimals', 'Value']
+        self.fieldattrorder = ['type', 'length', 'decimals']
         
     def clear(self):
         self.outputfields = {}
@@ -35,6 +38,9 @@ class OutputManager(object):
     def setoutputtype(self, outputtype):
         """Sets the format of the output. Only dbf is supported right now."""
         self.outputtype = outputtype
+        
+    def setoutputfile(self, outputfile):
+        self.outputfile = outputfile
         
     # existing fields will come with a filealias. new fields may come with an index
     def addfield(self, field, filealias = None, index = 'end'):
@@ -49,29 +55,29 @@ class OutputManager(object):
             
         # dbf is not case sensitive (won't allow 'objectID' and 'objectid')
         # outputfields uses uppercase names to facilitate checking for duplicates
-        while newField.outputname.upper() in self.outputfields:
-            newField.createnewoutputname()
+        while newField.name.upper() in self.outputfields:
+            newField.createnewname()
 
-        self.outputfields[newField.outputname.upper()] = newField
+        self.outputfields[newField.name.upper()] = newField
         # inserts after the first selected item in the gui list. if nothing is selected, it goes to the end
         if index == 'end':
-            self.outputorder.append(newField.outputname)
+            self.outputorder.append(newField.name)
         else:
-            self.outputorder.insert(index, newField.outputname)
+            self.outputorder.insert(index, newField.name)
             
         return newField
             
-    def addnewfield(self, fieldname, fieldvalue, fieldtype, fieldlen, fielddec, fieldindex):
+    def addnewfield(self, fieldname, fieldattributes, fieldvalue, fieldindex):
         """Takes field attributes and adds a field to the output."""
-        newField = field.Field(fieldname, fieldtype, fieldlen, fielddec)
-        newField.value = fieldvalue
+        newField = field.Field(fieldname, fieldattributes, fieldvalue)
         self.addfield(newField, index=fieldindex)
-        return newField.outputname
+        # inconsistent, should return newField instead
+        return newField.name
     
     def removefields(self, fieldnames):
         """Takes a list of field names and removes them from the output."""
         if self.editField:
-            editname = self.editField.outputname
+            editname = self.editField.name
         for fn in fieldnames:
             del self.outputfields[fn.upper()]
             self.outputorder.remove(fn)
@@ -116,14 +122,14 @@ class OutputManager(object):
         """Takes field attributes and overwrites the attributes of the field being edited"""
         returnval = 'ok'
         if self.editField:
-            if fieldname != self.editField.outputname:
+            if fieldname != self.editField.name:
                 if fieldname.upper() in self.outputfields:
                     return 'duplicate name'
                 editindex = self.getindex(self.editField)
                 self.outputorder[editindex] = fieldname
-                del self.outputfields[self.editField.outputname.upper()]
+                del self.outputfields[self.editField.name.upper()]
                 self.outputfields[fieldname.upper()] = self.editField
-            self.editField.outputname = fieldname
+            self.editField.name = fieldname
             self.editField.value = fieldvalue
             self.editField.type = fieldtype
             self.editField.len = fieldlen
@@ -134,7 +140,7 @@ class OutputManager(object):
         return returnval
             
     def getindex(self, field):
-        return self.outputorder.index(field.outputname)
+        return self.outputorder.index(field.name)
     
     def __getitem__(self, key):
         """Retrieve a Field object by index or by output name"""

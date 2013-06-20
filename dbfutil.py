@@ -97,6 +97,7 @@ class DBFUtil(object):
         # refresh the list of joins
         self.gui['jointree'].clear()
         self.rebuildjointree(None, self.joins.gettarget())
+        self.gui['joinview'].expand_all()
         
     # recursive function to fill jointree from
     def rebuildjointree(self, parentiter, alias):
@@ -116,7 +117,7 @@ class DBFUtil(object):
             # Add the fields from the file to the joinfieldcombo's model (joinfieldlist).
             joinfields = self.files[joinalias].getfields()
             for joinfield in joinfields:
-                joinfieldlist.append([joinfield['name']])
+                joinfieldlist.append([joinfield.name])
                     
     def targetaliaschanged(self, widget, data=None):
         """Populate the second set of listboxes with the fields from the selected files."""
@@ -130,7 +131,7 @@ class DBFUtil(object):
             # Add the fields from the file to the joinfieldcombo's model (joinfieldlist).
             targetfields = self.files[targetalias].getfields()
             for targetfield in targetfields:
-                targetfieldlist.append([targetfield['name']])
+                targetfieldlist.append([targetfield.name])
 
                     
     # 'apply' join choice button
@@ -150,27 +151,38 @@ class DBFUtil(object):
             else:
                 self.refreshjoinlists()
             
+    # non-critical, write later
     def removejoin(self, widget, data=None):
-        pass
+        self.gui.messagedialog('removing a join not implemented yet, low priority')
             
     def changeoutputformat(self, widget, data=None):
-        pass
+        self.gui.messagedialog('changing output format not implemented yet, low priority')
 
-    # 'init output' button
+##                                                ##
+# Everything above here is "done" #
+##                                                ##
+
     # populate the list of output fields with all the input fields
     def initoutput(self, widget, data=None):
         """Initialize the list of output fields and add all fields to the OutputManager."""
-        # delete any fields already entered
-        self.outputs.clear()
-        self.gui.output_list.delete(0,Tkinter.END)
+        self.outputs.setoutputfile(self.files.openoutputfile)
+        outputfieldattributes = self.outputs.fieldattr
+        self.gui.replacecolumns('outputlist', 'outputview', outputfieldattributes)
+        outputlist = self.gui['outputlist']
         
+        self.outputs.clear()
         # check that a target file has been opened
         if self.joins.targetalias:
             # add all the fields from the target and everything joined to it
             for filealias in self.joins.getjoinedaliases():
                 for field in self.files[filealias].getfields():
                     newField = self.outputs.addfield(field, filealias)
-                    self.gui.output_list.insert(Tkinter.END, newField.outputname)
+                    outputlist.append(newField.getattributelist(self.outputs.fieldattrorder))
+                    
+    def updatefieldattribute(self, cell, row, new_value, outputlist, column):
+        outputlist[row][column] = new_value
+        # magic happens
+        self.outputs[row][column] = new_value
         
     # 'add field' button
     def addoutput(self, widget, data=None):

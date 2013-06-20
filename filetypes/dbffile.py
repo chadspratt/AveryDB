@@ -14,11 +14,15 @@
 #   limitations under the License.
 ##
 # wrapper for dbfpy utility
+from collections import OrderedDict
 
-from dbfpy import dbf
+from libraries.dbfpy import dbf
 
 import genericfile
 import field
+
+FILETYPEEXT = '.dbf'
+FILETYPEDESCRIP = 'dbase file'
 
 class DBFFile(genericfile.GenericFile):
     def __init__(self, filename, mode='r'):
@@ -29,15 +33,17 @@ class DBFFile(genericfile.GenericFile):
             self.fh = dbf.Dbf(filename, new=True)
         # not used from here, but I'd like for it to be
         self.fieldtypes = ['C','N','F','I','Y','L','M','D','T']
+        self.fieldattrorder = ['type', 'length', 'decimals']
         
     def getfields(self):
+        """Returns the fields of the file as a list of Field objects"""
         fieldlist = []
         for f in self.fh.fieldDefs:
-            # use a simpler field object for storing the relevant attributes
-            newField = {'name' : f.name,
-                                'type' : f.typeCode,
+            # use ordereddict to enable accessing attributes by index
+            fieldattrs = OrderedDict({'type' : f.typeCode,
                                 'length' : f.length,
-                                'dec' : f.decimalCount}
+                                'decimals' : f.decimalCount})
+            newField = field.Field(f.name, fieldattributes=fieldattrs)
             fieldlist.append(newField)
         return fieldlist
          
@@ -47,7 +53,7 @@ class DBFFile(genericfile.GenericFile):
             yield record
             
     def addfield(self, field):
-        self.fh.addField((field.outputname, field.type, field.len, field.dec))
+        self.fh.addField((field.name, field['type'], field['length'], field['decimals']))
         
     def getrecordcount(self):
         return self.fh.recordCount

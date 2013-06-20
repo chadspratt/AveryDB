@@ -17,7 +17,7 @@
 import re
 # import all filetypes even if unreadable (arcpy)?
 # test for ability to read/write gis databases with arcpy
-import dbffile
+from filetypes import dbffile
 
 class JoinFile(object):
     def __init__(self, filename='', mode='r'):

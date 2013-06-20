@@ -16,6 +16,7 @@
 # GUI window config
 import sys
 import gtk
+import gobject
 #try:
 #    import gtk
 #except:
@@ -29,6 +30,8 @@ class GUI(object):
         self.gladefile = 'dbfutil.glade'
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.gladefile)
+        self.newobjects = {}
+        self.hfuncs = main
             
         handlers = {}
         handlers['mainwindow_destroy_cb'] = gtk.main_quit
@@ -80,9 +83,34 @@ class GUI(object):
         dialog.run()
         dialog.destroy()
         
+    def replacecolumns(self, storename, viewname, newcolnames):
+        # make a new liststore to use
+        typelist = []
+        for i in range(len(newcolnames)):
+            typelist.append(gobject.TYPE_STRING)
+        # __getitem__ checks newobjects, so this will seamlessly shift access to the new store
+        self.newobjects[storename] = gtk.ListStore(*typelist)
         
-    def __getitem__(self, value):
-        return self.builder.get_object(value)
+        # update the listview
+        view = self[viewname]
+        view.set_model(self[storename])
+        # remove the old columns
+        for col in view.get_columns():
+            view.remove_column(col)
+        # add the new columns
+        for i in range(len(newcolnames)):
+            newcell = gtk.CellRendererText()
+            newcell.set_property('editable', True)
+            newcell.connect('edited', self.hfuncs.updatefieldattribute, self[storename], i)
+            newcolumn = gtk.TreeViewColumn(newcolnames[i], newcell, text=i)
+            view.append_column(newcolumn)
+            
+        # need to hook up handlers for the new liststore
+        
+    def __getitem__(self, objname):
+        if objname in self.newobjects:
+            return self.newobjects[objname]
+        return self.builder.get_object(objname)
 #class GUI(object):
 #    def delete_event(widget, event, data=None):
 #        return False
