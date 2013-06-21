@@ -43,7 +43,8 @@ class OutputManager(object):
         self.outputfile = outputfile
         
     # existing fields will come with a filealias. new fields may come with an index
-    def addfield(self, field, filealias = None, index = 'end'):
+    # could use better design
+    def addfield(self, field, filealias = None, fieldindex = 'end'):
         """Takes a field object and adds it to the output."""
         # if field is being created from an input field, make a copy to use for the output field
         if filealias:            
@@ -60,30 +61,28 @@ class OutputManager(object):
 
         self.outputfields[newField.name.upper()] = newField
         # inserts after the first selected item in the gui list. if nothing is selected, it goes to the end
-        if index == 'end':
+        if fieldindex == 'end':
             self.outputorder.append(newField.name)
         else:
-            self.outputorder.insert(index, newField.name)
+            self.outputorder.insert(fieldindex, newField.name)
             
         return newField
             
-    def addnewfield(self, fieldname, fieldattributes, fieldvalue, fieldindex):
+    def addnewfield(self, fieldname = 'newfield',
+                                 fieldattributes = {'type' : 'C', 'length' : 254, 'decimals' : 0},
+                                 fieldvalue = '', fieldindex = 'end'):
         """Takes field attributes and adds a field to the output."""
         newField = field.Field(fieldname, fieldattributes, fieldvalue)
-        self.addfield(newField, index=fieldindex)
+        self.addfield(newField, fieldindex=fieldindex)
         # inconsistent, should return newField instead
-        return newField.name
+        return newField
     
-    def removefields(self, fieldnames):
-        """Takes a list of field names and removes them from the output."""
-        if self.editField:
-            editname = self.editField.name
-        for fn in fieldnames:
-            del self.outputfields[fn.upper()]
-            self.outputorder.remove(fn)
-            if fn == editname:
-                self.editField = ''
-            
+    def removefield(self, fieldindex):
+        """Takes a field index and removes the field in that postion from the output."""
+        fieldname = self.outputorder[fieldindex]
+        del self.outputfields[fieldname.upper()]
+        self.outputorder.remove(fieldname)
+        
     def movefieldsup(self, fieldindices):
         """Takes a list of sorted field indices and moves each of the fields up one spot in the order."""
         newindices = []
@@ -114,30 +113,6 @@ class OutputManager(object):
                 bottom = fi - 1
                 newindices.append(fi)
         return newindices
-        
-    def seteditfield(self, fieldindex):
-        self.editField = self[fieldindex]
-        
-    def saveeditfield(self, fieldname, fieldvalue, fieldtype, fieldlen, fielddec):
-        """Takes field attributes and overwrites the attributes of the field being edited"""
-        returnval = 'ok'
-        if self.editField:
-            if fieldname != self.editField.name:
-                if fieldname.upper() in self.outputfields:
-                    return 'duplicate name'
-                editindex = self.getindex(self.editField)
-                self.outputorder[editindex] = fieldname
-                del self.outputfields[self.editField.name.upper()]
-                self.outputfields[fieldname.upper()] = self.editField
-            self.editField.name = fieldname
-            self.editField.value = fieldvalue
-            self.editField.type = fieldtype
-            self.editField.len = fieldlen
-            self.editField.dec = fielddec
-            self.editField = ''
-        else:
-            return 'no field loaded'
-        return returnval
             
     def getindex(self, field):
         return self.outputorder.index(field.name)

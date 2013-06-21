@@ -79,6 +79,8 @@ class DBFUtil(object):
                     
             # refresh join lists in case the removed file was in one of them
             self.refreshjoinlists()
+            # want to check the outputs for fields that now have broken references.
+            # if not remove them, show some sort of alert
             
     def changetarget(self, widget, data=None):
         """Open a new file or set an already open file as the target for joining."""
@@ -158,10 +160,6 @@ class DBFUtil(object):
     def changeoutputformat(self, widget, data=None):
         self.gui.messagedialog('changing output format not implemented yet, low priority')
 
-##                                                ##
-# Everything above here is "done" #
-##                                                ##
-
     # populate the list of output fields with all the input fields
     def initoutput(self, widget, data=None):
         """Initialize the list of output fields and add all fields to the OutputManager."""
@@ -186,112 +184,79 @@ class DBFUtil(object):
         
     # 'add field' button
     def addoutput(self, widget, data=None):
-        # get the new values and do basic tests for validity
-        newname = self.gui.outputname.get()
-        if newname == '' or newname[0].isdigit():
-            return
-        newvalue = self.gui.outputvalue.get(1.0,Tkinter.END).strip()
-        newtype = self.gui.fieldtype.get().upper()
-        if newtype.upper() not in self.outputs.fieldtypes:
-            return
-        newlen = self.gui.fieldlen.get()
-        if newlen.isdigit():
-            newlen = int(newlen)
+        # get the selected row from the output list
+        selection = self.gui['outputview'].get_selection()
+        # (model, [(path0,), (path1,), ...])
+        (outputlist, selectedrows) = selection.get_selected_rows()
+        if selectedrows:
+            lastselectedindex = selectedrows[-1][0]
+            insertindex = lastselectedindex + 1
         else:
-            return
-        newdec = self.gui.fielddec.get()
-        if newdec.isdigit():
-            newdec = int(newdec)
-        else:
-            return
+            insertindex = len(self.gui['outputlist'])
         
-        # if a field is selected, insert the new field after it. otherwise insert it at the end
-        selected = self.gui.output_list.curselection()
-        if len(selected) > 0:
-            newindex = int(selected[0]) + 1
-        else:
-            newindex = 'end'
-        # add the field. If newfieldname is already in use, it will generate a unique name instead
-        newfieldname = self.outputs.addnewfield(newname, newvalue, newtype, newlen, newdec, newindex)
-        
-        # add the fiel
-        self.gui.output_list.insert(newindex,newfieldname)
-        self.gui.output_list.selection_clear(0,Tkinter.END)
-        self.gui.output_list.selection_set(newindex)
-        self.gui.output_list.see(newindex)
-        # not clearing will allow adding lots of similar fields more quickly
-#        gui.outputname.delete(0,END)
-#        gui.outputvalue.delete(1.0,END)
-#        gui.fieldtype.delete(0,END)
-#        gui.fieldlen.delete(0,END)
-#        gui.fielddec.delete(0,END)
+        # add an empty row after the last selected
+        newField = self.outputs.addnewfield(fieldindex=insertindex)
+        outputlist.insert(insertindex, newField.getattributelist(self.outputs.fieldattrorder))
+                                             
+        selection.unselect_all()
+        selection.select_path(insertindex)
+        self.gui['outputview'].scroll_to_cell(insertindex)
 
     # 'save field' button
     def copyoutput(self, widget, data=None):
-        """Save the modified attributes of a field."""
-        # get the new values and do basic tests for validity
-        newname = self.gui.outputname.get()
-        if newname == '' or newname[0].isdigit():
-            return
-        newvalue = self.gui.outputvalue.get(1.0,Tkinter.END).strip()
-        newtype = self.gui.fieldtype.get().upper()
-        if newtype.upper() not in self.outputs.fieldtypes:
-            return
-        newlen = self.gui.fieldlen.get()
-        if newlen.isdigit():
-            newlen = int(newlen)
-        else:
-            return
-        newdec = self.gui.fielddec.get()
-        if newdec.isdigit():
-            newdec = int(newdec)
-        else:
-            return
+        """Create a copy of the selected field[s]."""
+        selection = self.gui['outputview'].get_selection()
+        # (model, [(path0,), (path1,), ...])
+        (outputlist, selectedrows) = selection.get_selected_rows()
+        if selectedrows:
+            selection.unselect_all()
+            # reverse the list so that the indices won't get messed up as items are added
+            selectedrows.reverse()
+            for row in selectedrows:
+                insertindex = row[0] + 1
+                fieldCopy = self.outputs[row[0]].copy()
+                self.outputs.addfield(fieldCopy, fieldindex=insertindex)
+                outputlist.insert(insertindex, fieldCopy.getattributelist(self.outputs.fieldattrorder))
+                selection.select_path(insertindex)
+                self.gui['outputview'].scroll_to_cell(insertindex)
         
-        # this should be resilient to loading a field, moving fields around, then saving the field
-        fieldindex = self.outputs.getindex(self.outputs.editField)
-        
-        # save the new field attributes
-        result = self.outputs.saveeditfield(newname, newvalue, newtype, newlen, newdec)
-        if result != 'ok':
-            print result
-            return
-                
-        # refresh the field name in the gui then select and scroll to it
-        self.gui.output_list.delete(fieldindex)
-        self.gui.output_list.insert(fieldindex,newname)
-        self.gui.output_list.selection_clear(0,Tkinter.END)
-        self.gui.output_list.selection_set(fieldindex)
-        self.gui.output_list.see(fieldindex)
-        # clear the gui field attribute fields
-        self.gui.outputname.delete(0,Tkinter.END)
-        self.gui.outputvalue.delete(1.0,Tkinter.END)
-        self.gui.fieldtype.delete(0,Tkinter.END)
-        self.gui.fieldlen.delete(0,Tkinter.END)
-        self.gui.fielddec.delete(0,Tkinter.END)
+##                                                ##
+# Everything above here is "done" #
+##                                                ##
         
     # 'del field' button
     def removeoutput(self, widget, data=None):
-        """Remove a field from the output."""
-        # get the indices of the selected fields
-        selected = [int(item) for item in self.gui.output_list.curselection()]
-        selectednames = [self.gui.output_list.get(i) for i in selected]
-
-        ef = self.outputs.editField
-        self.outputs.removefields(selectednames)
-        
-        # clear the fields if the field loaded for editing was just removed
-        if ef and not self.outputs.editField:
-            self.gui.outputname.delete(0,Tkinter.END)
-            self.gui.outputvalue.delete(1.0,Tkinter.END)
-            self.gui.fieldtype.delete(0,Tkinter.END)
-            self.gui.fieldlen.delete(0,Tkinter.END)
-            self.gui.fielddec.delete(0,Tkinter.END)
-        
-        # reverse the list to delete from the back so the indices don't get messed up as we go
-        selected.reverse()
-        for index in selected:
-            self.gui.output_list.delete(index)
+        """Remove fields from the output."""
+        selection = self.gui['outputview'].get_selection()
+        # (model, [(path0,), (path1,), ...])
+        (outputlist, selectedrows) = selection.get_selected_rows()
+        if selectedrows:
+            selection.unselect_all()
+            # sort the list in reverse so that deletions won't affect the remaining indices
+            selectedrows.sort(reverse=True)
+            for row in selectedrows:
+                outputlist.remove(outputlist.get_iter(row))
+                self.outputs.removefield(row[0])
+    
+#        # get the indices of the selected fields
+#        selected = [int(item) for item in self.gui.output_list.curselection()]
+#        selectednames = [self.gui.output_list.get(i) for i in selected]
+#
+#        ef = self.outputs.editField
+#        self.outputs.removefields(selectednames)
+#        
+#        # clear the fields if the field loaded for editing was just removed
+#        if ef and not self.outputs.editField:
+#            self.gui.outputname.delete(0,Tkinter.END)
+#            self.gui.outputvalue.delete(1.0,Tkinter.END)
+#            self.gui.fieldtype.delete(0,Tkinter.END)
+#            self.gui.fieldlen.delete(0,Tkinter.END)
+#            self.gui.fielddec.delete(0,Tkinter.END)
+#        
+#        # reverse the list to delete from the back so the indices don't get messed up as we go
+#        selected.reverse()
+#        for index in selected:
+#            self.gui.output_list.delete(index)
 
     # 'move up' button
     def movetop(self, widget, data=None):

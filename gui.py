@@ -55,6 +55,10 @@ class GUI(object):
 
         self.builder.connect_signals(handlers)
         
+        # other setup
+        outputselection = self.builder.get_object('outputview').get_selection()
+        outputselection.set_mode(gtk.SELECTION_MULTIPLE)
+        
         self.window = self.builder.get_object('mainwindow')
         self.window.show_all()
         

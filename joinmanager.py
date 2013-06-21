@@ -42,7 +42,7 @@ class JoinManager(object):
         # remove where this file is joined to others
         for targetalias in self.joins:
             for joinDefinition in self.joins[targetalias]:
-                if joinDefinition.joinfile == alias:
+                if joinDefinition.joinalias == alias:
                     self.joins[targetalias].remove(joinDefinition)
         if alias == self.targetalias:
             self.targetalias = ''
@@ -50,7 +50,7 @@ class JoinManager(object):
     def _removejoin(self, alias):
         """Recursively remove joins to this alias and child joins."""
         for joinDefinition in self.joins[alias]:
-            self._removejoin(self, joinDefinition.joinfile)
+            self._removejoin(self, joinDefinition.joinalias)
         del self.joins[alias]
         
     # Check that joinalias is joined to targetalias, either directly or through intermediate files

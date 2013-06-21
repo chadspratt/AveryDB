@@ -74,7 +74,7 @@ class FileManager(object):
         filename = self.filenamesbyalias[alias]
         del self.filenamesbyalias[alias]
         # if the file has no other alias pointing to it, close the file and remove it
-        if filename not in self.filenamesbyalias.keys():
+        if filename not in self.filenamesbyalias.values():
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
             
