@@ -83,36 +83,12 @@ class OutputManager(object):
         del self.outputfields[fieldname.upper()]
         self.outputorder.remove(fieldname)
         
-    def movefieldsup(self, fieldindices):
-        """Takes a list of sorted field indices and moves each of the fields up one spot in the order."""
-        newindices = []
-        top = 0
-        for fi in fieldindices:
-            if fi > top:
-                fieldname = self.outputorder[fi]
-                self.outputorder.remove(fieldname)
-                self.outputorder.insert(fi-1, fieldname)
-                newindices.append(fi-1)
-            else:
-                top = fi + 1
-                newindices.append(fi)
-        return newindices
-        
-    def movefieldsdown(self, fieldindices):
-        """Takes a list of sorted field indices and moves each of the fields down one spot in the order."""
-        fieldindices.reverse()
-        newindices = []
-        bottom = len(self.outputorder) - 1
-        for fi in fieldindices:
-            if fi < bottom:
-                fieldname = self.outputorder[fi]
-                self.outputorder.remove(fieldname)
-                self.outputorder.insert(fi+1, fieldname)
-                newindices.append(fi+1)
-            else:
-                bottom = fi - 1
-                newindices.append(fi)
-        return newindices
+    def movefield(self, fieldindex, newfieldindex):
+        if newfieldindex == 'start':
+            newfieldindex = 0
+        elif newfieldindex == 'end':
+            newfieldindex = len(self.outputorder)
+        self.outputorder.insert(newfieldindex, self.outputorder.pop(fieldindex))
             
     def getindex(self, field):
         return self.outputorder.index(field.name)

@@ -74,8 +74,8 @@ class Field(object):
         elif key == 'value' or key == len(self.attributes) + 1:
             return self.value
         elif key in self.attributes:
-            return self.attributes[key-1]
-        return self.attributes.values()[key]
+            return self.attributes[key]
+        return self.attributes.values()[key-1]
         
     def __setitem__(self, key, value):
         if key == 'name' or key == 0:

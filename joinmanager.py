@@ -50,7 +50,7 @@ class JoinManager(object):
     def _removejoin(self, alias):
         """Recursively remove joins to this alias and child joins."""
         for joinDefinition in self.joins[alias]:
-            self._removejoin(self, joinDefinition.joinalias)
+            self._removejoin(joinDefinition.joinalias)
         del self.joins[alias]
         
     # Check that joinalias is joined to targetalias, either directly or through intermediate files

@@ -998,10 +998,51 @@ File:</property>
           </packing>
         </child>
         <child>
-          <object class="GtkStatusbar" id="statusbar1">
+          <object class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="spacing">2</property>
+            <child>
+              <object class="GtkProgressBar" id="progressbar">
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="text_xalign">0.019999999552965164</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolbar" id="stopjointoolbar">
+                <property name="width_request">35</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_size">1</property>
+                <child>
+                  <object class="GtkToolButton" id="stopjoinbutton">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="use_action_appearance">False</property>
+                    <property name="label" translatable="yes">toolbutton1</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-stop</property>
+                    <signal name="clicked" handler="stopjoinbutton_clicked_cb" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -1026,6 +1067,7 @@ File:</property>
       </row>
     </data>
   </object>
+  <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkListStore" id="sampleoutputlist"/>
   <object class="GtkListStore" id="targetfieldlist">
     <columns>

@@ -34,7 +34,7 @@ class GUI(object):
         self.hfuncs = main
             
         handlers = {}
-        handlers['mainwindow_destroy_cb'] = gtk.main_quit
+        handlers['mainwindow_destroy_cb'] = main.quitprogram
         handlers['addfilebutton_clicked_cb'] = main.addfile
         handlers['removefilebutton_clicked_cb'] = main.removefile
         handlers['targetcombo_changed_cb'] = main.changetarget
@@ -52,6 +52,7 @@ class GUI(object):
         handlers['removeoutputbutton_clicked_cb'] = main.removeoutput
         handlers['executejoinbutton_clicked_cb'] = main.executejoin
         handlers['removejoinbutton_clicked_cb'] = main.removejoin
+        handlers['stopjoinbutton_clicked_cb'] = main.abortjoin
 
         self.builder.connect_signals(handlers)
         
@@ -64,10 +65,10 @@ class GUI(object):
         
     def filedialog(self, filetypes):
         dialog = gtk.FileChooserDialog("Open..",
-                                                          None,
-                                                          gtk.FILE_CHOOSER_ACTION_OPEN,
-                                                          (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                                           gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+                                       None,
+                                       gtk.FILE_CHOOSER_ACTION_OPEN,
+                                       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK))
         dialog.set_default_response(gtk.RESPONSE_OK)
         for filetype in filetypes:
             filefilter = gtk.FileFilter()
