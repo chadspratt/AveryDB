@@ -61,10 +61,7 @@ class Field(object):
         
     def getattributelist(self, order=None):
         attrlist = [self.name]
-        if order:
-            attrlist.extend([self.attributes[attr] for attr in order])
-        else:
-            attrlist.extend(self.attributes.values())
+        attrlist.extend(self.attributes.values())
         attrlist.append(self.value)
         return attrlist
         

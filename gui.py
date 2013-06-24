@@ -40,6 +40,7 @@ class GUI(object):
         handlers['targetcombo_changed_cb'] = main.changetarget
         handlers['joinaliascombo_changed_cb'] = main.joinaliaschanged
         handlers['targetaliascombo_changed_cb'] = main.targetaliaschanged
+        handlers['joinfieldcombo_changed_cb'] = main.joinfieldchanged
         handlers['addjoinbutton_clicked_cb'] = main.addjoin
         handlers['outputformatcombo_changed_cb'] = main.changeoutputformat 
         handlers['movetopbutton_clicked_cb'] = main.movetop
@@ -109,9 +110,31 @@ class GUI(object):
             newcell.connect('edited', self.hfuncs.updatefieldattribute, self[storename], i)
             newcolumn = gtk.TreeViewColumn(newcolnames[i], newcell, text=i)
             view.append_column(newcolumn)
-            
-        # need to hook up handlers for the new liststore
+    
+    def setprogress(self, progress=-1, text='', lockgui=True):
+        """Updates the progress bar immediately.
         
+        progress: value from 0 to 1. -1 will keep the existing setting
+        text: text to display on the bar
+        lockgui: call setprogress during a long function with lockgui=False 
+        to enable gui input while the background function runs."""
+        progressbar = self['progressbar']
+        stopjoinbutton = self['stopjoinbutton']
+        if lockgui:
+            progressbar.grab_add()
+            # Also check the abort button
+            stopjoinbutton.grab_add()
+        if progress == 'pulse':
+            progressbar.pulse()
+        elif progress >= 0:
+            progressbar.set_fraction(progress)
+        progressbar.set_text(text)
+        while gtk.events_pending():
+            gtk.main_iteration(False)
+        if lockgui:
+            progressbar.grab_remove()
+            stopjoinbutton.grab_remove()
+            
     def __getitem__(self, objname):
         if objname in self.newobjects:
             return self.newobjects[objname]

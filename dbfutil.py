@@ -37,8 +37,11 @@ class DBFUtil(object):
         self.joins = joinmanager.JoinManager()
         self.outputs = outputmanager.OutputManager()
         self.calc = calculator.Calculator()
-        
+
+        # fake threading helpers        
         self.abortjoin = False
+        self.indicestobuild = []
+        self.indexinprogress = False
             
         # needs to be last because control goes to the gui once it's called
         gui.startgui(self.gui)
@@ -104,16 +107,20 @@ class DBFUtil(object):
     def refreshjoinlists(self):
         """Update when a join is added/removed or the main target is changed."""
         # refresh the target alias combobox list
-        targetfilelist = self.gui['targetfilelist']
-        targetfilelist.clear()
-        
+        targetfilelist = self.gui['targetfilelist']        
         for alias in self.joins.getjoinedaliases():
-            targetfilelist.append([alias])
+            self.checkandappend(targetfilelist, alias)
                     
         # refresh the list of joins
         self.gui['jointree'].clear()
         self.rebuildjointree(None, self.joins.gettarget())
         self.gui['joinview'].expand_all()
+        
+    def checkandappend(self, liststore, value):
+        for row in liststore:
+            if value in row:
+                return
+        liststore.append([value])
         
     # recursive function to fill jointree from
     def rebuildjointree(self, parentiter, alias):
@@ -148,6 +155,15 @@ class DBFUtil(object):
             for targetfield in targetfields:
                 targetfieldlist.append([targetfield.name])
 
+    def joinfieldchanged(self, widget, _data=None):
+        """Sets the target field if there is one with a matching name."""
+        value = widget.get_active_text()
+        targetfieldlist = self.gui['targetfieldlist']
+        for row in targetfieldlist:
+            if value in row:
+                self.gui['targetfieldcombo'].set_active_iter(row.iter)
+                return
+                
     # 'apply' join choice button
     def addjoin(self, _widget, _data=None):
         """Save join using the selected fields in the gui."""
@@ -160,13 +176,38 @@ class DBFUtil(object):
         if joinfield != None and targetfield != None:
             # save to joins
             result = self.joins.addjoin(joinalias, joinfield,
-                                        targetalias, targetfield)
-            if result:
+                                              targetalias, targetfield)
+            # check if the result is an error message
+            if type(result) == str:
                 self.gui.messagedialog(result)
+            # otherwise result is the new Join
             else:
                 self.refreshjoinlists()
+                self.buildindices(result)
+    
+    def buildindices(self, join):
+        self.indicestobuild.append(join)
+        # check if an index is already being built
+        if self.indexinprogress:
+            return
+        self.indexinprogress = True
+        while self.indicestobuild:
+            # if not, build the index and any more that are added in the process
+            nextjoin = self.indicestobuild.pop(0)
+            progresstext = ' '.join(['Building index:', nextjoin.joinalias, 
+                                     '-', nextjoin.joinfield])
+            self.gui.setprogress(0, progresstext)
+            # create a generator that will calculate x number of records then yield
+            indexbuilder = self.files[nextjoin.joinalias].buildindex(nextjoin.joinfield)
+            # run the generator until it's finished
+            for progress in indexbuilder:
+                self.gui.setprogress(progress, 
+                                 str(int(progress*100)) + '% - ' + progresstext, 
+                                 lockgui=False)
+        self.indexinprogress = False
+        self.gui.setprogress(0, '')
             
-    # incomplete
+    # XXX incomplete
     def removejoin(self, _widget, _data=None):
         """Removes the selected joins and any child joins dependent on it."""
         selection = self.gui['joinview'].get_selection()
@@ -344,8 +385,9 @@ class DBFUtil(object):
         """Execute the join and output the result"""
         if len(self.outputs) == 0:
             return
-        # build indexes of the join fields
-        self.buildindexes()
+        # XXX it would be better to have it auto start when indexing is done
+        if self.indexinprogress:
+            return
     
         targetalias = self.joins.gettarget()
         targetfile = self.files[targetalias]
@@ -359,7 +401,6 @@ class DBFUtil(object):
         for fieldname in self.outputs.outputorder:
             outputfile.addfield(self.outputs[fieldname])
     
-        progressbar = self.gui['progressbar']
         stopbutton = self.gui['stopjoinbutton']
         stopbutton.set_sensitive(True)
         self.abortjoin = False
@@ -382,17 +423,10 @@ class DBFUtil(object):
                                      self.timetostring(timetotal),  '/', 
                                      time.strftime('%I:%M %p', timeend)])
             print progresstext
-            progressbar.grab_add()
-            stopbutton.grab_add()
-            progressbar.set_fraction(progress)
-            progressbar.set_text(progresstext)
-            while gtk.events_pending():
-                gtk.main_iteration(False)
-            progressbar.grab_remove()
-            stopbutton.grab_remove()
+            self.gui.setprogress(progress, progresstext)
             if self.abortjoin:
-                progressbar.set_text('Output aborted')
-                progressbar.set_sensitive(False)
+                self.gui.setprogress(0, 'Output aborted')
+                stopbutton.set_sensitive(False)
                 outputfile.close()
                 return
             
@@ -454,8 +488,7 @@ class DBFUtil(object):
                 
         outputfile.close()
         print 'processing complete'
-        progressbar.set_fraction(1)
-        progressbar.set_text('Output complete')
+        self.gui.setprogress(1, 'Output complete')
         
     def timetostring(self, time):
         """Convert a number of seconds into a human readable duration."""
@@ -476,38 +509,29 @@ class DBFUtil(object):
         outputstr += str(seconds) + 's'
         return outputstr
         
-    # Want to rework to create a child task to build the index for each file
-    # as it's added, which will speed the user experience up significantly and
-    # allow for generating a sample of the output as it's being configured.
-    def buildindexes(self):
-        """Builds an index for each file being joined."""
-        for filealias in self.joins.getjoinedaliases():
-            if filealias in self.joins:
-                for join in self.joins[filealias]:
-                    self.files[join.joinalias].buildindex(join.joinfield)
-
     # util function used in dojoin()
     # this is all arbitrary
     def blankvalue(self, field):
         """Supplies a blank value for a field, based on field type."""
-        if field.type == 'N':
-            return 0
-        elif field.type == 'F':
-            return 0.0
-        elif field.type == 'C':
+        fieldtype = field['type']
+        if fieldtype == 'C':
             return ''
-        # i don't know for this one what a good nonvalue would be
-        elif field.type == 'D':
-            return (0, 0, 0)
-        elif field.type == 'I':
+        elif fieldtype == 'N':
             return 0
-        elif field.type == 'Y':
+        elif fieldtype == 'F':
             return 0.0
-        elif field.type == 'L':
+        # i don't know for this one what a good nonvalue would be
+        elif fieldtype == 'D':
+            return (0, 0, 0)
+        elif fieldtype == 'I':
+            return 0
+        elif fieldtype == 'Y':
+            return 0.0
+        elif fieldtype == 'L':
             return -1
-        elif field.type == 'M':
+        elif fieldtype == 'M':
             return " " * 10
-        elif field.type == 'T':
+        elif fieldtype == 'T':
             return
 
 DBFUTIL = DBFUtil()

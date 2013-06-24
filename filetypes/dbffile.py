@@ -40,9 +40,9 @@ class DBFFile(genericfile.GenericFile):
         fieldlist = []
         for f in self.fh.fieldDefs:
             # use ordereddict to enable accessing attributes by index
-            fieldattrs = OrderedDict({'type' : f.typeCode,
-                                'length' : f.length,
-                                'decimals' : f.decimalCount})
+            fieldattrs = OrderedDict([('type', f.typeCode),
+                                ('length', f.length),
+                                ('decimals', f.decimalCount)])
             newField = field.Field(f.name, fieldattributes=fieldattrs)
             fieldlist.append(newField)
         return fieldlist

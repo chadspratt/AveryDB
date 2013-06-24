@@ -78,20 +78,26 @@ class JoinFile(object):
         return self.fh.getrecordcount()
     
     def buildindex(self, fieldname):
-            # check if it's already built. I don't think it's possible
-            if fieldname in self.indices:
-                return
-            print 'building index: ', self.filename, ' - ', fieldname, '\n'
-            fieldindex = {}
-            i = 0
-            for rec in self.fh.readrecords():
-                # store the index of a record using the value of the specificed field as the key
-                # this doesn't check for duplicates since we can only use one record when doing a join.
-                # If a value appears in more than one record, the last will be used
-                fieldindex[rec[fieldname]] = i
+        # check if it's already built. highly unlikely
+        if fieldname in self.indices:
+            return
+        print 'building index: ', self.filename, ' - ', fieldname, '\n'
+        recordcount = self.fh.getrecordcount()
+        fieldindex = {}
+        i = 0
+        while i < recordcount:
+            # process 50 records before pausing
+            for i in range(i, min(i+1000, recordcount)):
+                # store the index of a record by the value of the join field
+                # this doesn't check for duplicates since we can only use one 
+                # record when doing a join. If a value appears in more than 
+                # one record, the last record is used (out of convenience)
+                fieldindex[self[i][fieldname]] = i
                 i += 1
-            
-            self.indices[fieldname] = fieldindex
+            # Take a break so the gui can be used
+            yield float(i) / recordcount
+        
+        self.indices[fieldname] = fieldindex
             
     def getjoinrecord(self, fieldname, fieldvalue):
         if fieldname in self.indices:

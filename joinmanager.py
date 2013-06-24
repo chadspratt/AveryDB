@@ -78,7 +78,7 @@ class JoinManager(object):
             self.joins[targetalias].append(newJoin)
         else:
             self.joins[targetalias] = [newJoin]
-        return ''
+        return newJoin
             
     # If I have __iter__ do I need this?
     # used in initoutput() and dojoin()
