@@ -15,8 +15,6 @@
 ##
 # handles all adding, removing, and delivery of files
 # it doesn't work with the files beyond that
-import re
-
 import joinfile
 
 # TO DO: arcpy, csv, sqlite
@@ -27,7 +25,6 @@ import joinfile
 #except:
 #    pass
 
-
 class FileManager(object):
     def __init__(self):
         # all variables are meant to be accessed through functions
@@ -35,18 +32,11 @@ class FileManager(object):
         self.filesbyfilename = {}
         # filenamesbyalias[alias] = filename
         self.filenamesbyalias = {}
-        # JoinFile
-#        self.targetFile = joinfile.JoinFile()
-        
         # usable filetypes (and initial directory)
         self.filetypes = {}
         self.filetypes['All files'] = {'mimes' : [], 'patterns' : ['*']}
         self.filetypes['dbf files'] = {'mimes' : ['application/dbase', 'application/x-dbase', 'application/dbf', 'application/x-dbf'],
                                                     'patterns' : ['*.dbf']}
-        
-        
-    def _isnew(self, filename):
-        return filename not in self.filesbyfilename
         
     def addfile(self, filename):
         """Open a new file. If the file is already open, add an alias for it"""
@@ -69,7 +59,7 @@ class FileManager(object):
             
         return filealias
         
-    def removefile(self, alias):
+    def removealias(self, alias):
         """Remove an alias for a file and remove/close the file if it has no other alias"""
         filename = self.filenamesbyalias[alias]
         del self.filenamesbyalias[alias]
@@ -85,9 +75,6 @@ class FileManager(object):
         """Return a file object given either a file name or alias"""
         if key in self.filenamesbyalias:
             return self.filesbyfilename[self.filenamesbyalias[key]]
-        # not sure if this will be useful
-        elif key in self.filesbyfilename:
-            return self.filesbyfilename[key]
             
     def __iter__(self):
         return iter([self.filesbyfilename[fn] for fn in self.filesbyfilename])

@@ -2,7 +2,7 @@
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
   <!-- interface-naming-policy toplevel-contextual -->
-  <object class="GtkListStore" id="filelist">
+  <object class="GtkListStore" id="aliaslist">
     <columns>
       <!-- column-name filealias -->
       <column type="gchararray"/>
@@ -17,6 +17,10 @@
   <object class="GtkTreeStore" id="jointree">
     <columns>
       <!-- column-name filealias -->
+      <column type="gchararray"/>
+      <!-- column-name joinfield -->
+      <column type="gchararray"/>
+      <!-- column-name targetfield -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -308,7 +312,7 @@
                           <object class="GtkComboBox" id="targetcombo">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="model">filelist</property>
+                            <property name="model">aliaslist</property>
                             <signal name="changed" handler="targetcombo_changed_cb" swapped="no"/>
                             <child>
                               <object class="GtkCellRendererText" id="targetcombotext"/>
@@ -340,17 +344,16 @@
                           <object class="GtkTreeView" id="fileview">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="model">filelist</property>
+                            <property name="model">aliaslist</property>
                             <property name="headers_visible">False</property>
                             <property name="headers_clickable">False</property>
                             <property name="search_column">0</property>
-                            <property name="fixed_height_mode">True</property>
                             <child>
-                              <object class="GtkTreeViewColumn" id="fileviewcolumn">
-                                <property name="sizing">fixed</property>
-                                <property name="title" translatable="yes">column</property>
+                              <object class="GtkTreeViewColumn" id="alias">
+                                <property name="sizing">autosize</property>
+                                <property name="title" translatable="yes">FIle Alias</property>
                                 <child>
-                                  <object class="GtkCellRendererText" id="fileviewcolumntext"/>
+                                  <object class="GtkCellRendererText" id="filealiastext"/>
                                   <attributes>
                                     <attribute name="text">0</attribute>
                                   </attributes>
@@ -412,7 +415,7 @@
                                       <object class="GtkComboBox" id="joinaliascombo">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="model">filelist</property>
+                                        <property name="model">aliaslist</property>
                                         <signal name="changed" handler="joinaliascombo_changed_cb" swapped="no"/>
                                         <child>
                                           <object class="GtkCellRendererText" id="joinaliascombotext"/>
@@ -444,7 +447,7 @@
                                       <object class="GtkComboBox" id="targetaliascombo">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="model">targetfilelist</property>
+                                        <property name="model">targetaliaslist</property>
                                         <signal name="changed" handler="targetaliascombo_changed_cb" swapped="no"/>
                                         <child>
                                           <object class="GtkCellRendererText" id="targetaliascombotext"/>
@@ -874,6 +877,7 @@ File:</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="use_underline">True</property>
                                     <property name="stock_id">gtk-remove</property>
+                                    <signal name="clicked" handler="removejoinbutton_clicked_cb" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
@@ -905,21 +909,41 @@ File:</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="model">jointree</property>
-                                <property name="headers_visible">False</property>
                                 <property name="headers_clickable">False</property>
                                 <property name="enable_search">False</property>
                                 <property name="search_column">0</property>
-                                <property name="fixed_height_mode">True</property>
                                 <property name="enable_tree_lines">True</property>
                                 <child>
-                                  <object class="GtkTreeViewColumn" id="joinviewcolumn">
-                                    <property name="sizing">fixed</property>
-                                    <property name="title" translatable="yes">column</property>
-                                    <property name="expand">True</property>
+                                  <object class="GtkTreeViewColumn" id="joinaliascolumn">
+                                    <property name="title" translatable="yes">File alias</property>
                                     <child>
-                                      <object class="GtkCellRendererText" id="joinviewcolumntext"/>
+                                      <object class="GtkCellRendererText" id="joinaliascolumntext"/>
                                       <attributes>
                                         <attribute name="text">0</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn" id="joinfieldcolumn">
+                                    <property name="sizing">autosize</property>
+                                    <property name="title" translatable="yes">Join field</property>
+                                    <child>
+                                      <object class="GtkCellRendererText" id="joinfieldcolumntext"/>
+                                      <attributes>
+                                        <attribute name="text">1</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn" id="targetfieldcolumn">
+                                    <property name="sizing">autosize</property>
+                                    <property name="title" translatable="yes">Target field</property>
+                                    <child>
+                                      <object class="GtkCellRendererText" id="targetfieldcolumntext"/>
+                                      <attributes>
+                                        <attribute name="text">2</attribute>
                                       </attributes>
                                     </child>
                                   </object>
@@ -935,7 +959,7 @@ File:</property>
                         </child>
                       </object>
                       <packing>
-                        <property name="resize">False</property>
+                        <property name="resize">True</property>
                         <property name="shrink">True</property>
                       </packing>
                     </child>
@@ -1071,15 +1095,15 @@ File:</property>
   </object>
   <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkListStore" id="sampleoutputlist"/>
-  <object class="GtkListStore" id="targetfieldlist">
+  <object class="GtkListStore" id="targetaliaslist">
     <columns>
-      <!-- column-name fieldname -->
+      <!-- column-name filealias -->
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="targetfilelist">
+  <object class="GtkListStore" id="targetfieldlist">
     <columns>
-      <!-- column-name filealias -->
+      <!-- column-name fieldname -->
       <column type="gchararray"/>
     </columns>
   </object>

@@ -22,7 +22,7 @@ from filetypes import dbffile
 class JoinFile(object):
     def __init__(self, filename='', mode='r'):
         self.filename = filename
-        self.indices = {} #not reimplemented yet
+        self.indices = {}
         if filename != '':
             self.status = self.openfile(filename, mode=mode)
         else:
@@ -34,7 +34,7 @@ class JoinFile(object):
     def openfile(self, filename, mode='r'):
         lc_filename = filename.lower()
         if lc_filename.endswith('dbf'):
-                self.fh = dbffile.DBFFile(filename, mode=mode)
+            self.fh = dbffile.DBFFile(filename, mode=mode)
             # other cases will go here if/when other files are supported. from here it is filetype agnostic
             # read field names/types
         #this return can't happen unless selecting invalid files is allowed in the first place
@@ -46,7 +46,7 @@ class JoinFile(object):
         return self.status
    
     def getfields(self):
-        """Returns a list of fields. The fields are stored as dictionaries that contain their attributes."""
+        """Returns a list of field objects."""
         return self.fh.getfields()
         
     # generate and return an alias for the file. Each time a file is opened
@@ -66,10 +66,7 @@ class JoinFile(object):
             dupecount += 1
     
     def generatealias(self):
-            return self.aliasgenerator.next()
-            
-    def readrecords(self):
-        return self.fh.readrecords()
+        return self.aliasgenerator.next()
         
     def addfield(self, field):
         self.fh.addfield(field)
@@ -86,7 +83,7 @@ class JoinFile(object):
         fieldindex = {}
         i = 0
         while i < recordcount:
-            # process 50 records before pausing
+            # process however many records before pausing
             for i in range(i, min(i+1000, recordcount)):
                 # store the index of a record by the value of the join field
                 # this doesn't check for duplicates since we can only use one 
@@ -111,5 +108,5 @@ class JoinFile(object):
     def close(self):
         self.fh.close()
 
-    def __getitem__(self, key):
-        return self.fh[key]
+    def __getitem__(self, index):
+        return self.fh[index]

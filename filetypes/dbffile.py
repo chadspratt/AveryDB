@@ -43,14 +43,9 @@ class DBFFile(genericfile.GenericFile):
             fieldattrs = OrderedDict([('type', f.typeCode),
                                 ('length', f.length),
                                 ('decimals', f.decimalCount)])
-            newField = field.Field(f.name, fieldattributes=fieldattrs)
-            fieldlist.append(newField)
+            newfield = field.Field(f.name, fieldattributes=fieldattrs)
+            fieldlist.append(newfield)
         return fieldlist
-         
-    # poor man's iterator for records in the file
-    def readrecords(self):
-        for record in self.fh:
-            yield record
             
     def addfield(self, field):
         self.fh.addField((field.name, field['type'], field['length'], field['decimals']))

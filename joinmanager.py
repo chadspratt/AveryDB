@@ -23,35 +23,42 @@ class JoinManager(object):
         # joins[alias] = [Join0, Join1, ...]
         self.joins = {}
         self.targetalias = ''
-        # stores the join currently being configured in the gui
-        self.curtarget = ''
-        self.curjoin = ''
+        # List of currently joined aliases. each file is limited to joining once
+        # for successive joins, the file needs to be reopened to get a new alias
+        # The target alias also can't be joined to any other files
+        self.joinedaliases = []
         
     def settarget(self, targetalias):
         if targetalias != self.targetalias:
             self.targetalias = targetalias
             self.joins = {}
+            self.joinedaliases = [targetalias]
     
     def gettarget(self):
         return self.targetalias        
         
-    def removefile(self, alias):
-        """Remove all joins that depend on this file."""
-        if alias in self.joins:
-            self._removejoin(alias)
+    def removealias(self, alias):
+        """Remove all joins that depend on a file."""
         # remove where this file is joined to others
         for targetalias in self.joins:
-            for joinDefinition in self.joins[targetalias]:
-                if joinDefinition.joinalias == alias:
-                    self.joins[targetalias].remove(joinDefinition)
-        if alias == self.targetalias:
+            for joindefinition in self.joins[targetalias]:
+                if joindefinition.joinalias == alias:
+                    self.joins[targetalias].remove(joindefinition)
+        # remove all joins to this alias
+        self.removejoins(alias)
+        if self.targetalias == alias:
             self.targetalias = ''
 
-    def _removejoin(self, alias):
+    def removejoins(self, alias):
         """Recursively remove joins to this alias and child joins."""
-        for joinDefinition in self.joins[alias]:
-            self._removejoin(joinDefinition.joinalias)
-        del self.joins[alias]
+        if alias in self.joins:
+            # For each join to this alias
+            for joindefinition in self.joins[alias]:
+                # remove the joins from the joined alias
+                self.removejoins(joindefinition.joinalias)
+            del self.joins[alias]
+        # remove the joined alias from the list of all joined aliases
+        self.joinedaliases.remove(alias)
         
     # Check that joinalias is joined to targetalias, either directly or through intermediate files
     def checkjoin(self, joinalias, targetalias):
@@ -70,15 +77,17 @@ class JoinManager(object):
     
     def addjoin(self, joinalias, joinfield, targetalias, targetfield):
         """Create a Join and add it to the dictionary of all Joins."""
-        # check that the target isn't a child of the file being joined
-        if self.checkjoin(targetalias, joinalias):
-            return 'Cannot create circular join. Reopen the file to use a different alias.'
-        newJoin = join.Join(joinalias, joinfield, targetalias, targetfield)
+        # Limit files to joining once. This avoids problems with circular joins,
+        # removing joins, and unexpected messes in rare cases
+        if joinalias in self.joinedaliases:
+            return joinalias + ' already in use. Open the file again for a different alias.'
+        newjoin = join.Join(joinalias, joinfield, targetalias, targetfield)
         if targetalias in self.joins:
-            self.joins[targetalias].append(newJoin)
+            self.joins[targetalias].append(newjoin)
         else:
-            self.joins[targetalias] = [newJoin]
-        return newJoin
+            self.joins[targetalias] = [newjoin]
+        self.joinedaliases.append(joinalias)
+        return newjoin
             
     # If I have __iter__ do I need this?
     # used in initoutput() and dojoin()

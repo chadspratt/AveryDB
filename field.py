@@ -15,7 +15,6 @@
 ##
 
 class Field(object):
-    # there's something off about using the same fields for input and output
     def __init__(self, fieldname, fieldattributes={}, fieldvalue=''):
         # used this for resetting a field
         self.originalname = fieldname
@@ -55,11 +54,10 @@ class Field(object):
             
     def copy(self):
         fieldCopy = Field(self.name, self.attributes, self.value)
-        
         fieldCopy.originalvalue = self.originalvalue
         return fieldCopy
         
-    def getattributelist(self, order=None):
+    def getattributelist(self):
         attrlist = [self.name]
         attrlist.extend(self.attributes.values())
         attrlist.append(self.value)

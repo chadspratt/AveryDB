@@ -14,7 +14,6 @@
 #   limitations under the License.
 ##
 # handles the initialization and configuration of the output
-# this just leaves dojoin(), the actual execution, needing a home
 
 import field
 from filetypes import dbffile
@@ -29,18 +28,19 @@ class OutputManager(object):
         self.outputorder = []       # output names, stores order of the fields
         self.editField = ''
         self.fieldattr = ['Name', 'Type', 'Length', 'Decimals', 'Value']
-        self.fieldattrorder = ['type', 'length', 'decimals']
         
     def clear(self):
         self.outputfields = {}
         self.outputorder = []
     
+    # XXX This function needs to update fieldtypes and fieldattr.
+    # It should also convert any existing outputfields to the new format
     def setoutputtype(self, outputtype):
         """Sets the format of the output. Only dbf is supported right now."""
         self.outputtype = outputtype
         
-    def setoutputfile(self, outputfile):
-        self.outputfile = outputfile
+    def getoutputtype(self):
+        return self.outputtype
         
     # existing fields will come with a filealias. new fields may come with an index
     # could use better design
@@ -48,34 +48,33 @@ class OutputManager(object):
         """Takes a field object and adds it to the output."""
         # if field is being created from an input field, make a copy to use for the output field
         if filealias:            
-            newField = field.copy()
-            newField.value = '!' + filealias + '.' + newField.name + '!'
+            newfield = field.copy()
+            newfield.value = '!' + filealias + '.' + newfield.name + '!'
         # if it is a new field, just use the one passed as an argument
         else:
-            newField = field
+            newfield = field
             
         # dbf is not case sensitive (won't allow 'objectID' and 'objectid')
         # outputfields uses uppercase names to facilitate checking for duplicates
-        while newField.name.upper() in self.outputfields:
-            newField.createnewname()
+        while newfield.name.upper() in self.outputfields:
+            newfield.createnewname()
 
-        self.outputfields[newField.name.upper()] = newField
+        self.outputfields[newfield.name.upper()] = newfield
         # inserts after the first selected item in the gui list. if nothing is selected, it goes to the end
         if fieldindex == 'end':
-            self.outputorder.append(newField.name)
+            self.outputorder.append(newfield.name)
         else:
-            self.outputorder.insert(fieldindex, newField.name)
+            self.outputorder.insert(fieldindex, newfield.name)
             
-        return newField
+        return newfield
             
     def addnewfield(self, fieldname = 'newfield',
                                  fieldattributes = {'type' : 'C', 'length' : 254, 'decimals' : 0},
                                  fieldvalue = '', fieldindex = 'end'):
         """Takes field attributes and adds a field to the output."""
-        newField = field.Field(fieldname, fieldattributes, fieldvalue)
-        self.addfield(newField, fieldindex=fieldindex)
-        # inconsistent, should return newField instead
-        return newField
+        newfield = field.Field(fieldname, fieldattributes, fieldvalue)
+        self.addfield(newfield, fieldindex=fieldindex)
+        return newfield
     
     def removefield(self, fieldindex):
         """Takes a field index and removes the field in that postion from the output."""
@@ -93,6 +92,12 @@ class OutputManager(object):
     def getindex(self, field):
         return self.outputorder.index(field.name)
     
+    def getuniquename(self, fieldname):
+        tempfield = field.Field(fieldname)
+        while tempfield['name'].upper() in self.outputfields:
+            tempfield.createnewname()
+        return tempfield['name']
+    
     def __getitem__(self, key):
         """Retrieve a Field object by index or by output name"""
         # since field names can't be just a number, interpret all numbers as indices
@@ -108,4 +113,7 @@ class OutputManager(object):
             
     def __len__(self):
         return len(self.outputfields)
+        
+    def __contains__(self, fieldname):
+        return fieldname.upper() in self.outputfields
         

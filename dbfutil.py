@@ -39,7 +39,7 @@ class DBFUtil(object):
         self.calc = calculator.Calculator()
 
         # fake threading helpers        
-        self.abortjoin = False
+        self.joinaborted = False
         self.indicestobuild = []
         self.indexinprogress = False
             
@@ -61,8 +61,8 @@ class DBFUtil(object):
             newfilename = addfiledialog.get_filename()
             newfilealias = self.files.addfile(newfilename)
             # add to the file list
-            filelist = self.gui['filelist']
-            newrow = filelist.append([newfilealias])
+            aliaslist = self.gui['aliaslist']
+            newrow = aliaslist.append([newfilealias])
             
             # set as target if no target is set
             if self.joins.gettarget() == '':
@@ -74,23 +74,23 @@ class DBFUtil(object):
         """Close a file and remove all joins that depend on it."""
         # get the selection from the list of files
         selection = self.gui['fileview'].get_selection()
-        (filelist, selectedpath) = selection.get_selected()
+        (aliaslist, selectedpath) = selection.get_selected()
         if selectedpath:
-            filealias = filelist.get_value(selectedpath, 0)
+            filealias = aliaslist.get_value(selectedpath, 0)
             
             # remove joins that depend on the file
-            self.joins.removefile(filealias)
+            self.joins.removealias(filealias)
             # remove the file
-            self.files.removefile(filealias)
+            self.files.removealias(filealias)
             
             # remove from gui list and from the fields dictionary
-            filelist.remove(selectedpath)
+            aliaslist.remove(selectedpath)
             selection.unselect_all()
                         
             # Update the target if the old one was removed
             if self.joins.gettarget() == '':
-                if len(filelist) > 0:
-                    newtargetiter = filelist.get_iter(0)
+                if len(aliaslist) > 0:
+                    newtargetiter = aliaslist.get_iter(0)
                     self.gui['targetcombo'].set_active_iter(newtargetiter)
                     
             # refresh join lists in case the removed file was in one of them
@@ -98,7 +98,7 @@ class DBFUtil(object):
             # want to check outputs for fields that now have broken references.
             # if not remove them, show some sort of alert
             
-    def changetarget(self, _widget, _data=None):
+    def targetchanged(self, _widget, _data=None):
         """Set an open file as the main target for joining."""
         newtarget = self.gui['targetcombo'].get_active_text()
         self.joins.settarget(newtarget)
@@ -107,27 +107,38 @@ class DBFUtil(object):
     def refreshjoinlists(self):
         """Update when a join is added/removed or the main target is changed."""
         # refresh the target alias combobox list
-        targetfilelist = self.gui['targetfilelist']        
-        for alias in self.joins.getjoinedaliases():
-            self.checkandappend(targetfilelist, alias)
+        targetaliaslist = self.gui['targetaliaslist']
+        targetcombo = self.gui['targetaliascombo']
+        # save the current selection
+        activealias = targetcombo.get_active_text()
+        # refresh the list of valid targets
+        targetaliaslist.clear()
+        for alias in self.joins.joinedaliases:
+            targetaliaslist.append([alias])
+        # reselect the previous selection, if it's still there
+        for row in targetaliaslist:
+            if activealias in row:
+                targetcombo.set_active_iter(row.iter)
                     
         # refresh the list of joins
         self.gui['jointree'].clear()
-        self.rebuildjointree(None, self.joins.gettarget())
+        # add the main target
+        targetalias = self.joins.gettarget()
+        targetiter = self.gui['jointree'].append(None, [targetalias,
+                                                        '', ''])
+        # add all the joins
+        for childjoin in self.joins[targetalias]:
+            self.rebuildjointree(targetiter, childjoin)
         self.gui['joinview'].expand_all()
         
-    def checkandappend(self, liststore, value):
-        for row in liststore:
-            if value in row:
-                return
-        liststore.append([value])
-        
     # recursive function to fill jointree from
-    def rebuildjointree(self, parentiter, alias):
+    def rebuildjointree(self, parentiter, join):
         """Update the join tree store by reading from the JoinManager."""
-        newparent = self.gui['jointree'].append(parentiter, [alias])
-        for childjoin in self.joins[alias]:
-            self.rebuildjointree(newparent, childjoin.joinalias)
+        newparent = self.gui['jointree'].append(parentiter, [join.joinalias,
+                                                             join.joinfield,
+                                                             join.targetfield])
+        for childjoin in self.joins[join.joinalias]:
+            self.rebuildjointree(newparent, childjoin)
             
     def joinaliaschanged(self, _widget, _data=None):
         """Update the join field combo when the join alias combo changes."""
@@ -188,39 +199,42 @@ class DBFUtil(object):
     def buildindices(self, join):
         self.indicestobuild.append(join)
         # check if an index is already being built
-        if self.indexinprogress:
-            return
-        self.indexinprogress = True
-        while self.indicestobuild:
-            # if not, build the index and any more that are added in the process
-            nextjoin = self.indicestobuild.pop(0)
-            progresstext = ' '.join(['Building index:', nextjoin.joinalias, 
-                                     '-', nextjoin.joinfield])
-            self.gui.setprogress(0, progresstext)
-            # create a generator that will calculate x number of records then yield
-            indexbuilder = self.files[nextjoin.joinalias].buildindex(nextjoin.joinfield)
-            # run the generator until it's finished
-            for progress in indexbuilder:
-                self.gui.setprogress(progress, 
-                                 str(int(progress*100)) + '% - ' + progresstext, 
-                                 lockgui=False)
-        self.indexinprogress = False
-        self.gui.setprogress(0, '')
+        if not self.indexinprogress:
+            self.indexinprogress = True
+            while self.indicestobuild:
+                nextjoin = self.indicestobuild.pop(0)
+                progresstext = ' '.join(['Building index:', nextjoin.joinalias, 
+                                         '-', nextjoin.joinfield])
+                self.gui.setprogress(0, progresstext)
+                # create a generator that will calculate x number of records then yield
+                indexbuilder = self.files[nextjoin.joinalias].buildindex(nextjoin.joinfield)
+                # run the generator until it's finished
+                for progress in indexbuilder:
+                    # this progress update lets the GUI function
+                    self.gui.setprogress(progress, 
+                                     str(int(progress*100)) + '% - ' + progresstext, 
+                                     lockgui=False)
+            self.indexinprogress = False
+            self.gui.setprogress(0, '')
             
-    # XXX incomplete
     def removejoin(self, _widget, _data=None):
         """Removes the selected joins and any child joins dependent on it."""
         selection = self.gui['joinview'].get_selection()
         (outputlist, selectedrow) = selection.get_selected()
+        joinalias = outputlist[selectedrow][0]
+        self.joins.removealias(joinalias)
+        self.refreshjoinlists()
             
     def changeoutputformat(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
-        self.gui.messagedialog('changing output format not implemented yet')
+        typeiter = self.gui['outputtypecombo'].get_active_iter()
+        newtype = self.gui['outputtypelist'][typeiter]
+        if newtype != None and newtype != self.outputs.getoutputtype():
+            self.outputs.setoutputtype(newtype)
 
     # populate the list of output fields with all the input fields
     def initoutput(self, _widget, _data=None):
         """Populate the list view of output fields and the OutputManager."""
-        self.outputs.setoutputfile(self.files.openoutputfile)
         fieldattributes = self.outputs.fieldattr
         self.gui.replacecolumns('outputlist', 'outputview', fieldattributes)
         outputlist = self.gui['outputlist']
@@ -236,8 +250,17 @@ class DBFUtil(object):
                     
     def updatefieldattribute(self, _cell, row, new_value, outputlist, column):
         """Update data when an outputview cell is edited."""
+        # If the field name was updated, change the user input if necessary to
+        # make it unique.
+        # If it's in the field name column
+        if column == 0:
+            # and the field name is already in use
+            if new_value in self.outputs:
+                # by a different field than the one being edited
+                if self.outputs[row]['name'].upper() != new_value.upper():
+                    # then modify new_value to be unique
+                    new_value = self.outputs.getuniquename(new_value)
         outputlist[row][column] = new_value
-        # magic happens
         self.outputs[row][column] = new_value
         
     # 'add field' button
@@ -378,7 +401,7 @@ class DBFUtil(object):
             self.gui['outputview'].scroll_to_cell(endindex)
             
     def abortjoin(self, _widget, _data=None):
-        self.abortjoin = True
+        self.joinaborted = True
 
     # 'execute join' button
     def executejoin(self, _widget, _data=None):
@@ -403,7 +426,7 @@ class DBFUtil(object):
     
         stopbutton = self.gui['stopjoinbutton']
         stopbutton.set_sensitive(True)
-        self.abortjoin = False
+        self.joinaborted = False
         # loop through target file
         i = 0
         recordcount = targetfile.getrecordcount()
@@ -424,7 +447,7 @@ class DBFUtil(object):
                                      time.strftime('%I:%M %p', timeend)])
             print progresstext
             self.gui.setprogress(progress, progresstext)
-            if self.abortjoin:
+            if self.joinaborted:
                 self.gui.setprogress(0, 'Output aborted')
                 stopbutton.set_sensitive(False)
                 outputfile.close()
@@ -490,19 +513,19 @@ class DBFUtil(object):
         print 'processing complete'
         self.gui.setprogress(1, 'Output complete')
         
-    def timetostring(self, time):
+    def timetostring(self, inputtime):
         """Convert a number of seconds into a human readable duration."""
         outputstr = ''
-        time = int(time)
-        seconds = time % 60
-        if time > seconds:
-            time /= 60
-            minutes = time % 60
-            if time > minutes:
-                time /= 60
-                hours = time % 24
-                if time > hours:
-                    days = time / 24
+        inputtime = int(inputtime)
+        seconds = inputtime % 60
+        if inputtime > seconds:
+            inputtime /= 60
+            minutes = inputtime % 60
+            if inputtime > minutes:
+                inputtime /= 60
+                hours = inputtime % 24
+                if inputtime > hours:
+                    days = inputtime / 24
                     outputstr += str(days) + 'd'
                 outputstr += str(hours) + 'h'
             outputstr += str(minutes) + 'm'
