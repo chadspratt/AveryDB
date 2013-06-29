@@ -14,7 +14,7 @@
 #   limitations under the License.
 ##
 
-# Is this object needed?
+# Is this object needed? currently not used
 class Record(dict):
     def __init__(self):
         dict.__init__()
@@ -25,5 +25,3 @@ class Record(dict):
     def __setitem__(self, key, value):
         dict.__setitem__(key, value)
         
-        Copyright [yyyy] [name of copyright owner]
-

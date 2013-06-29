@@ -1,3 +1,4 @@
+"""Contains a simple class for storing join configurations."""
 # -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
@@ -13,10 +14,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
-#  just a struct
 
 class Join(object):
-    def __init__(self, joinalias='', joinfield='', targetalias='', targetfield=''):
+    """A struct for storing a join definition."""
+    def __init__(self, joinalias='', joinfield='',
+                 targetalias='', targetfield=''):
         self.joinalias = joinalias
         self.joinfield = joinfield
         self.targetalias = targetalias #probably not needed

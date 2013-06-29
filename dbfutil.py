@@ -1,3 +1,15 @@
+#!/usr/bin/python
+"""This utility provides an easy interface for working with database files.
+
+To create a new, empty file, click the refresh button on the middle toolbar to
+initialize the list. Then click the + to add fields you can define.
+
+To modify an existing file, load the file, click the refresh button, and then
+modify the fields.
+
+To join and modify multiple files, load the files, configure how they will join
+together, click refresh to load the fields, then adjust the fields.
+"""
 # -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
@@ -17,8 +29,6 @@
 import re
 import gtk
 import time
-
-import pdb
 
 import gui
 import filemanager
@@ -44,7 +54,7 @@ class DBFUtil(object):
         self.indexinprogress = False
             
         # needs to be last because control goes to the gui once it's called
-        gui.startgui(self.gui)
+        gui.startgui()
 
     def quitprogram(self, _widget, _data=None):
         """Close open files before closing the program."""
@@ -197,22 +207,26 @@ class DBFUtil(object):
                 self.buildindices(result)
     
     def buildindices(self, join):
+        """Build indices in the background as joins are added."""
         self.indicestobuild.append(join)
-        # check if an index is already being built
+        # Check if an index is already being built
         if not self.indexinprogress:
             self.indexinprogress = True
             while self.indicestobuild:
                 nextjoin = self.indicestobuild.pop(0)
-                progresstext = ' '.join(['Building index:', nextjoin.joinalias, 
-                                         '-', nextjoin.joinfield])
+                indexfile = nextjoin.joinalias
+                indexfield = nextjoin.joinfield
+                progresstext = ' '.join(['Building index:', indexfile, 
+                                         '-', indexfield])
                 self.gui.setprogress(0, progresstext)
-                # create a generator that will calculate x number of records then yield
-                indexbuilder = self.files[nextjoin.joinalias].buildindex(nextjoin.joinfield)
-                # run the generator until it's finished
+                # Create a generator that will calculate some records then yield
+                indexbuilder = self.files[indexfile].buildindex(indexfield)
+                # Run the generator until it's finished. It yields % progress.
                 for progress in indexbuilder:
                     # this progress update lets the GUI function
                     self.gui.setprogress(progress, 
-                                     str(int(progress*100)) + '% - ' + progresstext, 
+                                         (str(int(progress*100)) + '% - ' 
+                                         + progresstext), 
                                      lockgui=False)
             self.indexinprogress = False
             self.gui.setprogress(0, '')
@@ -401,6 +415,7 @@ class DBFUtil(object):
             self.gui['outputview'].scroll_to_cell(endindex)
             
     def abortjoin(self, _widget, _data=None):
+        """Set a signal for the output to abort."""
         self.joinaborted = True
 
     # 'execute join' button
@@ -464,7 +479,8 @@ class DBFUtil(object):
                         joinvalue = inputvalues[join.targetalias][join.targetfield]
                         joinfile = self.files[join.joinalias]
                         # Will be None if there isn't a matching record to join
-                        temprecord = joinfile.getjoinrecord(join.joinfield, joinvalue)
+                        temprecord = joinfile.getjoinrecord(join.joinfield, 
+                                                            joinvalue)
                         if temprecord is None:                            
                             print join.joinfield+':', joinvalue, '- not found'
                         else:
@@ -482,20 +498,18 @@ class DBFUtil(object):
                         # check that each referenced file was able to be joined
                         if filealias in inputvalues:
                             refvalue = inputvalues[filealias][fieldname]
-                            try:
-                                fieldvalue = re.sub('!'+fieldref+'!', 
-                                                    str(refvalue).encode('string-escape'), 
-                                                    fieldvalue)
-                            except:
-                                pdb.set_trace()
+                            fieldvalue = re.sub('!'+fieldref+'!', 
+                                                str(refvalue).encode('string-escape'), 
+                                                fieldvalue)
                         # if it didn't join, use a blank value
                         else:
-                            # insert a blank value for the reference that matches the type of the output field
-                            # with more effort, it could match the type of the field that didn't get joined
-                            fieldvalue = re.sub('!'+fieldref+'!', str(self.blankvalue(field)), fieldvalue)
+                            # insert a blank value for the reference that 
+                            # matches the type of the output field
+                            fieldvalue = re.sub('!'+fieldref+'!', 
+                                                str(self.blankvalue(field)), 
+                                                fieldvalue)
                         
-                    # Apply any calculating. Want to make compatible with the arcmap field calculator.
-                    # That is extra functionality, with a second input field for the code block
+                    # XXX field calculations
                     try:
                         newrec[field.name] = eval(fieldvalue)
                     except NameError:
@@ -513,7 +527,8 @@ class DBFUtil(object):
         print 'processing complete'
         self.gui.setprogress(1, 'Output complete')
         
-    def timetostring(self, inputtime):
+    @classmethod
+    def timetostring(cls, inputtime):
         """Convert a number of seconds into a human readable duration."""
         outputstr = ''
         inputtime = int(inputtime)
@@ -534,7 +549,8 @@ class DBFUtil(object):
         
     # util function used in dojoin()
     # this is all arbitrary
-    def blankvalue(self, field):
+    @classmethod
+    def blankvalue(cls, field):
         """Supplies a blank value for a field, based on field type."""
         fieldtype = field['type']
         if fieldtype == 'C':

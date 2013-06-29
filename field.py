@@ -15,7 +15,10 @@
 ##
 
 class Field(object):
-    def __init__(self, fieldname, fieldattributes={}, fieldvalue=''):
+    """Stores a field definition."""
+    def __init__(self, fieldname, fieldattributes=None, fieldvalue=''):
+        if fieldattributes == None:
+            fieldattributes = {}
         # used this for resetting a field
         self.originalname = fieldname
         self.originalvalue = fieldvalue
@@ -26,9 +29,9 @@ class Field(object):
         self.attributes = fieldattributes
         self.namegen = self.namegenerator()
         
-    # it yields the new name, but I'm not using that and just checking the variable directly
+    # it yields the new name, but it isn't used. Field.name is checked directly
     def namegenerator(self, lenlimit=10):
-        """Generate an alternate filename to deal with duplicates when initiating the output."""
+        """Yields alternate field names for when there's a naming conflict."""
         namelen = len(self.originalname) #store original length
         # append a number to create a different name
         dupecount = 1
@@ -43,21 +46,27 @@ class Field(object):
             namelen = lenlimit - countlen
             
     def createnewname(self):
+        """Supplies a new unique name candidate."""
         self.namegen.next()
             
     def resetname(self):
+        """Resets the field name, though it will be changed if it conflicts."""
         self.name = self.originalname
         self.namegen = self.namegenerator()
         
+    # Not currently used
     def resetvalue(self):
+        """Resets the value of a field to it's original value."""
         self.value = self.originalvalue
             
     def copy(self):
-        fieldCopy = Field(self.name, self.attributes, self.value)
-        fieldCopy.originalvalue = self.originalvalue
-        return fieldCopy
+        """Creates a deep copy of the field."""
+        fieldcopy = Field(self.name, self.attributes, self.value)
+        fieldcopy.originalvalue = self.originalvalue
+        return fieldcopy
         
     def getattributelist(self):
+        """Returns all attributes (eg: name, type, len) of a field in a list."""
         attrlist = [self.name]
         attrlist.extend(self.attributes.values())
         attrlist.append(self.value)

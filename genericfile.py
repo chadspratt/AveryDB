@@ -13,11 +13,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
-# Template for different filetype wrappers so that JoinFile can treat them all the same
+# Template for different filetype wrappers
 
+# Is this needed?
 class GenericFile(object):
     def __init__(self):
-        return 'define __init__'
+        self.todo = 'define __init__'
     def getfields(self):
         return 'define getfields'
     def close(self):

@@ -1,3 +1,4 @@
+"""All things dealing strictly with the GUI."""
 # -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
@@ -18,37 +19,44 @@ import gtk
 import gobject
 
 class GUI(object):
-    def main(self):
-        gtk.main()
-        
-    def __init__(self, main):
+    """Initializes the GUI from the Glade file and provides widget access.
+    
+    This class:
+    *builds the Glade file
+    *gives access to all the widgets by name via __getitem__
+    *provides convenient message and file dialogs
+    *helps replace the columns in the output field store/view
+    *updates the progress bar which can also be used to keep the interface
+    responsiveduring background processing
+    """
+    def __init__(self, hfuncs):
         self.gladefile = 'dbfutil.glade'
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.gladefile)
         self.newobjects = {}
-        self.hfuncs = main
+        self.handlerfunctions = hfuncs
             
         handlers = {}
-        handlers['mainwindow_destroy_cb'] = main.quitprogram
-        handlers['addfilebutton_clicked_cb'] = main.addfile
-        handlers['removefilebutton_clicked_cb'] = main.removefile
-        handlers['targetcombo_changed_cb'] = main.targetchanged
-        handlers['joinaliascombo_changed_cb'] = main.joinaliaschanged
-        handlers['targetaliascombo_changed_cb'] = main.targetaliaschanged
-        handlers['joinfieldcombo_changed_cb'] = main.joinfieldchanged
-        handlers['addjoinbutton_clicked_cb'] = main.addjoin
-        handlers['outputformatcombo_changed_cb'] = main.changeoutputformat 
-        handlers['movetopbutton_clicked_cb'] = main.movetop
-        handlers['moveupbutton_clicked_cb'] = main.moveup
-        handlers['movedownbutton_clicked_cb'] = main.movedown
-        handlers['movebottombutton_clicked_cb'] = main.movebottom
-        handlers['initoutputbutton_clicked_cb'] = main.initoutput
-        handlers['addoutputbutton_clicked_cb'] = main.addoutput
-        handlers['copyoutputbutton_clicked_cb'] = main.copyoutput
-        handlers['removeoutputbutton_clicked_cb'] = main.removeoutput
-        handlers['executejoinbutton_clicked_cb'] = main.executejoin
-        handlers['removejoinbutton_clicked_cb'] = main.removejoin
-        handlers['stopjoinbutton_clicked_cb'] = main.abortjoin
+        handlers['mainwindow_destroy_cb'] = hfuncs.quitprogram
+        handlers['addfilebutton_clicked_cb'] = hfuncs.addfile
+        handlers['removefilebutton_clicked_cb'] = hfuncs.removefile
+        handlers['targetcombo_changed_cb'] = hfuncs.targetchanged
+        handlers['joinaliascombo_changed_cb'] = hfuncs.joinaliaschanged
+        handlers['targetaliascombo_changed_cb'] = hfuncs.targetaliaschanged
+        handlers['joinfieldcombo_changed_cb'] = hfuncs.joinfieldchanged
+        handlers['addjoinbutton_clicked_cb'] = hfuncs.addjoin
+        handlers['outputformatcombo_changed_cb'] = hfuncs.changeoutputformat 
+        handlers['movetopbutton_clicked_cb'] = hfuncs.movetop
+        handlers['moveupbutton_clicked_cb'] = hfuncs.moveup
+        handlers['movedownbutton_clicked_cb'] = hfuncs.movedown
+        handlers['movebottombutton_clicked_cb'] = hfuncs.movebottom
+        handlers['initoutputbutton_clicked_cb'] = hfuncs.initoutput
+        handlers['addoutputbutton_clicked_cb'] = hfuncs.addoutput
+        handlers['copyoutputbutton_clicked_cb'] = hfuncs.copyoutput
+        handlers['removeoutputbutton_clicked_cb'] = hfuncs.removeoutput
+        handlers['executejoinbutton_clicked_cb'] = hfuncs.executejoin
+        handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
+        handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
 
         self.builder.connect_signals(handlers)
         
@@ -59,7 +67,9 @@ class GUI(object):
         self.window = self.builder.get_object('mainwindow')
         self.window.show_all()
         
-    def filedialog(self, filetypes):
+    @classmethod
+    def filedialog(cls, filetypes):
+        """Sets up and returns a file chooser dialog for the caller to run."""
         dialog = gtk.FileChooserDialog("Open..",
                                        None,
                                        gtk.FILE_CHOOSER_ACTION_OPEN,
@@ -77,19 +87,25 @@ class GUI(object):
             
         return dialog
         
-    def messagedialog(self, message):
+    @classmethod
+    def messagedialog(cls, message):
+        """Creates a simple dialog to display the provided message."""
         dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_OK,)
         dialog.set_markup(message)
         dialog.set_default_response(gtk.RESPONSE_OK)
         dialog.run()
         dialog.destroy()
         
+    # This is only used for the center output field view. Different output
+    # formats may require different field attributes, so the columns will need
+    # to be changed
     def replacecolumns(self, storename, viewname, newcolnames):
+        """Replaces the columns in the output list/view with new columns."""
         # make a new liststore to use
         typelist = []
         for i in range(len(newcolnames)):
             typelist.append(gobject.TYPE_STRING)
-        # __getitem__ checks newobjects, so this will seamlessly shift access to the new store
+        # __getitem__ checks newobjects so access will shift to the new store
         self.newobjects[storename] = gtk.ListStore(*typelist)
         
         # update the listview
@@ -100,11 +116,13 @@ class GUI(object):
             view.remove_column(col)
         # add the new columns
         for i in range(len(newcolnames)):
-             newcell = gtk.CellRendererText()
-             newcell.set_property('editable', True)
-             newcell.connect('edited', self.hfuncs.updatefieldattribute, self[storename], i)
-             newcolumn = gtk.TreeViewColumn(newcolnames[i], newcell, text=i)
-             view.append_column(newcolumn)
+            newcell = gtk.CellRendererText()
+            newcell.set_property('editable', True)
+            newcell.connect('edited', 
+                            self.handlerfunctions.updatefieldattribute, 
+                            self[storename], i)
+            newcolumn = gtk.TreeViewColumn(newcolnames[i], newcell, text=i)
+            view.append_column(newcolumn)
     
     def setprogress(self, progress=-1, text='', lockgui=True):
         """Updates the progress bar immediately.
@@ -135,11 +153,13 @@ class GUI(object):
             return self.newobjects[objname]
         return self.builder.get_object(objname)
 
-def creategui(main):
-    gui = GUI(main)
+def creategui(handlerfunctions):
+    """Initializes and returns the gui."""
+    gui = GUI(handlerfunctions)
 #    root.title('DBF Utility')
     return gui
     
-def startgui(gui):
-    gui.main()
+def startgui():
+    """Starts the gtk main loop."""
+    gtk.main()
     

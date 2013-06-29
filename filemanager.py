@@ -1,3 +1,6 @@
+"""FileManager handles all adding, removing, and delivery of files.
+
+It doesn't do anything further with the files.""" 
 # -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
@@ -13,19 +16,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
-# handles all adding, removing, and delivery of files
-# it doesn't work with the files beyond that
+# 
 import joinfile
 
-# TO DO: arcpy, csv, sqlite
-#try:
-#    import arcpy
-#    # example, i'm guess it's more involved selecting something from an esri database
-#    askopenfiletype['filetypes'].append(('gdb layers','.gdb'))
-#except:
-#    pass
-
 class FileManager(object):
+    """Manages opening, closing, and providing access to files."""
     def __init__(self):
         # all variables are meant to be accessed through functions
         # filesbyfilename[filename] = JoinFile
@@ -35,40 +30,42 @@ class FileManager(object):
         # usable filetypes (and initial directory)
         self.filetypes = {}
         self.filetypes['All files'] = {'mimes' : [], 'patterns' : ['*']}
-        self.filetypes['dbf files'] = {'mimes' : ['application/dbase', 'application/x-dbase', 'application/dbf', 'application/x-dbf'],
-                                                    'patterns' : ['*.dbf']}
+        self.filetypes['dbf files'] = {'mimes' : ['application/dbase', 
+                                                  'application/x-dbase', 
+                                                  'application/dbf', 
+                                                  'application/x-dbf'],
+                                       'patterns' : ['*.dbf']}
         
     def addfile(self, filename):
-        """Open a new file. If the file is already open, add an alias for it"""
-        # save the directory so that it defaults there next time a file dialog is opened
-        # pathsplit = re.findall('[a-zA-Z0-9\.]+',filename)
-        
+        """Open a new file. If the file is already open, add an alias for it."""        
         # check if file is already opened
         if filename in self.filesbyfilename:
-            newFile = self.filesbyfilename[filename]
+            newfile = self.filesbyfilename[filename]
         else:
             # open the file. need to catch exceptions in JoinFile
-            newFile = joinfile.JoinFile(filename)
-            self.filesbyfilename[filename] = newFile
+            newfile = joinfile.JoinFile(filename)
+            self.filesbyfilename[filename] = newfile
             
         # get a unique alias (in case another loaded file has the same name)
-        filealias = newFile.generatealias()
+        filealias = newfile.generatealias()
         while filealias in self.filenamesbyalias:
-            filealias = newFile.generatealias()
+            filealias = newfile.generatealias()
         self.filenamesbyalias[filealias] = filename
             
         return filealias
         
     def removealias(self, alias):
-        """Remove an alias for a file and remove/close the file if it has no other alias"""
+        """Remove an alias and remove the file if it has no other aliases."""
         filename = self.filenamesbyalias[alias]
         del self.filenamesbyalias[alias]
-        # if the file has no other alias pointing to it, close the file and remove it
+        # if the file has no other alias pointing to it, close and remove it
         if filename not in self.filenamesbyalias.values():
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
             
-    def openoutputfile(self, filename):
+    @classmethod
+    def openoutputfile(cls, filename):
+        """Returns a file, with the given filenam,e opened for writing."""
         return joinfile.JoinFile(filename, mode='w')
         
     def __getitem__(self, key):

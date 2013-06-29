@@ -1,3 +1,7 @@
+"""JoinManager handles the configuration of the join operation.
+
+JoinManager creates and stores new join definitions and describes the joins to
+other parts of the application in useful ways."""
 # -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
@@ -13,12 +17,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
-# handles the configuration and execution of the join operation
-# should I seperate output? i think i can do it
+# 
 
 import join
 
 class JoinManager(object):
+    """Manages creation and access of join definitions."""
     def __init__(self):
         # joins[alias] = [Join0, Join1, ...]
         self.joins = {}
@@ -29,12 +33,14 @@ class JoinManager(object):
         self.joinedaliases = []
         
     def settarget(self, targetalias):
+        """Updates the main target alias and clears all configured joins."""
         if targetalias != self.targetalias:
             self.targetalias = targetalias
             self.joins = {}
             self.joinedaliases = [targetalias]
     
     def gettarget(self):
+        """Returns the alias of the main target file."""
         return self.targetalias        
         
     def removealias(self, alias):
@@ -59,28 +65,15 @@ class JoinManager(object):
             del self.joins[alias]
         # remove the joined alias from the list of all joined aliases
         self.joinedaliases.remove(alias)
-        
-    # Check that joinalias is joined to targetalias, either directly or through intermediate files
-    def checkjoin(self, joinalias, targetalias):
-        """Check that a file is joined to the primary target and can therefore be used as a target."""
-        if targetalias == joinalias:
-            return True
-        if targetalias in self.joins:
-            targetjoins = self.joins[targetalias]
-        else:
-            return False
-        # recursively check each file joined to targetalias
-        for entry in targetjoins:
-            if self.checkjoin(entry.joinalias, joinalias):
-                return True
-        return False
     
     def addjoin(self, joinalias, joinfield, targetalias, targetfield):
         """Create a Join and add it to the dictionary of all Joins."""
         # Limit files to joining once. This avoids problems with circular joins,
         # removing joins, and unexpected messes in rare cases
         if joinalias in self.joinedaliases:
-            return joinalias + ' already in use. Open the file again for a different alias.'
+            # XXX raising an exception would be better?
+            return joinalias + \
+                   ' already in use. Open the file again for a new alias.'
         newjoin = join.Join(joinalias, joinfield, targetalias, targetfield)
         if targetalias in self.joins:
             self.joins[targetalias].append(newjoin)
@@ -92,26 +85,17 @@ class JoinManager(object):
     # If I have __iter__ do I need this?
     # used in initoutput() and dojoin()
     def getjoinedaliases(self, start='target'):
-        """Return a list of the target and everything joined to it, in depth-first search order."""
+        """Returns a list of all joined aliases in depth-first order."""
         if start == 'target':
             start = self.targetalias
-        return self.joinsdfs(start)
-    
-#    def getjoindepth(self, start='target', depth=0):
-#        if start == 'target':
-#            start = self.targetalias
-#        fulldepth = depth
-#        if start in self.joins:
-#            for entry in self.joins[start]:
-#                fulldepth = max(fulldepth, self.getjoindepth(entry.joinalias, depth+1))
-#        return fulldepth
-        
+        return self._joinsdfs(start)
                 
-    def joinsdfs(self, start):
+    def _joinsdfs(self, start):
+        """Returns a list of all joined aliases in depth-first order."""
         joinlist = [start]
         if start in self.joins:
             for entry in self.joins[start]:
-                joinlist.extend(self.joinsdfs(entry.joinalias))
+                joinlist.extend(self._joinsdfs(entry.joinalias))
         return joinlist
                  
     def __getitem__(self, target):

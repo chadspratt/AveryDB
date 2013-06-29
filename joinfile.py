@@ -20,39 +20,38 @@ import re
 from filetypes import dbffile
 
 class JoinFile(object):
+    """This is used to open, read and write all files of all supported types."""
     def __init__(self, filename='', mode='r'):
         self.filename = filename
         self.indices = {}
         if filename != '':
-            self.status = self.openfile(filename, mode=mode)
-        else:
-            self.status = 'not set'
-            # self.fields = [Field0, Field1, ...]
+            try:
+                self.filehandler = self.openfile(filename, mode=mode)
+            except ValueError:
+                print 'Invalid file type'
         self.aliasgenerator = self._generatealias()
             
-    # not inherited
-    def openfile(self, filename, mode='r'):
-        lc_filename = filename.lower()
-        if lc_filename.endswith('dbf'):
-            self.fh = dbffile.DBFFile(filename, mode=mode)
-            # other cases will go here if/when other files are supported. from here it is filetype agnostic
-            # read field names/types
-        #this return can't happen unless selecting invalid files is allowed in the first place
-        else:            
-            self.status = 'invalid file type'
-            return self.status
+    @classmethod
+    def openfile(cls, filename, mode='r'):
+        """Supplies an abstracted file handler for different file formats."""
+        lowercase_filename = filename.lower()
+        # This is the only code that treats different file types differently
+        if lowercase_filename.endswith('dbf'):
+            filehandler = dbffile.DBFFile(filename, mode=mode)
+        else:
+            #this won't happen unless selecting invalid files is allowed
+            raise ValueError
         
-        self.status = 'open'
-        return self.status
+        return filehandler
    
     def getfields(self):
         """Returns a list of field objects."""
-        return self.fh.getfields()
+        return self.filehandler.getfields()
         
     # generate and return an alias for the file. Each time a file is opened
     def _generatealias(self):
-        """Create an alias for a file. Allows more complex joining and a shorter name"""
-        filenamesplit = re.findall('[a-zA-Z0-9]+',self.filename)
+        """Creates a unique alias for a file."""
+        filenamesplit = re.findall('[a-zA-Z0-9]+', self.filename)
         alias = filenamesplit[-2]
         # start with just the filename
         yield alias
@@ -66,25 +65,29 @@ class JoinFile(object):
             dupecount += 1
     
     def generatealias(self):
+        """Returns a modified, hopefully unique, file alias.""" 
         return self.aliasgenerator.next()
         
     def addfield(self, field):
-        self.fh.addfield(field)
+        """Calls the file handler's addfield."""
+        self.filehandler.addfield(field)
         
     def getrecordcount(self):
-        return self.fh.getrecordcount()
+        """Calls the file handler's getrecordcount to return the total count."""
+        return self.filehandler.getrecordcount()
     
     def buildindex(self, fieldname):
+        """Builds an index of a given field."""
         # check if it's already built. highly unlikely
         if fieldname in self.indices:
             return
         print 'building index: ', self.filename, ' - ', fieldname, '\n'
-        recordcount = self.fh.getrecordcount()
+        recordcount = self.filehandler.getrecordcount()
         fieldindex = {}
         i = 0
         while i < recordcount:
             # process however many records before pausing
-            for i in range(i, min(i+1000, recordcount)):
+            for i in range(i, min(i+250, recordcount)):
                 # store the index of a record by the value of the join field
                 # this doesn't check for duplicates since we can only use one 
                 # record when doing a join. If a value appears in more than 
@@ -97,16 +100,19 @@ class JoinFile(object):
         self.indices[fieldname] = fieldindex
             
     def getjoinrecord(self, fieldname, fieldvalue):
+        """Returns a record with a given value for a given field."""
         if fieldname in self.indices:
             if fieldvalue in self.indices[fieldname]:
                 recordindex = self.indices[fieldname][fieldvalue]
                 return self[recordindex]
                 
     def addrecord(self, newrecord):
-        return self.fh.addrecord(newrecord)
+        """Calls the file handler's addrecord."""
+        self.filehandler.addrecord(newrecord)
         
     def close(self):
-        self.fh.close()
+        """Calls the file handler's close."""
+        self.filehandler.close()
 
     def __getitem__(self, index):
-        return self.fh[index]
+        return self.filehandler[index]

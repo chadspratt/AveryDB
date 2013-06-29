@@ -16,7 +16,7 @@
 # wrapper for dbfpy utility
 from collections import OrderedDict
 
-from libraries.dbfpy import dbf
+from filetypes.libraries.dbfpy import dbf
 
 import genericfile
 import field
@@ -24,45 +24,51 @@ import field
 FILETYPEEXT = '.dbf'
 FILETYPEDESCRIP = 'dbase file'
 
+# I'm not making use of GenericFile
 class DBFFile(genericfile.GenericFile):
+    """Wraps the dbfpy library with a set of standard functions."""
     def __init__(self, filename, mode='r'):
         self.filename = filename
         if mode == 'r':
-            self.fh = dbf.Dbf(filename, readOnly=True)
+            self.filehandler = dbf.Dbf(filename, readOnly=True)
         else:
-            self.fh = dbf.Dbf(filename, new=True)
+            self.filehandler = dbf.Dbf(filename, new=True)
         # not used from here, but I'd like for it to be
-        self.fieldtypes = ['C','N','F','I','Y','L','M','D','T']
+        self.fieldtypes = ['C', 'N', 'F', 'I', 'Y', 'L', 'M', 'D', 'T']
         self.fieldattrorder = ['type', 'length', 'decimals']
         
     def getfields(self):
         """Returns the fields of the file as a list of Field objects"""
         fieldlist = []
-        for f in self.fh.fieldDefs:
+        for fielddef in self.filehandler.fieldDefs:
             # use ordereddict to enable accessing attributes by index
-            fieldattrs = OrderedDict([('type', f.typeCode),
-                                ('length', f.length),
-                                ('decimals', f.decimalCount)])
-            newfield = field.Field(f.name, fieldattributes=fieldattrs)
+            fieldattrs = OrderedDict([('type', fielddef.typeCode),
+                                ('length', fielddef.length),
+                                ('decimals', fielddef.decimalCount)])
+            newfield = field.Field(fielddef.name, fieldattributes=fieldattrs)
             fieldlist.append(newfield)
         return fieldlist
             
-    def addfield(self, field):
-        self.fh.addField((field.name, field['type'], field['length'], field['decimals']))
+    def addfield(self, newfield):
+        """Adds a field to an output file. Used before any records are added."""
+        self.filehandler.addField((newfield['name'], newfield['type'],
+                                   newfield['length'], newfield['decimals']))
         
     def getrecordcount(self):
-        return self.fh.recordCount
+        """Returns the number of records in the file."""
+        return self.filehandler.recordCount
         
     def addrecord(self, newrecord):
-        rec = self.fh.newRecord()
-        for field in newrecord:
-            rec[field] = newrecord[field]
+        """Appends a new record to an output dbf file."""
+        rec = self.filehandler.newRecord()
+        for fieldname in newrecord:
+            rec[fieldname] = newrecord[fieldname]
         rec.store()
             
     def close(self):
-        self.fh.close()
+        self.filehandler.close()
     
     # returns record at given index as a dictionary of field name:value
     def __getitem__(self, index):
-        return self.fh[index].asDict()
+        return self.filehandler[index].asDict()
         
