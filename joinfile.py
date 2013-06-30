@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +18,9 @@ import re
 # test for ability to read/write gis databases with arcpy
 from filetypes import dbffile
 
+
 class JoinFile(object):
-    """This is used to open, read and write all files of all supported types."""
+    """Used to open, read and write all files of all supported types."""
     def __init__(self, filename='', mode='r'):
         self.filename = filename
         self.indices = {}
@@ -30,7 +30,7 @@ class JoinFile(object):
             except ValueError:
                 print 'Invalid file type'
         self.aliasgenerator = self._generatealias()
-            
+
     @classmethod
     def openfile(cls, filename, mode='r'):
         """Supplies an abstracted file handler for different file formats."""
@@ -41,13 +41,13 @@ class JoinFile(object):
         else:
             #this won't happen unless selecting invalid files is allowed
             raise ValueError
-        
+
         return filehandler
-   
+
     def getfields(self):
         """Returns a list of field objects."""
         return self.filehandler.getfields()
-        
+
     # generate and return an alias for the file. Each time a file is opened
     def _generatealias(self):
         """Creates a unique alias for a file."""
@@ -57,25 +57,25 @@ class JoinFile(object):
         yield alias
         # append a number for successive alias requests
         dupecount = 1
-        aliaslen = len(alias) #store original length
+        aliaslen = len(alias)  # store original length
         while True:
             # append next number to original alias
             alias = alias[:aliaslen] + str(dupecount)
             yield alias
             dupecount += 1
-    
+
     def generatealias(self):
-        """Returns a modified, hopefully unique, file alias.""" 
+        """Returns a modified, hopefully unique, file alias."""
         return self.aliasgenerator.next()
-        
+
     def addfield(self, field):
         """Calls the file handler's addfield."""
         self.filehandler.addfield(field)
-        
+
     def getrecordcount(self):
-        """Calls the file handler's getrecordcount to return the total count."""
+        """Call the file handler's getrecordcount to return the total count."""
         return self.filehandler.getrecordcount()
-    
+
     def buildindex(self, fieldname):
         """Builds an index of a given field."""
         # check if it's already built. highly unlikely
@@ -87,29 +87,29 @@ class JoinFile(object):
         i = 0
         while i < recordcount:
             # process however many records before pausing
-            for i in range(i, min(i+250, recordcount)):
+            for i in range(i, min(i + 250, recordcount)):
                 # store the index of a record by the value of the join field
-                # this doesn't check for duplicates since we can only use one 
-                # record when doing a join. If a value appears in more than 
+                # this doesn't check for duplicates since we can only use one
+                # record when doing a join. If a value appears in more than
                 # one record, the last record is used (out of convenience)
                 fieldindex[self[i][fieldname]] = i
                 i += 1
             # Take a break so the gui can be used
             yield float(i) / recordcount
-        
+
         self.indices[fieldname] = fieldindex
-            
+
     def getjoinrecord(self, fieldname, fieldvalue):
         """Returns a record with a given value for a given field."""
         if fieldname in self.indices:
             if fieldvalue in self.indices[fieldname]:
                 recordindex = self.indices[fieldname][fieldvalue]
                 return self[recordindex]
-                
+
     def addrecord(self, newrecord):
         """Calls the file handler's addrecord."""
         self.filehandler.addrecord(newrecord)
-        
+
     def close(self):
         """Calls the file handler's close."""
         self.filehandler.close()

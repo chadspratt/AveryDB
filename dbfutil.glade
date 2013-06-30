@@ -909,6 +909,7 @@ File:</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="model">jointree</property>
+                                <property name="headers_visible">False</property>
                                 <property name="headers_clickable">False</property>
                                 <property name="enable_search">False</property>
                                 <property name="search_column">0</property>

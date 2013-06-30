@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +13,11 @@
 #   limitations under the License.
 ##
 
+
 class Field(object):
     """Stores a field definition."""
     def __init__(self, fieldname, fieldattributes=None, fieldvalue=''):
-        if fieldattributes == None:
+        if fieldattributes is None:
             fieldattributes = {}
         # used this for resetting a field
         self.originalname = fieldname
@@ -28,11 +28,11 @@ class Field(object):
         # dictionary of attribute names and values
         self.attributes = fieldattributes
         self.namegen = self.namegenerator()
-        
+
     # it yields the new name, but it isn't used. Field.name is checked directly
     def namegenerator(self, lenlimit=10):
         """Yields alternate field names for when there's a naming conflict."""
-        namelen = len(self.originalname) #store original length
+        namelen = len(self.originalname)  # store original length
         # append a number to create a different name
         dupecount = 1
         countlen = 1
@@ -44,34 +44,34 @@ class Field(object):
             dupecount += 1
             countlen = len(str(dupecount))
             namelen = lenlimit - countlen
-            
+
     def createnewname(self):
         """Supplies a new unique name candidate."""
         self.namegen.next()
-            
+
     def resetname(self):
         """Resets the field name, though it will be changed if it conflicts."""
         self.name = self.originalname
         self.namegen = self.namegenerator()
-        
+
     # Not currently used
     def resetvalue(self):
         """Resets the value of a field to it's original value."""
         self.value = self.originalvalue
-            
+
     def copy(self):
         """Creates a deep copy of the field."""
         fieldcopy = Field(self.name, self.attributes, self.value)
         fieldcopy.originalvalue = self.originalvalue
         return fieldcopy
-        
+
     def getattributelist(self):
-        """Returns all attributes (eg: name, type, len) of a field in a list."""
+        """Returns all attributes (eg: name, type) of a field as a list."""
         attrlist = [self.name]
         attrlist.extend(self.attributes.values())
         attrlist.append(self.value)
         return attrlist
-        
+
     def __getitem__(self, key):
         if key == 'name' or key == 0:
             return self.name
@@ -79,8 +79,8 @@ class Field(object):
             return self.value
         elif key in self.attributes:
             return self.attributes[key]
-        return self.attributes.values()[key-1]
-        
+        return self.attributes.values()[key - 1]
+
     def __setitem__(self, key, value):
         if key == 'name' or key == 0:
             self.name = value
@@ -89,6 +89,5 @@ class Field(object):
         elif key in self.attributes:
             self.attributes[key] = value
         else:
-            attrname = self.attributes.keys()[key-1]
+            attrname = self.attributes.keys()[key - 1]
             self.attributes[attrname] = value
-        

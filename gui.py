@@ -1,5 +1,4 @@
 """All things dealing strictly with the GUI."""
-# -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,9 +17,10 @@
 import gtk
 import gobject
 
+
 class GUI(object):
     """Initializes the GUI from the Glade file and provides widget access.
-    
+
     This class:
     *builds the Glade file
     *gives access to all the widgets by name via __getitem__
@@ -35,7 +35,7 @@ class GUI(object):
         self.builder.add_from_file(self.gladefile)
         self.newobjects = {}
         self.handlerfunctions = hfuncs
-            
+
         handlers = {}
         handlers['mainwindow_destroy_cb'] = hfuncs.quitprogram
         handlers['addfilebutton_clicked_cb'] = hfuncs.addfile
@@ -45,7 +45,7 @@ class GUI(object):
         handlers['targetaliascombo_changed_cb'] = hfuncs.targetaliaschanged
         handlers['joinfieldcombo_changed_cb'] = hfuncs.joinfieldchanged
         handlers['addjoinbutton_clicked_cb'] = hfuncs.addjoin
-        handlers['outputformatcombo_changed_cb'] = hfuncs.changeoutputformat 
+        handlers['outputformatcombo_changed_cb'] = hfuncs.changeoutputformat
         handlers['movetopbutton_clicked_cb'] = hfuncs.movetop
         handlers['moveupbutton_clicked_cb'] = hfuncs.moveup
         handlers['movedownbutton_clicked_cb'] = hfuncs.movedown
@@ -59,14 +59,14 @@ class GUI(object):
         handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
 
         self.builder.connect_signals(handlers)
-        
+
         # other setup
         outputselection = self.builder.get_object('outputview').get_selection()
         outputselection.set_mode(gtk.SELECTION_MULTIPLE)
-        
+
         self.window = self.builder.get_object('mainwindow')
         self.window.show_all()
-        
+
     @classmethod
     def filedialog(cls, filetypes):
         """Sets up and returns a file chooser dialog for the caller to run."""
@@ -84,9 +84,9 @@ class GUI(object):
             for pattern in filetypes[filetype]['patterns']:
                 filefilter.add_pattern(pattern)
             dialog.add_filter(filefilter)
-            
+
         return dialog
-        
+
     @classmethod
     def messagedialog(cls, message):
         """Creates a simple dialog to display the provided message."""
@@ -95,7 +95,7 @@ class GUI(object):
         dialog.set_default_response(gtk.RESPONSE_OK)
         dialog.run()
         dialog.destroy()
-        
+
     # This is only used for the center output field view. Different output
     # formats may require different field attributes, so the columns will need
     # to be changed
@@ -107,7 +107,7 @@ class GUI(object):
             typelist.append(gobject.TYPE_STRING)
         # __getitem__ checks newobjects so access will shift to the new store
         self.newobjects[storename] = gtk.ListStore(*typelist)
-        
+
         # update the listview
         view = self[viewname]
         view.set_model(self[storename])
@@ -118,18 +118,18 @@ class GUI(object):
         for i in range(len(newcolnames)):
             newcell = gtk.CellRendererText()
             newcell.set_property('editable', True)
-            newcell.connect('edited', 
-                            self.handlerfunctions.updatefieldattribute, 
+            newcell.connect('edited',
+                            self.handlerfunctions.updatefieldattribute,
                             self[storename], i)
             newcolumn = gtk.TreeViewColumn(newcolnames[i], newcell, text=i)
             view.append_column(newcolumn)
-    
+
     def setprogress(self, progress=-1, text='', lockgui=True):
         """Updates the progress bar immediately.
-        
+
         progress: value from 0 to 1. -1 will keep the existing setting
         text: text to display on the bar
-        lockgui: call setprogress during a long function with lockgui=False 
+        lockgui: call setprogress during a long function with lockgui=False
         to enable gui input while the background function runs."""
         progressbar = self['progressbar']
         stopjoinbutton = self['stopjoinbutton']
@@ -147,19 +147,20 @@ class GUI(object):
         if lockgui:
             progressbar.grab_remove()
             stopjoinbutton.grab_remove()
-            
+
     def __getitem__(self, objname):
         if objname in self.newobjects:
             return self.newobjects[objname]
         return self.builder.get_object(objname)
+
 
 def creategui(handlerfunctions):
     """Initializes and returns the gui."""
     gui = GUI(handlerfunctions)
 #    root.title('DBF Utility')
     return gui
-    
+
+
 def startgui():
     """Starts the gtk main loop."""
     gtk.main()
-    

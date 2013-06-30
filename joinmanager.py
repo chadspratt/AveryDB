@@ -2,7 +2,6 @@
 
 JoinManager creates and stores new join definitions and describes the joins to
 other parts of the application in useful ways."""
-# -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +16,9 @@ other parts of the application in useful ways."""
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
-# 
-
+#
 import join
+
 
 class JoinManager(object):
     """Manages creation and access of join definitions."""
@@ -27,22 +26,22 @@ class JoinManager(object):
         # joins[alias] = [Join0, Join1, ...]
         self.joins = {}
         self.targetalias = ''
-        # List of currently joined aliases. each file is limited to joining once
-        # for successive joins, the file needs to be reopened to get a new alias
-        # The target alias also can't be joined to any other files
+        # List of currently joined aliases. each file is limited to joining
+        # once for successive joins, the file needs to be reopened to get a new
+        # alias The target alias also can't be joined to any other files
         self.joinedaliases = []
-        
+
     def settarget(self, targetalias):
         """Updates the main target alias and clears all configured joins."""
         if targetalias != self.targetalias:
             self.targetalias = targetalias
             self.joins = {}
             self.joinedaliases = [targetalias]
-    
+
     def gettarget(self):
         """Returns the alias of the main target file."""
-        return self.targetalias        
-        
+        return self.targetalias
+
     def removealias(self, alias):
         """Remove all joins that depend on a file."""
         # remove where this file is joined to others
@@ -65,15 +64,15 @@ class JoinManager(object):
             del self.joins[alias]
         # remove the joined alias from the list of all joined aliases
         self.joinedaliases.remove(alias)
-    
+
     def addjoin(self, joinalias, joinfield, targetalias, targetfield):
         """Create a Join and add it to the dictionary of all Joins."""
-        # Limit files to joining once. This avoids problems with circular joins,
-        # removing joins, and unexpected messes in rare cases
+        # Limit files to joining once. This avoids problems with circular
+        # joins, removing joins, and unexpected messes in rare cases
         if joinalias in self.joinedaliases:
             # XXX raising an exception would be better?
-            return joinalias + \
-                   ' already in use. Open the file again for a new alias.'
+            return (joinalias +
+                    ' already in use. Open the file again for a new alias.')
         newjoin = join.Join(joinalias, joinfield, targetalias, targetfield)
         if targetalias in self.joins:
             self.joins[targetalias].append(newjoin)
@@ -81,7 +80,7 @@ class JoinManager(object):
             self.joins[targetalias] = [newjoin]
         self.joinedaliases.append(joinalias)
         return newjoin
-            
+
     # If I have __iter__ do I need this?
     # used in initoutput() and dojoin()
     def getjoinedaliases(self, start='target'):
@@ -89,7 +88,7 @@ class JoinManager(object):
         if start == 'target':
             start = self.targetalias
         return self._joinsdfs(start)
-                
+
     def _joinsdfs(self, start):
         """Returns a list of all joined aliases in depth-first order."""
         joinlist = [start]
@@ -97,16 +96,16 @@ class JoinManager(object):
             for entry in self.joins[start]:
                 joinlist.extend(self._joinsdfs(entry.joinalias))
         return joinlist
-                 
+
     def __getitem__(self, target):
         if target in self.joins:
             return self.joins[target]
         return []
-        
+
     # not used
     def __contains__(self, value):
         return value in self.joins
-    
+
     # untested
     def __iter__(self):
         joinlists = []
@@ -114,4 +113,3 @@ class JoinManager(object):
             if filealias in self.joins:
                 joinlists.append(self.joins[filealias])
         return iter(joinlists)
-        

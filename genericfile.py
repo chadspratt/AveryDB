@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +14,15 @@
 ##
 # Template for different filetype wrappers
 
+
 # Is this needed?
 class GenericFile(object):
     def __init__(self):
         self.todo = 'define __init__'
+
     def getfields(self):
         return 'define getfields'
+
     def close(self):
         return 'define close'
 #    def read(i)

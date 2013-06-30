@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,14 +13,14 @@
 #   limitations under the License.
 ##
 
+
 # Is this object needed? currently not used
 class Record(dict):
     def __init__(self):
         dict.__init__()
-        
+
     def __getitem__(self, key):
         return dict.__getitem__[key]
-    
+
     def __setitem__(self, key, value):
         dict.__setitem__(key, value)
-        
