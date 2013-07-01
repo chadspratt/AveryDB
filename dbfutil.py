@@ -481,8 +481,8 @@ class DBFUtil(object):
 
                 for joinlist in self.joins:
                     for join in joinlist:
-                        targetfile = inputvalues[join.targetalias]
-                        joinvalue = targetfile[join.targetfield]
+                        # no good way to make this line shorter
+                        joinvalue = inputvalues[join.targetalias][join.targetfield]
                         joinfile = self.files[join.joinalias]
                         # Will be None if there isn't a matching record to join
                         temprecord = joinfile.getjoinrecord(join.joinfield,
@@ -524,7 +524,5 @@ class DBFUtil(object):
             outputstr += str(minutes) + 'm'
         outputstr += str(seconds) + 's'
         return outputstr
-
-
 
 DBFUTIL = DBFUtil()
