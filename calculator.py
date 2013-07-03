@@ -96,9 +96,6 @@ class Calculator(object):
         newfuncstr = 'def ' + newfuncname + '(self, args):\n'
         newfuncstr = newfuncstr + '    return ' + newfuncbody
 
-        # XXX print statement
-        print newfuncstr
-
         # create the function and return it with the list of args it needs
         exec(newfuncstr) in globals(), locals()
         for i in range(len(args)):

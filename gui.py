@@ -22,12 +22,12 @@ class GUI(object):
     """Initializes the GUI from the Glade file and provides widget access.
 
     This class:
-    *builds the Glade file
-    *gives access to all the widgets by name via __getitem__
-    *provides convenient message and file dialogs
-    *helps replace the columns in the output field store/view
-    *updates the progress bar which can also be used to keep the interface
-    responsiveduring background processing
+    * builds the Glade file
+    * gives access to all the widgets by name via __getitem__
+    * provides convenient message and file dialogs
+    * helps replace the columns in the output field store/view
+    * updates the progress bar which can also be used to keep the interface
+    responsive during background processing
     """
     def __init__(self, hfuncs):
         self.gladefile = 'dbfutil.glade'
@@ -54,7 +54,7 @@ class GUI(object):
         handlers['addoutputbutton_clicked_cb'] = hfuncs.addoutput
         handlers['copyoutputbutton_clicked_cb'] = hfuncs.copyoutput
         handlers['removeoutputbutton_clicked_cb'] = hfuncs.removeoutput
-        handlers['executejoinbutton_clicked_cb'] = hfuncs.executejoin
+        handlers['executejointoggle_toggled_cb'] = hfuncs.executetoggled
         handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
         handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
 
@@ -64,8 +64,8 @@ class GUI(object):
         outputselection = self.builder.get_object('outputview').get_selection()
         outputselection.set_mode(gtk.SELECTION_MULTIPLE)
 
-        self.window = self.builder.get_object('mainwindow')
-        self.window.show_all()
+        self.mainwindow = self.builder.get_object('mainwindow')
+        self.mainwindow.show_all()
 
     @classmethod
     def filedialog(cls, filetypes):

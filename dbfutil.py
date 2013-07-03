@@ -49,8 +49,8 @@ class DBFUtil(object):
 
         # fake threading helpers
         self.joinaborted = False
-        self.indicestobuild = []
-        self.indexinprogress = False
+        self.tasks_to_process = []
+        self.taskinprogress = False
 
         # needs to be last because control goes to the gui once it's called
         gui.startgui()
@@ -203,32 +203,51 @@ class DBFUtil(object):
             # otherwise result is the new Join
             else:
                 self.refreshjoinlists()
-                self.buildindices(result)
+                self.processtask(('index', result))
 
-    def buildindices(self, join):
-        """Build indices in the background as joins are added."""
-        self.indicestobuild.append(join)
-        # Check if an index is already being built
-        if not self.indexinprogress:
-            self.indexinprogress = True
-            while self.indicestobuild:
-                nextjoin = self.indicestobuild.pop(0)
-                indexfile = nextjoin.joinalias
-                indexfield = nextjoin.joinfield
-                progresstext = ' '.join(['Building index:', indexfile,
-                                         '-', indexfield])
-                self.gui.setprogress(0, progresstext)
-                # Create a generator that calculates some records then yields
-                indexbuilder = self.files[indexfile].buildindex(indexfield)
-                # Run the generator until it's finished. It yields % progress.
-                for progress in indexbuilder:
-                    # this progress update lets the GUI function
-                    self.gui.setprogress(progress,
-                                         (str(int(progress * 100)) + '% - '
-                                         + progresstext),
-                                         lockgui=False)
-            self.indexinprogress = False
-            self.gui.setprogress(0, '')
+    def processtask(self, task=None):
+        if task:
+            self.tasks_to_process.append(task)
+        if not self.taskinprogress:
+            self.taskinprogress = True
+            while self.tasks_to_process:
+                tasktype, taskdata = self.tasks_to_process.pop(0)
+                if tasktype is 'index':
+                    self.buildindex(taskdata)
+                elif tasktype is 'sample':
+                    # process sample updates after index building
+                    if len(self.tasks_to_process) > 0:
+                        self.tasks_to_process.append((tasktype, taskdata))
+                    else:
+                        self.updatesample()
+        # This has to go after indexing too. The execute toggle button can be
+        # used to cancel the output while the indices are still building.
+            if self.executejoinqueued:
+                self.gui['executejointoggle'].set_active(False)
+                self.executejoin(None)
+            self.taskinprogress = False
+
+    def executetoggled(self, widget, _data=None):
+        self.executejoinqueued = widget.get_active()
+        self.processtask()
+
+    def buildindex(self, join):
+        """Build index in the background"""
+        indexalias = join.joinalias
+        indexfield = join.joinfield
+        progresstext = ' '.join(['Building index:', indexalias,
+                                 '-', indexfield])
+        self.gui.setprogress(0, progresstext)
+        # Create a generator that calculates some records then yields
+        indexbuilder = self.files[indexalias].buildindex(indexfield)
+        # Run the generator until it's finished. It yields % progress.
+        for progress in indexbuilder:
+            # this progress update lets the GUI function
+            self.gui.setprogress(progress,
+                                 (str(int(progress * 100)) + '% - '
+                                 + progresstext),
+                                 lockgui=False)
+        self.gui.setprogress(0, '')
 
     def removejoin(self, _widget, _data=None):
         """Removes the selected joins and any child joins dependent on it."""
@@ -421,12 +440,9 @@ class DBFUtil(object):
         self.joinaborted = True
 
     # 'execute join' button
-    def executejoin(self, _widget, _data=None):
+    def executejoin(self, _widget, _data=None, sample=False):
         """Execute the join and output the result"""
         if len(self.outputs) == 0:
-            return
-        # XXX it would be better to have it auto start when indexing is done
-        if self.indexinprogress:
             return
 
         targetalias = self.joins.gettarget()
