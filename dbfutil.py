@@ -50,6 +50,7 @@ class DBFUtil(object):
 
         # fake threading helpers
         self.joinaborted = False
+        self.executejoinqueued = False
         self.tasks_to_process = []
         self.taskinprogress = False
 
@@ -219,12 +220,7 @@ class DBFUtil(object):
                 tasktype, taskdata = self.tasks_to_process.pop(0)
                 if tasktype is 'index':
                     self.buildindex(taskdata)
-                elif tasktype is 'sample':
-                    # process sample updates after index building
-                    if len(self.tasks_to_process) > 0:
-                        self.tasks_to_process.append((tasktype, taskdata))
-                    else:
-                        self.updatesample()
+                self.updatesample()
         # This has to go after indexing too. The execute toggle button can be
         # used to cancel the output while the indices are still building.
             if self.executejoinqueued:
@@ -535,7 +531,7 @@ class DBFUtil(object):
         print 'processing complete'
         self.gui.setprogress(1, 'Output complete')
 
-    def updatesample(self, samplesize=50):
+    def updatesample(self, samplesize=10):
         """Update the sample of output records"""
         if len(self.outputs) == 0:
             return
@@ -547,8 +543,8 @@ class DBFUtil(object):
         self.gui.replacecolumns('sampleoutputlist', 'sampleoutputview',
                                 sampleoutputfields)
 
-        # creating the output functions in order will make the returned output
-        # be in order too
+        self.calc.clear()
+        # XXX doesn't adjust for reordered
         for fieldname in sampleoutputfields:
             self.calc.createoutputfunc(self.outputs[fieldname])
 

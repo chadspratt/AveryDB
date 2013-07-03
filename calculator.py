@@ -31,6 +31,9 @@ class Calculator(object):
         self.inputblanks = {}
         self.moremodules = {}
 
+    def clear(self):
+        self.outputfuncs = OrderedDict()
+
     # doesn't need to be speedy
     def createoutputfunc(self, field):
         """Converts an expression to a single function call.
