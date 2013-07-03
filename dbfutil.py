@@ -27,6 +27,7 @@ together, click refresh to load the fields, then adjust the fields.
 # callback functions for the gui
 import gtk
 import time
+import random
 
 import gui
 import filemanager
@@ -51,6 +52,9 @@ class DBFUtil(object):
         self.joinaborted = False
         self.tasks_to_process = []
         self.taskinprogress = False
+
+        # indices of the records used for showing sample output
+        self.sampleindices = []
 
         # needs to be last because control goes to the gui once it's called
         gui.startgui()
@@ -204,6 +208,7 @@ class DBFUtil(object):
             else:
                 self.refreshjoinlists()
                 self.processtask(('index', result))
+                self.processtask(('sample', None))
 
     def processtask(self, task=None):
         if task:
@@ -281,6 +286,7 @@ class DBFUtil(object):
                     outputlist.append(newfield.getattributelist())
                     # not the ideal place for this, but most convenient
                     self.calc.addblankvalue(filealias, field)
+        self.updatesample()
 
     def updatefieldattribute(self, _cell, row, new_value, outputlist, column):
         """Update data when an outputview cell is edited."""
@@ -296,6 +302,7 @@ class DBFUtil(object):
                     new_value = self.outputs.getuniquename(new_value)
         outputlist[row][column] = new_value
         self.outputs[row][column] = new_value
+        self.updatesample()
 
     # 'add field' button
     def addoutput(self, _widget, _data=None):
@@ -317,6 +324,7 @@ class DBFUtil(object):
         selection.unselect_all()
         selection.select_path(insertindex)
         self.gui['outputview'].scroll_to_cell(insertindex)
+        self.updatesample()
 
     # 'save field' button
     def copyoutput(self, _widget, _data=None):
@@ -335,6 +343,7 @@ class DBFUtil(object):
                 outputlist.insert(insertindex, fieldcopy.getattributelist())
                 selection.select_path(insertindex)
             self.gui['outputview'].scroll_to_cell(insertindex)
+        self.updatesample()
 
     # 'del field' button
     def removeoutput(self, _widget, _data=None):
@@ -349,6 +358,7 @@ class DBFUtil(object):
             for row in selectedrows:
                 outputlist.remove(outputlist.get_iter(row))
                 self.outputs.removefield(row[0])
+        self.updatesample()
 
     # 'move up' button
     def movetop(self, _widget, _data=None):
@@ -367,6 +377,7 @@ class DBFUtil(object):
                 moveindex += 1
             selection.select_range(0, selectedcount - 1)
             self.gui['outputview'].scroll_to_cell(0)
+        self.updatesample()
 
     # 'move up' button
     def moveup(self, _widget, _data=None):
@@ -390,6 +401,7 @@ class DBFUtil(object):
                 startindex += 1
             self.gui['outputview'].scroll_to_cell(max(selectedrows[0][0] - 1,
                                                       0))
+        self.updatesample()
 
     # 'move down' button
     def movedown(self, _widget, _data=None):
@@ -415,6 +427,7 @@ class DBFUtil(object):
                 else:
                     selection.select_path(row[0])
                 endindex -= 1
+        self.updatesample()
 
     # 'move down' button
     def movebottom(self, _widget, _data=None):
@@ -434,6 +447,7 @@ class DBFUtil(object):
                 moveindex -= 1
             selection.select_range(moveindex + 1, endindex)
             self.gui['outputview'].scroll_to_cell(endindex)
+        self.updatesample()
 
     def abortjoin(self, _widget, _data=None):
         """Set a signal for the output to abort."""
@@ -520,6 +534,57 @@ class DBFUtil(object):
         outputfile.close()
         print 'processing complete'
         self.gui.setprogress(1, 'Output complete')
+
+    def updatesample(self, samplesize=50):
+        """Update the sample of output records"""
+        if len(self.outputs) == 0:
+            return
+
+        targetalias = self.joins.gettarget()
+        targetfile = self.files[targetalias]
+
+        sampleoutputfields = self.outputs.outputorder
+        self.gui.replacecolumns('sampleoutputlist', 'sampleoutputview',
+                                sampleoutputfields)
+
+        # creating the output functions in order will make the returned output
+        # be in order too
+        for fieldname in sampleoutputfields:
+            self.calc.createoutputfunc(self.outputs[fieldname])
+
+        # generate a selection of records to use
+        if len(self.sampleindices) != samplesize:
+            recordcount = targetfile.getrecordcount()
+            self.sampleindices = []
+            while len(self.sampleindices) < samplesize:
+                newindex = random.randint(0, recordcount)
+                if newindex not in self.sampleindices:
+                    self.sampleindices.append(newindex)
+
+        # process however many records before updating progress
+        for sampleindex in self.sampleindices:
+            # inputvalues[filealias][fieldname] = value
+            inputvalues = {}
+            inputvalues[targetalias] = targetfile[sampleindex]
+
+            for joinlist in self.joins:
+                for join in joinlist:
+                    # no good way to make this line shorter
+                    joinvalue = inputvalues[join.targetalias][join.targetfield]
+                    joinfile = self.files[join.joinalias]
+                    # Will be None if there isn't a matching record to join
+                    temprecord = joinfile.getjoinrecord(join.joinfield,
+                                                        joinvalue)
+                    if temprecord is None:
+                        print join.joinfield + ':', joinvalue, ' not found'
+                    else:
+                        inputvalues[join.joinalias] = temprecord
+
+            outputrecord = []
+            outputvalues = self.calc.calculateoutput(inputvalues)
+            for _fieldname, fieldvalue in outputvalues:
+                outputrecord.append(fieldvalue)
+            self.gui['sampleoutputlist'].append(outputrecord)
 
     @classmethod
     def timetostring(cls, inputtime):

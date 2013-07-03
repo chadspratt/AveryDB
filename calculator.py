@@ -18,6 +18,7 @@ values.
 #   limitations under the License.
 ##
 import re
+from collections import OrderedDict
 
 from fieldcalcs import defaultfuncs
 
@@ -26,7 +27,7 @@ from fieldcalcs import defaultfuncs
 class Calculator(object):
     """This class creates custom functions for each of the output fields."""
     def __init__(self):
-        self.outputfuncs = {}
+        self.outputfuncs = OrderedDict()
         self.inputblanks = {}
         self.moremodules = {}
 
