@@ -14,6 +14,8 @@
 #   limitations under the License.
 ##
 # GUI window config
+import re
+
 import gtk
 import gobject
 
@@ -116,12 +118,13 @@ class GUI(object):
             view.remove_column(col)
         # add the new columns
         for i in range(len(newcolnames)):
+            colname = re.sub(r'_', '__', newcolnames[i])
             newcell = gtk.CellRendererText()
             newcell.set_property('editable', True)
             newcell.connect('edited',
                             self.handlerfunctions.updatefieldattribute,
                             self[storename], i)
-            newcolumn = gtk.TreeViewColumn(newcolnames[i], newcell, text=i)
+            newcolumn = gtk.TreeViewColumn(colname, newcell, text=i)
             view.append_column(newcolumn)
 
     def setprogress(self, progress=-1, text='', lockgui=True):

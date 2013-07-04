@@ -63,7 +63,8 @@ class JoinManager(object):
                 self.removejoins(joindefinition.joinalias)
             del self.joins[alias]
         # remove the joined alias from the list of all joined aliases
-        self.joinedaliases.remove(alias)
+        if alias in self.joinedaliases:
+            self.joinedaliases.remove(alias)
 
     def addjoin(self, joinalias, joinfield, targetalias, targetfield):
         """Create a Join and add it to the dictionary of all Joins."""
