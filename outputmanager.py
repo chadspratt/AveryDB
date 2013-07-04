@@ -104,6 +104,19 @@ class OutputManager(object):
             tempfield.createnewname()
         return tempfield['name']
 
+    def updatename(self, fieldpos, newname):
+        # Check that the name was changed
+        fieldindex = int(fieldpos)
+        oldname = self.outputorder[fieldindex]
+        if oldname.upper() != newname.upper():
+            # Check if the name is already in use.
+            if newname.upper() in self.outputfields:
+                newname = self.getuniquename(newname)
+            # Apply the updated name
+            self.outputorder[fieldindex] = newname
+            self.outputfields[newname.upper()] = self.outputfields[oldname.upper()]
+            del self.outputfields[oldname.upper()]
+
     def __getitem__(self, key):
         """Retrieve a Field object by index or by output name"""
         # Interpret all numbers as indices

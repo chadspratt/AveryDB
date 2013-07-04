@@ -286,18 +286,14 @@ class DBFUtil(object):
 
     def updatefieldattribute(self, _cell, row, new_value, outputlist, column):
         """Update data when an outputview cell is edited."""
-        # If the field name was updated, change the user input if necessary to
-        # make it unique.
-        # If it's in the field name column
+        # Update output manager if the field name was changed
         if column == 0:
-            # and the field name is already in use
-            if new_value in self.outputs:
-                # by a different field than the one being edited
-                if self.outputs[row]['name'].upper() != new_value.upper():
-                    # then modify new_value to be unique
-                    new_value = self.outputs.getuniquename(new_value)
+            self.outputs.updatename(row, new_value)
+        # update the view
         outputlist[row][column] = new_value
+        # update the field
         self.outputs[row][column] = new_value
+        # update the output sample
         self.updatesample()
 
     # 'add field' button
@@ -467,6 +463,7 @@ class DBFUtil(object):
         for fieldname in self.outputs.outputorder:
             outputfile.addfield(self.outputs[fieldname])
 
+        self.calc.clear()
         for field in self.outputs:
             self.calc.createoutputfunc(field)
 
@@ -507,16 +504,18 @@ class DBFUtil(object):
 
                 for joinlist in self.joins:
                     for join in joinlist:
-                        # no good way to make this line shorter
-                        joinvalue = inputvalues[join.targetalias][join.targetfield]
-                        joinfile = self.files[join.joinalias]
-                        # Will be None if there isn't a matching record to join
-                        temprecord = joinfile.getjoinrecord(join.joinfield,
-                                                            joinvalue)
-                        if temprecord is None:
-                            print join.joinfield + ':', joinvalue, ' not found'
-                        else:
-                            inputvalues[join.joinalias] = temprecord
+                        if join.targetalias in inputvalues:
+                            targetrecord = inputvalues[join.targetalias]
+                            joinvalue = targetrecord[join.targetfield]
+                            joinfile = self.files[join.joinalias]
+                            # Will be None if there isn't a matching record
+                            temprecord = joinfile.getjoinrecord(join.joinfield,
+                                                                joinvalue)
+                            if temprecord is None:
+                                print (join.joinfield + ':',
+                                       joinvalue, ' not found')
+                            else:
+                                inputvalues[join.joinalias] = temprecord
 
                 newrec = {}
                 outputvalues = self.calc.calculateoutput(inputvalues)
@@ -544,7 +543,6 @@ class DBFUtil(object):
                                 sampleoutputfields)
 
         self.calc.clear()
-        # XXX doesn't adjust for reordered
         for fieldname in sampleoutputfields:
             self.calc.createoutputfunc(self.outputs[fieldname])
 
@@ -572,7 +570,8 @@ class DBFUtil(object):
                     temprecord = joinfile.getjoinrecord(join.joinfield,
                                                         joinvalue)
                     if temprecord is None:
-                        print join.joinfield + ':', joinvalue, ' not found'
+                        pass
+                        #print join.joinfield + ':', joinvalue, ' not found'
                     else:
                         inputvalues[join.joinalias] = temprecord
 
