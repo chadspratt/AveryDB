@@ -8,4 +8,5 @@ import math
 
 
 def strsqrt(inputval):
+    """Return the square root of the input as a string."""
     return str(math.sqrt(inputval))

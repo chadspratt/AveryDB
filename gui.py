@@ -59,6 +59,17 @@ class GUI(object):
         handlers['executejointoggle_toggled_cb'] = hfuncs.executetoggled
         handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
         handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
+        # calc window
+        handlers['calc_clicked_cb'] = hfuncs.showcalculator
+        handlers['calcwindow_delete_event_cb'] = hfuncs.hidecalculator
+        handlers['calcoutputfieldcombo_changed_cb'] = hfuncs.changecalcfield
+        handlers['calcinputview_row_activated_cb'] = hfuncs.insertfieldvalue
+        handlers['calcsavevaluebutton_clicked_cb'] = hfuncs.savecalcvalue
+        handlers['calclibrarycomboentry_changed_cb'] = hfuncs.calclibchanged
+        handlers['calcfunctionview_row_activated_cb'] = hfuncs.insertfunccall
+
+        # experimental
+        handlers['sampleoutputview_columns_changed_cb'] = hfuncs.reordercols
 
         self.builder.connect_signals(handlers)
 
@@ -98,9 +109,7 @@ class GUI(object):
         dialog.run()
         dialog.destroy()
 
-    # This is only used for the center output field view. Different output
-    # formats may require different field attributes, so the columns will need
-    # to be changed
+    # This is used for the output field config and sample views.
     def replacecolumns(self, storename, viewname, newcolnames):
         """Replaces the columns in the output list/view with new columns."""
         # make a new liststore to use
@@ -118,6 +127,7 @@ class GUI(object):
             view.remove_column(col)
         # add the new columns
         for i in range(len(newcolnames)):
+            # treeviews need double underscores to display single underscores
             colname = re.sub(r'_', '__', newcolnames[i])
             newcell = gtk.CellRendererText()
             newcell.set_property('editable', True)

@@ -18,9 +18,12 @@ values.
 #   limitations under the License.
 ##
 import re
+import os
 from collections import OrderedDict
 
 from fieldcalcs import defaultfuncs
+
+DEFAULT_LIBRARIES = ['math']
 
 
 # not sure if this needs to be in a class. lots of scope ambiguity to test
@@ -31,8 +34,56 @@ class Calculator(object):
         self.inputblanks = {}
         self.moremodules = {}
 
+        for libname in DEFAULT_LIBRARIES:
+            self.importlib(libname)
+        self.moremodules['builtins'] = __builtins__
+
+        # import everything from the fieldcalcs directory
+        customfuncs = os.listdir('fieldcalcs')
+        for funcname in customfuncs:
+            name, extension = funcname.split('.')
+            if extension == 'py':
+                self.importlib(name)
+
     def clear(self):
         self.outputfuncs = OrderedDict()
+
+    def importlib(self, libname, reloadlib=False):
+        libname = libname.strip()
+        if libname is '':
+            return
+        if libname not in self.moremodules:
+            try:
+                # try this way in case it's a python library module
+                self.moremodules[libname] = __import__(libname)
+            except ImportError:
+                # assume it's a fieldcals module
+                self.moremodules[libname] = __import__('fieldcalcs.' +
+                                                       libname,
+                                                       globals(),
+                                                       locals(),
+                                                       [libname])
+        elif reloadlib:
+            self.moremodules[libname] = reload(self.moremodules[libname])
+
+    def getlibs(self):
+        return self.moremodules
+
+    def getfuncs(self, libname):
+        if libname not in self.moremodules:
+            self.importlib(libname)
+        libfuncs = []
+        # get a list of all the names defined in the function
+        names = dir(self.moremodules[libname])
+        for name in names:
+            libobject = getattr(self.moremodules[libname], name)
+            # filter out other modules that were imported
+            if callable(libobject):
+                # filter out private methods:
+                    if not name.startswith('_'):
+                        # return a tuple of the function name and docstring
+                        libfuncs.append((name, libobject.__doc__))
+        return libfuncs
 
     # doesn't need to be speedy
     def createoutputfunc(self, field):
@@ -79,17 +130,7 @@ class Calculator(object):
             else:
                 # if it has a module name, make sure the module is imported
                 module = components[0]
-                if module not in globals() and module not in self.moremodules:
-                    try:
-                        # try this way in case it's a python library module
-                        self.moremodules[module] = __import__(module)
-                    except ImportError:
-                        # assume it's a fieldcals module
-                        self.moremodules[module] = __import__('fieldcalcs.' +
-                                                              module,
-                                                              globals(),
-                                                              locals(),
-                                                              [module])
+                self.importlib(module)
                 if module in self.moremodules:
                     # replace the module name with a reference to the locally
                     # imported module
