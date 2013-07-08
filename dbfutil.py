@@ -451,7 +451,7 @@ class DBFUtil(object):
         self.joinaborted = True
 
     # 'execute join' button
-    def executejoin(self, _widget, _data=None, sample=False):
+    def executejoin(self, _widget, _data=None):
         """Execute the join and output the result"""
         if len(self.outputs) == 0:
             return
@@ -615,13 +615,14 @@ class DBFUtil(object):
             lastindex = selectedrows[-1]
             lastfield = outputlist.get_value(outputlist.get_iter(lastindex), 0)
             # select the field in the calc window
-            outputlist = self.gui['outputlist']
+#            outputlist = self.gui['outputlist']
             for row in outputlist:
                 if lastfield in row:
+                    # this will trigger changecalcfield
                     self.gui['calcoutputfieldcombo'].set_active_iter(row.iter)
                     break
-        else:
-            self.gui['calcoutputfieldcombo'].set_active(-1)
+#        elif outputlist.get_iter_first():
+#            self.gui['calcoutputfieldcombo'].set_active(-1)
 
         # init the list of available libraries in the combobox
         librarylist = self.gui['librarylist']
@@ -648,13 +649,14 @@ class DBFUtil(object):
         newlib = widget.get_active_text()
         functionlist = self.gui['functionlist']
         functionlist.clear()
-        try:
-            for funcname, funcdoc in self.calc.getfuncs(newlib):
-                functionlist.append([funcname, funcdoc])
-        except ImportError:
-            # this will get called for every letter typed into the box
-            # many failed imports are to be expected
-            pass
+        if newlib:
+            try:
+                for funcname, funcdoc in self.calc.getfuncs(newlib):
+                    functionlist.append([funcname, funcdoc])
+            except ImportError:
+                # this will get called for every letter typed into the box
+                # many failed imports are to be expected
+                pass
 
     def insertfieldvalue(self, _widget, path, _view_column):
         """Insert a double-clicked value where the cursor or highlight is."""
@@ -702,11 +704,77 @@ class DBFUtil(object):
         self.gui['outputlist'][outputcombo.get_active_iter()][-1] = fieldvalue
         self.updatesample()
 
+    # XXX dragging dropping columns to reorder attributes, incomplete
     def reordercols(self, widget):
         columns = widget.get_columns()
         columnnames = [col.get_title() for col in columns]
         outputlist = self.gui['outputlist']
         for i in range(len(columnnames)):
             pass
+
+    def showfunceditor(self, _widget, _data=None):
+        """Initialize and show the function editor window."""
+        # get the selected lib from the combobox
+        selectedlibname = self.gui['calclibrarycomboentry'].get_active_text()
+        # get the selected function name from the function list
+        selection = self.gui['calcfunctionview'].get_selection()
+        (functionlist, selectedpath) = selection.get_selected()
+        if selectedpath:
+            selectedfuncname = functionlist.get_value(selectedpath, 0)
+        else:
+            selectedfuncname = None
+        customlibs = self.calc.getcustomlibs()
+        customlibrarylist = self.gui['customlibrarylist']
+        customlibrarylist.clear()
+        for customlib in customlibs:
+            rowiter = customlibrarylist.append([customlib])
+            if customlib == selectedlibname:
+                # this would call changefunclibrary but on init it needs
+                # to use the selected function from the calc window
+                funclibcombo = self.gui['funclibrarycombo']
+                funclibcombo.handler_block_by_func(self.changefunclibrary)
+                funclibcombo.set_active_iter(rowiter)
+                funclibcombo.handler_unblock_by_func(self.changefunclibrary)
+        # if the lib was custom, load its functions
+        if self.gui['funclibrarycombo'].get_active_iter():
+            libfunctions = self.calc.getfuncs(selectedlibname)
+            customfunctionlist = self.gui['customfunctionlist']
+            customfunctionlist.clear()
+            for libname, _libdoc in libfunctions:
+                rowiter = customfunctionlist.append([libname])
+                if libname == selectedfuncname:
+                    # this will trigger changefuncfunction to init the text
+                    self.gui['funcfunctioncombo'].set_active_iter(rowiter)
+        self.gui['funcwindow'].show_all()
+
+    def hidefunceditor(self, _widget, _data=None):
+        self.gui['funcwindow'].hide()
+        return True
+
+    def changefunclibrary(self, widget, _data=None):
+        """Update calc value box when the calc output field combo changes."""
+        libname = widget.get_active_text()
+        if libname is not None:
+            libfunctions = self.calc.getfuncs(libname)
+            customfunctionlist = self.gui['customfunctionlist']
+            customfunctionlist.clear()
+            for funcname, _funcdoc in libfunctions:
+                customfunctionlist.append([funcname])
+
+    def changefuncfunction(self, widget, _data=None):
+        """Update calc value box when the calc output field combo changes."""
+        libname = self.gui['funclibrarycombo'].get_active_text()
+        funcname = widget.get_active_text()
+        if funcname:
+            functext = self.calc.getfunctext(libname, funcname)
+            valuebuffer = self.gui['funceditingtextview'].get_buffer()
+            valuebuffer.set_text(functext)
+
+    def savefunction(self, _widget, _data=None):
+        libname = self.gui['funclibrarycombo'].get_active_text()
+        funcbuffer = self.gui['funceditingtextview'].get_buffer()
+        functext = funcbuffer.get_text(funcbuffer.get_start_iter(),
+                                       funcbuffer.get_end_iter())
+        self.calc.writefunctext(libname, functext)
 
 DBFUTIL = DBFUtil()

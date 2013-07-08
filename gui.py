@@ -60,13 +60,19 @@ class GUI(object):
         handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
         handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
         # calc window
-        handlers['calc_clicked_cb'] = hfuncs.showcalculator
+        handlers['opencalcbutton_clicked_cb'] = hfuncs.showcalculator
         handlers['calcwindow_delete_event_cb'] = hfuncs.hidecalculator
         handlers['calcoutputfieldcombo_changed_cb'] = hfuncs.changecalcfield
         handlers['calcinputview_row_activated_cb'] = hfuncs.insertfieldvalue
         handlers['calcsavevaluebutton_clicked_cb'] = hfuncs.savecalcvalue
         handlers['calclibrarycomboentry_changed_cb'] = hfuncs.calclibchanged
         handlers['calcfunctionview_row_activated_cb'] = hfuncs.insertfunccall
+        # function window
+        handlers['calcopenfuncbutton_clicked_cb'] = hfuncs.showfunceditor
+        handlers['funcwindow_delete_event_cb'] = hfuncs.hidefunceditor
+        handlers['funclibrarycombo_changed_cb'] = hfuncs.changefunclibrary
+        handlers['funcfunctioncombo_changed_cb'] = hfuncs.changefuncfunction
+        handlers['funcsavebutton_clicked_cb'] = hfuncs.savefunction
 
         # experimental
         handlers['sampleoutputview_columns_changed_cb'] = hfuncs.reordercols

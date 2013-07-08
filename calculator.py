@@ -21,18 +21,19 @@ import re
 import os
 from collections import OrderedDict
 
-from fieldcalcs import defaultfuncs
-
+# libraries to preload and list in the calculator dialog
+# XXX needs a menu setting to edit it. in place or make a config file?
 DEFAULT_LIBRARIES = ['math']
 
 
-# not sure if this needs to be in a class. lots of scope ambiguity to test
 class Calculator(object):
     """This class creates custom functions for each of the output fields."""
     def __init__(self):
         self.outputfuncs = OrderedDict()
         self.inputblanks = {}
         self.moremodules = {}
+        # list of all the modules the user can edit
+        self.custommodules = ['defaultfuncs']
 
         for libname in DEFAULT_LIBRARIES:
             self.importlib(libname)
@@ -44,11 +45,15 @@ class Calculator(object):
             name, extension = funcname.split('.')
             if extension == 'py':
                 self.importlib(name)
+                if name not in self.custommodules:
+                    self.custommodules.append(name)
 
     def clear(self):
+        """Clear the list of dynamically generated output functions."""
         self.outputfuncs = OrderedDict()
 
-    def importlib(self, libname, reloadlib=False):
+    def importlib(self, libname):
+        """Import a library for the calculator to use."""
         libname = libname.strip()
         if libname is '':
             return
@@ -63,13 +68,19 @@ class Calculator(object):
                                                        globals(),
                                                        locals(),
                                                        [libname])
-        elif reloadlib:
-            self.moremodules[libname] = reload(self.moremodules[libname])
 
     def getlibs(self):
+        """Get a list of all libraries currently imported for field calcs."""
         return self.moremodules
 
+    def getcustomlibs(self):
+        """Get a list of all the custom libraries."""
+        return self.custommodules
+
     def getfuncs(self, libname):
+        """Get the names of all public functions in a library."""
+        if libname is '':
+            return
         if libname not in self.moremodules:
             self.importlib(libname)
         libfuncs = []
@@ -80,10 +91,111 @@ class Calculator(object):
             # filter out other modules that were imported
             if callable(libobject):
                 # filter out private methods:
-                    if not name.startswith('_'):
-                        # return a tuple of the function name and docstring
-                        libfuncs.append((name, libobject.__doc__))
+                if not name.startswith('_'):
+                    # return a tuple of the function name and docstring
+                    libfuncs.append((name, libobject.__doc__))
         return libfuncs
+
+    # this is only used for custom functions defined in a fieldcalcs module
+    @classmethod
+    def getfunctext(cls, libname, funcname):
+        """Parse a library file and get the full text of a given function."""
+        os.chdir('fieldcalcs')
+        libfile = open(libname + '.py', 'r')
+        os.chdir('..')
+
+        libtext = libfile.readlines()
+        libfile.close()
+        i = 0
+        funcstart = -1
+        funcend = -1
+        # find the start of the function
+        while i < len(libtext):
+            if re.findall('def ' + funcname, libtext[i]):
+                funcstart = i
+                # backtrack and grab comments that precede the function
+                while libtext[funcstart - 1].strip().startswith('#'):
+                    funcstart -= 1
+                break
+            i += 1
+        else:
+            # function not found
+            return ''
+        # find the end of the function
+        i += 1
+        while i < len(libtext):
+            if libtext[i].startswith('    '):
+                funcend = i
+                i += 1
+            else:
+                break
+
+        # return the function as a single string
+        return ''.join(libtext[funcstart:funcend + 1])
+
+    @classmethod
+    def getfuncbounds(cls, libname, funcname):
+        """Parse a library file and get the full text of a given function."""
+        os.chdir('fieldcalcs')
+        libfile = open(libname + '.py', 'r')
+        os.chdir('..')
+
+        libtext = libfile.readlines()
+        libfile.close()
+        i = 0
+        funcstart = -1
+        funcend = -1
+        # find the start of the function
+        while i < len(libtext):
+            if re.findall('def ' + funcname, libtext[i]):
+                funcstart = i
+                # backtrack and grab comments that precede the function
+                while libtext[funcstart - 1].strip().startswith('#'):
+                    funcstart -= 1
+                break
+            i += 1
+        else:
+            # function not found
+            return (None, None)
+        # find the end of the function
+        i += 1
+        while i < len(libtext):
+            if libtext[i].startswith('    '):
+                funcend = i
+                i += 1
+            else:
+                break
+
+        # return the function as a single string
+        return (funcstart, funcend)
+
+    def writefunctext(self, libname, functext):
+        """Save a function written in the gui to a file."""
+        # extract the function name from the function text.
+        funcname = re.findall(r'def ([a-zA-Z_][a-zA-Z_0-9]*)\(', functext)[0]
+        curfuncstart, curfuncend = self.getfuncbounds(libname, funcname)
+        os.chdir('fieldcalcs')
+        libfile = open(libname + '.py', 'r')
+        fulllibtext = libfile.readlines()
+        libfile.close()
+        # if the function is already in the file, replace it
+        if curfuncstart:
+            libfile = open(libname + '.py', 'w')
+            libfile.truncate(0)
+            # Add the portion of the library before the function being replaced
+            outputtext = ''.join(fulllibtext[:curfuncstart])
+            # Add the new function to lines
+            outputtext = outputtext + functext
+            # Add the portion of the library after the function being replaced
+            outputtext = outputtext + ''.join(fulllibtext[curfuncend + 1:])
+            libfile.write(outputtext)
+        else:
+            libfile = open(libname + '.py', 'a')
+            libfile.write('\n\n' + functext)
+        libfile.close()
+        os.chdir('..')
+        # reload the module so the new function can be used
+        self.moremodules[libname] = reload(self.moremodules[libname])
 
     # doesn't need to be speedy
     def createoutputfunc(self, field):
@@ -121,7 +233,7 @@ class Calculator(object):
             # A single word is either a builtin or from defaultfuncs
             if len(components) == 1:
                 # check if it's a func in defaultfunc
-                if components[0] in dir(defaultfuncs):
+                if components[0] in dir(self.moremodules['defaultfuncs']):
                     # prepend 'defaultfuncs.' to the function name
                     newfuncbody = re.sub(funcname,
                                          'defaultfuncs.' + funcname,
