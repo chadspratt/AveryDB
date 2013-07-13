@@ -42,10 +42,10 @@ class GUI(object):
         handlers['mainwindow_destroy_cb'] = hfuncs.quitprogram
         handlers['addfilebutton_clicked_cb'] = hfuncs.addfile
         handlers['removefilebutton_clicked_cb'] = hfuncs.removefile
-        handlers['targetcombo_changed_cb'] = hfuncs.targetchanged
-        handlers['joinaliascombo_changed_cb'] = hfuncs.joinaliaschanged
-        handlers['targetaliascombo_changed_cb'] = hfuncs.targetaliaschanged
-        handlers['joinfieldcombo_changed_cb'] = hfuncs.joinfieldchanged
+        handlers['targetcombo_changed_cb'] = hfuncs.changetarget
+        handlers['joinaliascombo_changed_cb'] = hfuncs.loadjoinfields
+        handlers['targetaliascombo_changed_cb'] = hfuncs.loadtargetfields
+        handlers['joinfieldcombo_changed_cb'] = hfuncs.matchtargetfield
         handlers['addjoinbutton_clicked_cb'] = hfuncs.addjoin
         handlers['outputformatcombo_changed_cb'] = hfuncs.changeoutputformat
         handlers['movetopbutton_clicked_cb'] = hfuncs.movetop
@@ -56,7 +56,7 @@ class GUI(object):
         handlers['addoutputbutton_clicked_cb'] = hfuncs.addoutput
         handlers['copyoutputbutton_clicked_cb'] = hfuncs.copyoutput
         handlers['removeoutputbutton_clicked_cb'] = hfuncs.removeoutput
-        handlers['executejointoggle_toggled_cb'] = hfuncs.executetoggled
+        handlers['executejointoggle_toggled_cb'] = hfuncs.queueexecution
         handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
         handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
         # calc window
@@ -70,9 +70,10 @@ class GUI(object):
         # function window
         handlers['calcopenfuncbutton_clicked_cb'] = hfuncs.showfunceditor
         handlers['funcwindow_delete_event_cb'] = hfuncs.hidefunceditor
-        handlers['funclibrarycombo_changed_cb'] = hfuncs.changefunclibrary
-        handlers['funcfunctioncombo_changed_cb'] = hfuncs.changefuncfunction
+        handlers['funclibrarycombo_changed_cb'] = hfuncs.loadlibraryfunctions
+        handlers['funcfunctioncombo_changed_cb'] = hfuncs.loadfunctiontext
         handlers['funcsavebutton_clicked_cb'] = hfuncs.savefunction
+#        handlers['functiontextbuffer_changed_cb'] = hfuncs.checkfunctionname
 
         # experimental
         handlers['sampleoutputview_columns_changed_cb'] = hfuncs.reordercols

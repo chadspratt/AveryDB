@@ -112,7 +112,7 @@ class DBFUtil(object):
             # want to check outputs for fields that now have broken references.
             # if not remove them, show some sort of alert
 
-    def targetchanged(self, _widget, _data=None):
+    def changetarget(self, _widget, _data=None):
         """Set an open file as the main target for joining."""
         newtarget = self.gui['targetcombo'].get_active_text()
         self.joins.settarget(newtarget)
@@ -154,7 +154,7 @@ class DBFUtil(object):
         for childjoin in self.joins[join.joinalias]:
             self.rebuildjointree(newparent, childjoin)
 
-    def joinaliaschanged(self, _widget, _data=None):
+    def loadjoinfields(self, _widget, _data=None):
         """Update the join field combo when the join alias combo changes."""
         # clear the liststore and add the new items
         joinfieldlist = self.gui['joinfieldlist']
@@ -167,7 +167,7 @@ class DBFUtil(object):
             for joinfield in joinfields:
                 joinfieldlist.append([joinfield.name])
 
-    def targetaliaschanged(self, _widget, _data=None):
+    def loadtargetfields(self, _widget, _data=None):
         """Update target field combo when target alias combo changes."""
         # clear the liststore and add the new items
         targetfieldlist = self.gui['targetfieldlist']
@@ -180,7 +180,7 @@ class DBFUtil(object):
             for targetfield in targetfields:
                 targetfieldlist.append([targetfield.name])
 
-    def joinfieldchanged(self, widget, _data=None):
+    def matchtargetfield(self, widget, _data=None):
         """Sets the target field if there is one with a matching name."""
         value = widget.get_active_text()
         targetfieldlist = self.gui['targetfieldlist']
@@ -228,7 +228,7 @@ class DBFUtil(object):
                 self.executejoin(None)
             self.taskinprogress = False
 
-    def executetoggled(self, widget, _data=None):
+    def queueexecution(self, widget, _data=None):
         self.executejoinqueued = widget.get_active()
         self.processtask()
 
@@ -732,9 +732,9 @@ class DBFUtil(object):
                 # this would call changefunclibrary but on init it needs
                 # to use the selected function from the calc window
                 funclibcombo = self.gui['funclibrarycombo']
-                funclibcombo.handler_block_by_func(self.changefunclibrary)
+                funclibcombo.handler_block_by_func(self.loadlibraryfunctions)
                 funclibcombo.set_active_iter(rowiter)
-                funclibcombo.handler_unblock_by_func(self.changefunclibrary)
+                funclibcombo.handler_unblock_by_func(self.loadlibraryfunctions)
         # if the lib was custom, load its functions
         if self.gui['funclibrarycombo'].get_active_iter():
             libfunctions = self.calc.getfuncs(selectedlibname)
@@ -751,7 +751,7 @@ class DBFUtil(object):
         self.gui['funcwindow'].hide()
         return True
 
-    def changefunclibrary(self, widget, _data=None):
+    def loadlibraryfunctions(self, widget, _data=None):
         """Update calc value box when the calc output field combo changes."""
         libname = widget.get_active_text()
         if libname is not None:
@@ -761,20 +761,30 @@ class DBFUtil(object):
             for funcname, _funcdoc in libfunctions:
                 customfunctionlist.append([funcname])
 
-    def changefuncfunction(self, widget, _data=None):
+    def loadfunctiontext(self, _widget, _data=None):
         """Update calc value box when the calc output field combo changes."""
         libname = self.gui['funclibrarycombo'].get_active_text()
-        funcname = widget.get_active_text()
+        funcname = self.gui['funcfunctioncombo'].get_active_text()
         if funcname:
             functext = self.calc.getfunctext(libname, funcname)
             valuebuffer = self.gui['funceditingtextview'].get_buffer()
             valuebuffer.set_text(functext)
 
     def savefunction(self, _widget, _data=None):
+        """Write the contents of the editor to the selected library.
+
+        Whatever is in the text editing area will be written to the library
+        selected in the combobox at the top of the function editor window.
+        If the function alread exists it will be overwritten. If the input is
+        not a function it will probably cause problems and the file will need
+        to be opened in an external editor and cleaned."""
         libname = self.gui['funclibrarycombo'].get_active_text()
         funcbuffer = self.gui['funceditingtextview'].get_buffer()
         functext = funcbuffer.get_text(funcbuffer.get_start_iter(),
                                        funcbuffer.get_end_iter())
         self.calc.writefunctext(libname, functext)
+        self.loadfunctiontext(None)
+
+#    def checkfunctionname
 
 DBFUTIL = DBFUtil()

@@ -100,54 +100,20 @@ class Calculator(object):
     @classmethod
     def getfunctext(cls, libname, funcname):
         """Parse a library file and get the full text of a given function."""
-        os.chdir('fieldcalcs')
-        libfile = open(libname + '.py', 'r')
-        os.chdir('..')
-
-        libtext = libfile.readlines()
-        libfile.close()
-        i = 0
-        funcstart = -1
-        funcend = -1
-        # find the start of the function
-        while i < len(libtext):
-            if re.findall('def ' + funcname, libtext[i]):
-                funcstart = i
-                # backtrack and grab comments that precede the function
-                while libtext[funcstart - 1].strip().startswith('#'):
-                    funcstart -= 1
-                break
-            i += 1
-        else:
-            # function not found
-            return ''
-        # find the end of the function
-        i += 1
-        while i < len(libtext):
-            if libtext[i].startswith('    '):
-                funcend = i
-                i += 1
-            else:
-                break
-
+        libtext = cls.getlibtext(libname)
+        funcstart, funcend = cls.getfuncbounds(libtext, funcname)
         # return the function as a single string
         return ''.join(libtext[funcstart:funcend + 1])
 
     @classmethod
-    def getfuncbounds(cls, libname, funcname):
+    def getfuncbounds(cls, libtext, funcname):
         """Parse a library file and get the full text of a given function."""
-        os.chdir('fieldcalcs')
-        libfile = open(libname + '.py', 'r')
-        os.chdir('..')
-
-        libtext = libfile.readlines()
-        libfile.close()
         i = 0
         funcstart = -1
         funcend = -1
         # find the start of the function
         while i < len(libtext):
-            if re.findall('def ' + funcname, libtext[i]):
+            if re.findall('^def ' + funcname, libtext[i]):
                 funcstart = i
                 # backtrack and grab comments that precede the function
                 while libtext[funcstart - 1].strip().startswith('#'):
@@ -157,10 +123,14 @@ class Calculator(object):
         else:
             # function not found
             return (None, None)
-        # find the end of the function
+        # move to the first indented line
         i += 1
+        # find the end of the function
+        print 'libtext:', libtext
+        print 'len(libtext):', len(libtext)
         while i < len(libtext):
-            if libtext[i].startswith('    '):
+            print 'libtext[' + str(i) + ']:', libtext[i]
+            if re.findall(r'^    ', libtext[i]):
                 funcend = i
                 i += 1
             else:
@@ -169,33 +139,60 @@ class Calculator(object):
         # return the function as a single string
         return (funcstart, funcend)
 
-    def writefunctext(self, libname, functext):
-        """Save a function written in the gui to a file."""
-        # extract the function name from the function text.
-        funcname = re.findall(r'def ([a-zA-Z_][a-zA-Z_0-9]*)\(', functext)[0]
-        curfuncstart, curfuncend = self.getfuncbounds(libname, funcname)
+    @classmethod
+    def getlibtext(cls, libname):
+        """Returns the text of a python library file as a list of lines."""
         os.chdir('fieldcalcs')
         libfile = open(libname + '.py', 'r')
-        fulllibtext = libfile.readlines()
+        os.chdir('..')
+        libtext = libfile.readlines()
         libfile.close()
-        # if the function is already in the file, replace it
-        if curfuncstart:
+        return libtext
+
+    def writefunctext(self, libname, text):
+        """Save a function written in the gui to a file."""
+        curtext = self.getlibtext(libname)
+        print 'text:', text
+        # replace any tabs with four spaces
+        spacedtext = re.sub(r'\t', '    ', text)
+        print 'spacedtext:', spacedtext
+        # split the entered text into lines, retaining newline characters
+        newtext = [line + '\n' for line in spacedtext.split('\n')]
+#        re.findall(r'.*\n*', spacedtext)
+        # extract the function names from the function text.
+        funcnames = re.findall(r'def ([a-zA-Z_][a-zA-Z_0-9]*)\(', text)
+        print 'funcnames:', funcnames
+        for funcname in funcnames:
+            curfuncstart, curfuncend = self.getfuncbounds(curtext, funcname)
+            newfuncstart, newfuncend = self.getfuncbounds(newtext, funcname)
+            print 'curfuncstart, curfuncend:', curfuncstart, curfuncend
+            print 'newfuncstart, newfuncend:', newfuncstart, newfuncend
+            if curfuncstart:
+                print 'curfunc:', curtext[curfuncstart:curfuncend + 1]
+            print 'newfunc:', newtext[newfuncstart:newfuncend + 1]
+            # if the function is already in the file, replace it
+            if curfuncstart:
+                # Add portion of the library before the function being replaced
+                outputtext = curtext[:curfuncstart]
+                # Add the new function to lines
+                outputtext.extend(newtext[newfuncstart:newfuncend + 1])
+                # Add portion of the library after the function being replaced
+                outputtext.extend(curtext[curfuncend + 1:])
+                curtext = outputtext
+            else:
+                curtext.extend(['\n', '\n'])
+                curtext.extend(newtext[newfuncstart:newfuncend + 1])
+            print 'curtext:', curtext
+        # if there were any functions to write, do so and reload the library
+        if len(funcnames) > 0:
+            os.chdir('fieldcalcs')
             libfile = open(libname + '.py', 'w')
             libfile.truncate(0)
-            # Add the portion of the library before the function being replaced
-            outputtext = ''.join(fulllibtext[:curfuncstart])
-            # Add the new function to lines
-            outputtext = outputtext + functext
-            # Add the portion of the library after the function being replaced
-            outputtext = outputtext + ''.join(fulllibtext[curfuncend + 1:])
-            libfile.write(outputtext)
-        else:
-            libfile = open(libname + '.py', 'a')
-            libfile.write('\n\n' + functext)
-        libfile.close()
-        os.chdir('..')
-        # reload the module so the new function can be used
-        self.moremodules[libname] = reload(self.moremodules[libname])
+            libfile.write(''.join(curtext))
+            libfile.close()
+            os.chdir('..')
+            # reload the module so the new function can be used
+            self.moremodules[libname] = reload(self.moremodules[libname])
 
     # doesn't need to be speedy
     def createoutputfunc(self, field):

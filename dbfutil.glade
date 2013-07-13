@@ -377,6 +377,9 @@
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkTextBuffer" id="functiontextbuffer">
+    <signal name="changed" handler="functiontextbuffer_changed_cb" swapped="no"/>
+  </object>
   <object class="GtkWindow" id="funcwindow">
     <property name="width_request">450</property>
     <property name="height_request">350</property>
@@ -543,6 +546,7 @@
               <object class="GtkTextView" id="funceditingtextview">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="buffer">functiontextbuffer</property>
               </object>
             </child>
           </object>
@@ -556,12 +560,14 @@
           <object class="GtkToolbar" id="funcmaintoolbar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="toolbar_style">both-horiz</property>
             <child>
               <object class="GtkToolButton" id="funcresetbutton">
+                <property name="width_request">125</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">toolbutton3</property>
+                <property name="label" translatable="yes">reset</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-revert-to-saved</property>
               </object>
@@ -575,7 +581,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">toolbutton4</property>
+                <property name="label" translatable="yes">cancel</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-cancel</property>
               </object>
@@ -589,7 +595,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">toolbutton5</property>
+                <property name="label" translatable="yes">save &amp; close</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-close</property>
               </object>
@@ -603,7 +609,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">toolbutton6</property>
+                <property name="label" translatable="yes">save</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-save</property>
                 <signal name="clicked" handler="funcsavebutton_clicked_cb" swapped="no"/>
