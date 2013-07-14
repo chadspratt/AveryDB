@@ -65,7 +65,7 @@ class GUI(object):
         handlers['calcoutputfieldcombo_changed_cb'] = hfuncs.changecalcfield
         handlers['calcinputview_row_activated_cb'] = hfuncs.insertfieldvalue
         handlers['calcsavevaluebutton_clicked_cb'] = hfuncs.savecalcvalue
-        handlers['calclibrarycomboentry_changed_cb'] = hfuncs.calclibchanged
+        handlers['calclibrarycomboentry_changed_cb'] = hfuncs.loadfunctionlist
         handlers['calcfunctionview_row_activated_cb'] = hfuncs.insertfunccall
         # function window
         handlers['calcopenfuncbutton_clicked_cb'] = hfuncs.showfunceditor

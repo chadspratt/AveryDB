@@ -1,7 +1,10 @@
 """Converts input records to output records.
 
-This class takes input values and python statements and computes the output
-values.
+This class serves two purposes:
+* Calculates the output values for each field
+** Call createoutputfunc(field) for each output field
+** Call calculateoutput(inputvalues) to get all output values
+* Creates and edits custom functions that can be used for calculating output
 """
 ##
 #   Copyright 2013 Chad Spratt
@@ -33,26 +36,35 @@ class Calculator(object):
         self.inputblanks = {}
         self.moremodules = {}
         # list of all the modules the user can edit
-        self.custommodules = ['defaultfuncs']
+        self.custommodules = []
 
+        # load all the libraries set to load by default
         for libname in DEFAULT_LIBRARIES:
-            self.importlib(libname)
+            self._importlib(libname)
         self.moremodules['builtins'] = __builtins__
+
+        # reset the file for storing temporary functions. resetting when the
+        # program starts means the functions will remain available in case
+        # they're wanted after all.
+        os.chdir('fieldcalcs')
+        templib = open('temporary.py', 'w')
+        templib.truncate(0)
+        templib.close()
+        os.chdir('..')
 
         # import everything from the fieldcalcs directory
         customfuncs = os.listdir('fieldcalcs')
         for funcname in customfuncs:
             name, extension = funcname.split('.')
             if extension == 'py':
-                self.importlib(name)
-                if name not in self.custommodules:
-                    self.custommodules.append(name)
+                self._importlib(name)
+                self.custommodules.append(name)
 
     def clear(self):
         """Clear the list of dynamically generated output functions."""
         self.outputfuncs = OrderedDict()
 
-    def importlib(self, libname):
+    def _importlib(self, libname):
         """Import a library for the calculator to use."""
         libname = libname.strip()
         if libname is '':
@@ -82,7 +94,7 @@ class Calculator(object):
         if libname is '':
             return
         if libname not in self.moremodules:
-            self.importlib(libname)
+            self._importlib(libname)
         libfuncs = []
         # get a list of all the names defined in the function
         names = dir(self.moremodules[libname])
@@ -100,13 +112,14 @@ class Calculator(object):
     @classmethod
     def getfunctext(cls, libname, funcname):
         """Parse a library file and get the full text of a given function."""
-        libtext = cls.getlibtext(libname)
-        funcstart, funcend = cls.getfuncbounds(libtext, funcname)
+        libtext = cls._getlibtext(libname)
+        funcstart, funcend = cls._getfuncbounds(libtext, funcname)
         # return the function as a single string
         return ''.join(libtext[funcstart:funcend + 1])
 
+    # this is only used for custom functions defined in a fieldcalcs module
     @classmethod
-    def getfuncbounds(cls, libtext, funcname):
+    def _getfuncbounds(cls, libtext, funcname):
         """Parse a library file and get the full text of a given function."""
         i = 0
         funcstart = -1
@@ -139,8 +152,9 @@ class Calculator(object):
         # return the function as a single string
         return (funcstart, funcend)
 
+    # this is only used for custom functions defined in a fieldcalcs module
     @classmethod
-    def getlibtext(cls, libname):
+    def _getlibtext(cls, libname):
         """Returns the text of a python library file as a list of lines."""
         os.chdir('fieldcalcs')
         libfile = open(libname + '.py', 'r')
@@ -151,20 +165,20 @@ class Calculator(object):
 
     def writefunctext(self, libname, text):
         """Save a function written in the gui to a file."""
-        curtext = self.getlibtext(libname)
+        curtext = self._getlibtext(libname)
         print 'text:', text
         # replace any tabs with four spaces
         spacedtext = re.sub(r'\t', '    ', text)
         print 'spacedtext:', spacedtext
-        # split the entered text into lines, retaining newline characters
+        # this formats the input string like readlines() does for files
         newtext = [line + '\n' for line in spacedtext.split('\n')]
 #        re.findall(r'.*\n*', spacedtext)
         # extract the function names from the function text.
         funcnames = re.findall(r'def ([a-zA-Z_][a-zA-Z_0-9]*)\(', text)
         print 'funcnames:', funcnames
         for funcname in funcnames:
-            curfuncstart, curfuncend = self.getfuncbounds(curtext, funcname)
-            newfuncstart, newfuncend = self.getfuncbounds(newtext, funcname)
+            curfuncstart, curfuncend = self._getfuncbounds(curtext, funcname)
+            newfuncstart, newfuncend = self._getfuncbounds(newtext, funcname)
             print 'curfuncstart, curfuncend:', curfuncstart, curfuncend
             print 'newfuncstart, newfuncend:', newfuncstart, newfuncend
             if curfuncstart:
@@ -194,7 +208,8 @@ class Calculator(object):
             # reload the module so the new function can be used
             self.moremodules[libname] = reload(self.moremodules[libname])
 
-    # doesn't need to be speedy
+    # Doesn't need to be speedy, but the function it creates does
+    # Not a lot of room for optimizing, that I can imagine
     def createoutputfunc(self, field):
         """Converts an expression to a single function call.
 
@@ -206,7 +221,7 @@ class Calculator(object):
         * input field values: !filealias.fieldname!
         * builtin function calls: len(), str(), abs()
         * library function calls: math.sqrt(), os.getcwd()
-        * custom functions defined in fieldcalcs.defaultfuncs: pad_ids()
+        * custom functions defined in fieldcalcs.default: pad_ids()
         * functions from a different module in fieldcalcs: streets.fullname()
         (fullname function is defined in streets.py)
 
@@ -227,19 +242,19 @@ class Calculator(object):
         funcs = re.findall(r'([a-zA-Z]+[a-zA-Z0-9\._]*)\(', newfuncbody)
         for funcname in funcs:
             components = funcname.split('.')
-            # A single word is either a builtin or from defaultfuncs
+            # A single word is either a builtin or from default.py
             if len(components) == 1:
                 # check if it's a func in defaultfunc
-                if components[0] in dir(self.moremodules['defaultfuncs']):
-                    # prepend 'defaultfuncs.' to the function name
+                if components[0] in dir(self.moremodules['default']):
+                    # prepend 'default.' to the function name
                     newfuncbody = re.sub(funcname,
-                                         'defaultfuncs.' + funcname,
+                                         'default.' + funcname,
                                          newfuncbody)
                 # otherwise assume it's a builtin and leave it alone
             else:
                 # if it has a module name, make sure the module is imported
                 module = components[0]
-                self.importlib(module)
+                self._importlib(module)
                 if module in self.moremodules:
                     # replace the module name with a reference to the locally
                     # imported module
@@ -270,17 +285,20 @@ class Calculator(object):
             for arg in args:
                 if arg[0] in inputvalues:
                     argvalues.append(inputvalues[arg[0]][arg[1]])
-                # File didn't join for this record, pass a blank default value
                 else:
+                    # Missed join for this record, pass a blank default value
                     argvalues.append(self.inputblanks[arg[0]][arg[1]])
             outputvalue = outputfunc(self, argvalues)
             outputvalues.append((outputfieldname, outputvalue))
         return outputvalues
 
-    # util function used in dojoin()
     # doesn't need to be speedy
     def addblankvalue(self, filealias, field):
-        """Supplies a blank value for a field, based on field type."""
+        """Stores a default blank value to use for each input field.
+
+        This needs to be called once for each field which may need a blank
+        value, which are used when a record doesn't join. The fields in the
+        target file don't need this since they will always exist."""
         fieldtype = field['type']
         if fieldtype == 'C':
             blankvalue = ''

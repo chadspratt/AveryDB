@@ -560,30 +560,30 @@
           <object class="GtkToolbar" id="funcmaintoolbar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="toolbar_style">both-horiz</property>
+            <property name="toolbar_style">text</property>
             <child>
               <object class="GtkToolButton" id="funcresetbutton">
                 <property name="width_request">125</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">reset</property>
+                <property name="label" translatable="yes">Reload Function</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-revert-to-saved</property>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="funccancelbutton">
+              <object class="GtkToolButton" id="funcsavebutton">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">cancel</property>
                 <property name="use_underline">True</property>
-                <property name="stock_id">gtk-cancel</property>
+                <property name="stock_id">gtk-save</property>
+                <signal name="clicked" handler="funcsavebutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -595,7 +595,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">save &amp; close</property>
+                <property name="label" translatable="yes">Save &amp; Close</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-close</property>
               </object>
@@ -605,14 +605,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="funcsavebutton">
+              <object class="GtkToolButton" id="funccancelbutton">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">save</property>
+                <property name="label" translatable="yes">Cancel</property>
                 <property name="use_underline">True</property>
-                <property name="stock_id">gtk-save</property>
-                <signal name="clicked" handler="funcsavebutton_clicked_cb" swapped="no"/>
+                <property name="stock_id">gtk-cancel</property>
               </object>
               <packing>
                 <property name="expand">False</property>

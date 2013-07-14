@@ -212,6 +212,7 @@ class DBFUtil(object):
                 self.processtask(('sample', None))
 
     def processtask(self, task=None):
+        """Build indices and update sample output in the "background"."""
         if task:
             self.tasks_to_process.append(task)
         if not self.taskinprogress:
@@ -229,6 +230,7 @@ class DBFUtil(object):
             self.taskinprogress = False
 
     def queueexecution(self, widget, _data=None):
+        """Signal the program to start once background processing is done."""
         self.executejoinqueued = widget.get_active()
         self.processtask()
 
@@ -285,7 +287,7 @@ class DBFUtil(object):
                     newfield = self.outputs.addfield(field, filealias)
                     outputlist.append(newfield.getattributelist())
                     inputlist.append([newfield['value']])
-                    # not the ideal place for this, but most convenient
+                    # XXX not the ideal place for this, but most convenient
                     self.calc.addblankvalue(filealias, field)
         self.updatesample()
 
@@ -607,6 +609,7 @@ class DBFUtil(object):
         return outputstr
 
     def showcalculator(self, _widget, _data=None):
+        """Show the calculator window when the Calc button is clicked."""
         # get the selected row from the output list
         selection = self.gui['outputview'].get_selection()
         # (model, [(path0,), (path1,), ...])
@@ -634,6 +637,7 @@ class DBFUtil(object):
         self.gui['calcwindow'].show_all()
 
     def hidecalculator(self, _widget, _data=None):
+        """Hide the calculator window in response to a destroy event."""
         self.gui['calcwindow'].hide()
         return True
 
@@ -645,7 +649,8 @@ class DBFUtil(object):
             valuebuffer = self.gui['calcvalueview'].get_buffer()
             valuebuffer.set_text(newvalue)
 
-    def calclibchanged(self, widget, _data=None):
+    def loadfunctionlist(self, widget, _data=None):
+        """List the functions when a new library is entered or selected."""
         newlib = widget.get_active_text()
         functionlist = self.gui['functionlist']
         functionlist.clear()
@@ -676,7 +681,7 @@ class DBFUtil(object):
         functionlist = self.gui['functionlist']
         functionname = functionlist.get_value(functionlist.get_iter(path), 0)
         # Append the module name for everything not in these two modules
-        if modulename not in ['builtins', 'defaultfuncs']:
+        if modulename not in ['builtins', 'default']:
             functionname = modulename + '.' + functionname
         # Get any selected text
         valuebuffer = self.gui['calcvalueview'].get_buffer()
@@ -706,6 +711,7 @@ class DBFUtil(object):
 
     # XXX dragging dropping columns to reorder attributes, incomplete
     def reordercols(self, widget):
+        """Update the column order when they are drug around in the GUI."""
         columns = widget.get_columns()
         columnnames = [col.get_title() for col in columns]
         outputlist = self.gui['outputlist']
@@ -748,6 +754,7 @@ class DBFUtil(object):
         self.gui['funcwindow'].show_all()
 
     def hidefunceditor(self, _widget, _data=None):
+        """Hide the function editor in response to a destroy event."""
         self.gui['funcwindow'].hide()
         return True
 
