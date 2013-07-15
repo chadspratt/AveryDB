@@ -72,8 +72,14 @@ class GUI(object):
         handlers['funcwindow_delete_event_cb'] = hfuncs.hidefunceditor
         handlers['funclibrarycombo_changed_cb'] = hfuncs.loadlibraryfunctions
         handlers['funcfunctioncombo_changed_cb'] = hfuncs.loadfunctiontext
+        handlers['funcreloadbutton_clicked_cb'] = hfuncs.loadfunctiontext
         handlers['funcsavebutton_clicked_cb'] = hfuncs.savefunction
-#        handlers['functiontextbuffer_changed_cb'] = hfuncs.checkfunctionname
+        handlers['funcsaveclosebutton_clicked_cb'] = hfuncs.saveclosefunction
+        handlers['funccancelbutton_clicked_cb'] = hfuncs.hidefunceditor
+        # new library dialog
+        handlers['funcaddlibrarybutton_clicked_cb'] = hfuncs.getlibraryname
+        handlers['newlibcreate_clicked_cb'] = hfuncs.createlibrary
+        handlers['newlibcancel_clicked_cb'] = hfuncs.cancelcreatelibrary
 
         # experimental
         handlers['sampleoutputview_columns_changed_cb'] = hfuncs.reordercols

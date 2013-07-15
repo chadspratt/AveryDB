@@ -758,6 +758,24 @@ class DBFUtil(object):
         self.gui['funcwindow'].hide()
         return True
 
+    def getlibraryname(self, _widget, _data=None):
+        """Show a dialog to ask for a new function name."""
+        self.gui['newlibentry'].set_text('')
+        self.gui['newlibdialog'].show()
+
+    def createlibrary(self, _widget, _data=None):
+        """Create a new library file with the user-provided library name."""
+        libname = self.gui['newlibentry'].get_text()
+        self.calc.createlib(libname)
+        self.gui['newlibdialog'].hide()
+        # refresh the different library lists
+        self.showfunceditor(None)
+        self.showcalculator(None)
+
+    def cancelcreatelibrary(self, _widget, _data=None):
+        """Hide the library name dialog without creating anything."""
+        self.gui['newlibdialog'].hide()
+
     def loadlibraryfunctions(self, widget, _data=None):
         """Update calc value box when the calc output field combo changes."""
         libname = widget.get_active_text()
@@ -792,6 +810,9 @@ class DBFUtil(object):
         self.calc.writefunctext(libname, functext)
         self.loadfunctiontext(None)
 
-#    def checkfunctionname
+    def saveclosefunction(self, _widget, _data=None):
+        """Save the contents of the editor and close the function editor."""
+        self.savefunction(None)
+        self.hidefunceditor(None)
 
 DBFUTIL = DBFUtil()

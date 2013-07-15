@@ -81,6 +81,15 @@ class Calculator(object):
                                                        locals(),
                                                        [libname])
 
+    def createlib(self, libname):
+        if libname not in self.moremodules:
+            os.chdir('fieldcalcs')
+            newlib = open(libname + '.py', 'w')
+            newlib.close()
+            os.chdir('..')
+            self._importlib(libname)
+            self.custommodules.append(libname)
+
     def getlibs(self):
         """Get a list of all libraries currently imported for field calcs."""
         return self.moremodules
@@ -139,10 +148,7 @@ class Calculator(object):
         # move to the first indented line
         i += 1
         # find the end of the function
-        print 'libtext:', libtext
-        print 'len(libtext):', len(libtext)
         while i < len(libtext):
-            print 'libtext[' + str(i) + ']:', libtext[i]
             if re.findall(r'^    ', libtext[i]):
                 funcend = i
                 i += 1
@@ -166,24 +172,16 @@ class Calculator(object):
     def writefunctext(self, libname, text):
         """Save a function written in the gui to a file."""
         curtext = self._getlibtext(libname)
-        print 'text:', text
         # replace any tabs with four spaces
         spacedtext = re.sub(r'\t', '    ', text)
-        print 'spacedtext:', spacedtext
         # this formats the input string like readlines() does for files
         newtext = [line + '\n' for line in spacedtext.split('\n')]
 #        re.findall(r'.*\n*', spacedtext)
         # extract the function names from the function text.
         funcnames = re.findall(r'def ([a-zA-Z_][a-zA-Z_0-9]*)\(', text)
-        print 'funcnames:', funcnames
         for funcname in funcnames:
             curfuncstart, curfuncend = self._getfuncbounds(curtext, funcname)
             newfuncstart, newfuncend = self._getfuncbounds(newtext, funcname)
-            print 'curfuncstart, curfuncend:', curfuncstart, curfuncend
-            print 'newfuncstart, newfuncend:', newfuncstart, newfuncend
-            if curfuncstart:
-                print 'curfunc:', curtext[curfuncstart:curfuncend + 1]
-            print 'newfunc:', newtext[newfuncstart:newfuncend + 1]
             # if the function is already in the file, replace it
             if curfuncstart:
                 # Add portion of the library before the function being replaced
@@ -196,7 +194,6 @@ class Calculator(object):
             else:
                 curtext.extend(['\n', '\n'])
                 curtext.extend(newtext[newfuncstart:newfuncend + 1])
-            print 'curtext:', curtext
         # if there were any functions to write, do so and reload the library
         if len(funcnames) > 0:
             os.chdir('fieldcalcs')
@@ -242,15 +239,25 @@ class Calculator(object):
         funcs = re.findall(r'([a-zA-Z]+[a-zA-Z0-9\._]*)\(', newfuncbody)
         for funcname in funcs:
             components = funcname.split('.')
-            # A single word is either a builtin or from default.py
+            # A single word is either a builtin, default, or temporary function
             if len(components) == 1:
-                # check if it's a func in defaultfunc
-                if components[0] in dir(self.moremodules['default']):
+                # first check if it's a temporary function
+                # this means temp functions will overrule default functions
+                # defaults or builtins can still be used by writing
+                # default.func or builtins.func
+                if components[0] in dir(self.moremodules['temporary']):
+                    # prepend 'temporary.' to the function name
+                    newfuncbody = re.sub(funcname,
+                                         'temporary.' + funcname,
+                                         newfuncbody)
+                # then check if it's in default
+                elif components[0] in dir(self.moremodules['default']):
                     # prepend 'default.' to the function name
                     newfuncbody = re.sub(funcname,
                                          'default.' + funcname,
                                          newfuncbody)
                 # otherwise assume it's a builtin and leave it alone
+                # XXX should check builtins and do something if it isn't there
             else:
                 # if it has a module name, make sure the module is imported
                 module = components[0]

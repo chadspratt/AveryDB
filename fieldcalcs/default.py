@@ -12,9 +12,10 @@ def area(height, width):
 
 # test comment
 def concat(field1, field2):
-    return str(field1) + ' ' + str(field2) + ' cats'
+    return str(field1) + ' ' + str(field2)
 
 
 def halfstring(inputstr):
+    """Return the first half of a string."""
     strlen = len(inputstr)
     return  inputstr[:strlen / 2]

@@ -377,9 +377,6 @@
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkTextBuffer" id="functiontextbuffer">
-    <signal name="changed" handler="functiontextbuffer_changed_cb" swapped="no"/>
-  </object>
   <object class="GtkWindow" id="funcwindow">
     <property name="width_request">450</property>
     <property name="height_request">350</property>
@@ -390,11 +387,12 @@
       <object class="GtkVBox" id="funcmainbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="border_width">3</property>
+        <property name="spacing">2</property>
         <child>
           <object class="GtkHBox" id="funclibrarybox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="border_width">2</property>
             <property name="spacing">2</property>
             <child>
               <object class="GtkLabel" id="funclibrarylabel">
@@ -442,6 +440,7 @@
                     <property name="label" translatable="yes">toolbutton2</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-add</property>
+                    <signal name="clicked" handler="funcaddlibrarybutton_clicked_cb" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -466,7 +465,6 @@
           <object class="GtkHBox" id="funcfunctionbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="border_width">2</property>
             <property name="spacing">2</property>
             <child>
               <object class="GtkLabel" id="funcfunctionlabel">
@@ -500,33 +498,6 @@
                 <property name="position">1</property>
               </packing>
             </child>
-            <child>
-              <object class="GtkToolbar" id="funcfunctiontoolbar">
-                <property name="width_request">30</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="icon_size">1</property>
-                <child>
-                  <object class="GtkToolButton" id="funcaddfunctionbutton">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
-                    <property name="label" translatable="yes">toolbutton1</property>
-                    <property name="use_underline">True</property>
-                    <property name="stock_id">gtk-add</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -538,7 +509,6 @@
           <object class="GtkScrolledWindow" id="funceditingwindow">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="border_width">3</property>
             <property name="hscrollbar_policy">automatic</property>
             <property name="vscrollbar_policy">automatic</property>
             <property name="shadow_type">in</property>
@@ -546,7 +516,6 @@
               <object class="GtkTextView" id="funceditingtextview">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="buffer">functiontextbuffer</property>
               </object>
             </child>
           </object>
@@ -557,65 +526,67 @@
           </packing>
         </child>
         <child>
-          <object class="GtkToolbar" id="funcmaintoolbar">
+          <object class="GtkHBox" id="funcbuttonbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="toolbar_style">text</property>
             <child>
-              <object class="GtkToolButton" id="funcresetbutton">
-                <property name="width_request">125</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
+              <object class="GtkButton" id="funcreloadbutton">
                 <property name="label" translatable="yes">Reload Function</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-revert-to-saved</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="funcreloadbutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
-                <property name="homogeneous">True</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="funcsavebutton">
+              <object class="GtkButton" id="funcsavebutton">
+                <property name="label" translatable="yes">Save</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-save</property>
                 <signal name="clicked" handler="funcsavebutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="funcclosebutton">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
+              <object class="GtkButton" id="funcsaveclosebutton">
                 <property name="label" translatable="yes">Save &amp; Close</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-close</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="funcsaveclosebutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="fill">False</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="funccancelbutton">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
+              <object class="GtkButton" id="funccancelbutton">
                 <property name="label" translatable="yes">Cancel</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="funccancelbutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="fill">False</property>
+                <property name="position">3</property>
               </packing>
             </child>
           </object>
@@ -633,11 +604,6 @@
       <!-- column-name fieldname -->
       <column type="gchararray"/>
     </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">!test.name!</col>
-      </row>
-    </data>
   </object>
   <object class="GtkListStore" id="joinfieldlist">
     <columns>
@@ -1741,6 +1707,96 @@ File:</property>
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkDialog" id="newlibdialog">
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="default_height">100</property>
+    <property name="type_hint">dialog</property>
+    <property name="skip_taskbar_hint">True</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="newlibbox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="newlibbuttons">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="newlibcreate">
+                <property name="label" translatable="yes">Create</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="newlibcreate_clicked_cb" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="newlibcancel">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="newlibcancel_clicked_cb" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="newlibprompt">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="xalign">0.019999999552965164</property>
+            <property name="label" translatable="yes">New library name:</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="newlibentry">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">•</property>
+            <property name="primary_icon_activatable">False</property>
+            <property name="secondary_icon_activatable">False</property>
+            <property name="primary_icon_sensitive">True</property>
+            <property name="secondary_icon_sensitive">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">newlibcreate</action-widget>
+      <action-widget response="0">newlibcancel</action-widget>
+    </action-widgets>
   </object>
   <object class="GtkListStore" id="outputtypelist">
     <columns>
