@@ -16,6 +16,8 @@ It doesn't do anything further with the files."""
 #   limitations under the License.
 ##
 #
+import sqlite3
+
 import joinfile
 
 
@@ -35,6 +37,16 @@ class FileManager(object):
                                                  'application/dbf',
                                                  'application/x-dbf'],
                                        'patterns': ['*.dbf']}
+        # clear the sqlite db. could alternately do this on program close
+        sqlitefile = open('temp.db', 'w')
+        sqlitefile.truncate(0)
+        sqlitefile.close()
+        # If two aliases point to one file, only one will be used as the table
+        # name
+        # table names by filename
+        self.tablesbyfilename = {}
+        # table names by alias
+        self.tablesbyalias = {}
 
     def addfile(self, filename):
         """Open a new file. If file is already open, add an alias for it."""
@@ -63,9 +75,59 @@ class FileManager(object):
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
 
+    # long-running, should yield periodically so the GUI can function
+    def converttosqlite(self, alias):
+        """Create an sqlite table to use instead of the filehandler."""
+        filename = self.filenamesbyalias[alias]
+        # check if the sqlite table has already been created
+        if filename in self.tablesbyfilename:
+            self.tablesbyalias[alias] = self.tablesbyfilename[filename]
+            return
+        self.tablesbyalias[alias] = alias
+        # open the file and get the field names
+        inputfile = self.filesbyfilename[filename]
+        fields = inputfile.getfields()
+        fieldnames = [field.name for field in fields]
+        # create a string of question marks for the queries
+        # one question mark for each field. four fields = '?, ?, ?, ?'
+        qmarklist = []
+        for x in range(len(fieldnames)):
+            qmarklist.append('?')
+        qmarks = ', '.join(qmarklist)
+
+        # open the database
+        conn = sqlite3.connect('temp.db')
+        cur = conn.cursor()
+        # create the table
+        print 'CREATE TABLE "' + alias + """" ('""" + "', '".join(fieldnames) + "')"
+        cur.execute('CREATE TABLE "' + alias + """" ('""" + "', '".join(fieldnames) + "')")
+#        cur.execute('CREATE TABLE ' + alias + ' (' + qmarks + ');', fieldnames)
+        # insert all the records
+        recordcount = inputfile.getrecordcount()
+        i = 0
+        insertquery = 'INSERT INTO "' + alias + '" VALUES (' + qmarks + ');'
+        while i < recordcount:
+            # process however many records before pausing
+            for i in range(i, min(i + 250, recordcount)):
+                record = inputfile[i]
+                values = [record[fn] for fn in fieldnames]
+                cur.execute(insertquery, values)
+                i += 1
+            # Take a break so the gui can be used
+            yield float(i) / recordcount
+        # save the name of the table for this filename
+        self.tablesbyfilename[filename] = alias
+
+    def buildsqlindex(self, indexalias, indexfield):
+        # open the database
+        conn = sqlite3.connect('temp.db')
+        cur = conn.cursor()
+        cur.execute('CREATE INDEX ' + indexfield + 'index ON ' +
+                    self.tablesbyalias[indexalias] + '(' + indexfield + ')')
+
     @classmethod
     def openoutputfile(cls, filename):
-        """Returns a file, with the given filenam,e opened for writing."""
+        """Returns a file, with the given filename opened for writing."""
         return joinfile.JoinFile(filename, mode='w')
 
     def __getitem__(self, key):

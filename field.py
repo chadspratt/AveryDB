@@ -19,7 +19,7 @@ class Field(object):
     def __init__(self, fieldname, fieldattributes=None, fieldvalue=''):
         if fieldattributes is None:
             fieldattributes = {}
-        # used this for resetting a field
+        # used for resetting a field
         self.originalname = fieldname
         self.originalvalue = fieldvalue
         # name and value that will be used in the output

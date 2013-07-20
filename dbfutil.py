@@ -28,6 +28,7 @@ together, click refresh to load the fields, then adjust the fields.
 import gtk
 import time
 import random
+import sqlite3
 
 import gui
 import filemanager
@@ -57,6 +58,9 @@ class DBFUtil(object):
         # indices of the records used for showing sample output
         self.sampleindices = []
 
+        # sql flag
+        self.usesql = False
+
         # needs to be last because control goes to the gui once it's called
         gui.startgui()
 
@@ -83,6 +87,8 @@ class DBFUtil(object):
                 self.joins.settarget(newfilealias)
                 self.gui['targetcombo'].set_active_iter(newrow)
         addfiledialog.destroy()
+        if self.usesql:
+            self.processtasks(('sqlite', newfilealias))
 
     def removefile(self, _widget, _data=None):
         """Close a file and remove all joins that depend on it."""
@@ -208,20 +214,29 @@ class DBFUtil(object):
             # otherwise result is the new Join
             else:
                 self.refreshjoinlists()
-                self.processtask(('index', result))
-                self.processtask(('sample', None))
+                self.queuetask(('index', result))
+                self.queuetask(('sample', None))
+                self.processtasks()
 
-    def processtask(self, task=None):
-        """Build indices and update sample output in the "background"."""
+    def queuetask(self, task=None):
         if task:
             self.tasks_to_process.append(task)
+
+    def processtasks(self, task=None):
+        if task:
+            self.tasks_to_process.append(task)
+        """Build indices and update sample output in the "background"."""
         if not self.taskinprogress:
             self.taskinprogress = True
             while self.tasks_to_process:
                 tasktype, taskdata = self.tasks_to_process.pop(0)
                 if tasktype is 'index':
                     self.buildindex(taskdata)
-                self.updatesample()
+                    self.updatesample()
+                elif tasktype is 'sample':
+                    self.updatesample()
+                elif tasktype is 'sqlite':
+                    self.converttosql(taskdata)
         # This has to go after indexing too. The execute toggle button can be
         # used to cancel the output while the indices are still building.
             if self.executejoinqueued:
@@ -232,19 +247,44 @@ class DBFUtil(object):
     def queueexecution(self, widget, _data=None):
         """Signal the program to start once background processing is done."""
         self.executejoinqueued = widget.get_active()
-        self.processtask()
+        self.processtasks()
+
+    def togglesqluse(self, widget, _data=None):
+        self.usesql = widget.get_active()
+        if self.usesql:
+            for alias in self.files.filenamesbyalias:
+                self.queuetask(('sqlite', alias))
+            self.processtasks()
+        # else could check that all the indices are built, but that's tricky
 
     def buildindex(self, join):
         """Build index in the background"""
         indexalias = join.joinalias
         indexfield = join.joinfield
-        progresstext = ' '.join(['Building index:', indexalias,
-                                 '-', indexfield])
+        if self.usesql:
+            self.files.buildsqlindex(indexalias, indexfield)
+        else:
+            progresstext = ' '.join(['Building index:', indexalias,
+                                     '-', indexfield])
+            self.gui.setprogress(0, progresstext)
+            # Create a generator that calculates some records then yields
+            indexbuilder = self.files[indexalias].buildindex(indexfield)
+            # Run the generator until it's finished. It yields % progress.
+            for progress in indexbuilder:
+                # this progress update lets the GUI function
+                self.gui.setprogress(progress,
+                                     (str(int(progress * 100)) + '% - '
+                                     + progresstext),
+                                     lockgui=False)
+            self.gui.setprogress(0, '')
+
+    def converttosql(self, alias):
+        progresstext = 'Converting to sqlite: ' + alias
         self.gui.setprogress(0, progresstext)
         # Create a generator that calculates some records then yields
-        indexbuilder = self.files[indexalias].buildindex(indexfield)
+        dataconverter = self.files.converttosqlite(alias)
         # Run the generator until it's finished. It yields % progress.
-        for progress in indexbuilder:
+        for progress in dataconverter:
             # this progress update lets the GUI function
             self.gui.setprogress(progress,
                                  (str(int(progress * 100)) + '% - '
@@ -452,6 +492,27 @@ class DBFUtil(object):
         """Set a signal for the output to abort."""
         self.joinaborted = True
 
+    def getinputfromdbf(self, targetalias, targetfile, i):
+        # inputvalues[filealias][fieldname] = value
+        inputvalues = {}
+        inputvalues[targetalias] = targetfile[i]
+
+        for joinlist in self.joins:
+            for join in joinlist:
+                if join.targetalias in inputvalues:
+                    targetrecord = inputvalues[join.targetalias]
+                    joinvalue = targetrecord[join.targetfield]
+                    joinfile = self.files[join.joinalias]
+                    # Will be None if there isn't a matching record
+                    temprecord = joinfile.getjoinrecord(join.joinfield,
+                                                        joinvalue)
+                    if temprecord is None:
+                        print (join.joinfield + ':',
+                               joinvalue, ' not found')
+                    else:
+                        inputvalues[join.joinalias] = temprecord
+        return inputvalues
+
     # 'execute join' button
     def executejoin(self, _widget, _data=None):
         """Execute the join and output the result"""
@@ -477,6 +538,18 @@ class DBFUtil(object):
         stopbutton = self.gui['stopjoinbutton']
         stopbutton.set_sensitive(True)
         self.joinaborted = False
+
+        # sqlite setup
+        cur = None
+        if self.usesql:
+            joinquery = self.joins.getquery(self.files.tablesbyalias)
+            # open the database
+            conn = sqlite3.connect('temp.db')
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            # create the table
+            cur.execute(joinquery)
+
         # loop through target file
         i = 0
         recordcount = targetfile.getrecordcount()
@@ -506,23 +579,12 @@ class DBFUtil(object):
             # process however many records before updating progress
             for i in range(i, min(i + 1000, recordcount)):
                 # inputvalues[filealias][fieldname] = value
-                inputvalues = {}
-                inputvalues[targetalias] = targetfile[i]
-
-                for joinlist in self.joins:
-                    for join in joinlist:
-                        if join.targetalias in inputvalues:
-                            targetrecord = inputvalues[join.targetalias]
-                            joinvalue = targetrecord[join.targetfield]
-                            joinfile = self.files[join.joinalias]
-                            # Will be None if there isn't a matching record
-                            temprecord = joinfile.getjoinrecord(join.joinfield,
-                                                                joinvalue)
-                            if temprecord is None:
-                                print (join.joinfield + ':',
-                                       joinvalue, ' not found')
-                            else:
-                                inputvalues[join.joinalias] = temprecord
+                # XXX move this if-else outside of the while loop
+                if self.usesql:
+                    inputvalues = cur.fetchone()
+                else:
+                    inputvalues = self.getinputfromdbf(targetalias,
+                                                       targetfile, i)
 
                 newrec = {}
                 outputvalues = self.calc.calculateoutput(inputvalues)
@@ -562,25 +624,26 @@ class DBFUtil(object):
                 if newindex not in self.sampleindices:
                     self.sampleindices.append(newindex)
 
+        # sqlite setup
+        cur = None
+        if self.usesql:
+            joinquery = self.joins.getquery(self.files.tablesbyalias)
+            # modify it to only get the sampling of records
+            joinquery += ' WHERE
+            # open the database
+            conn = sqlite3.connect('temp.db')
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            # create the table
+            cur.execute(joinquery)
+
         # process however many records before updating progress
         for sampleindex in self.sampleindices:
-            # inputvalues[filealias][fieldname] = value
-            inputvalues = {}
-            inputvalues[targetalias] = targetfile[sampleindex]
-
-            for joinlist in self.joins:
-                for join in joinlist:
-                    # no good way to make this line shorter
-                    joinvalue = inputvalues[join.targetalias][join.targetfield]
-                    joinfile = self.files[join.joinalias]
-                    # Will be None if there isn't a matching record to join
-                    temprecord = joinfile.getjoinrecord(join.joinfield,
-                                                        joinvalue)
-                    if temprecord is None:
-                        pass
-                        #print join.joinfield + ':', joinvalue, ' not found'
-                    else:
-                        inputvalues[join.joinalias] = temprecord
+            if self.usesql:
+                inputvalues = cur.fetchone()
+            else:
+                inputvalues = self.getinputfromdbf(targetalias,
+                                                   targetfile, sampleindex)
 
             outputrecord = []
             outputvalues = self.calc.calculateoutput(inputvalues)
@@ -646,6 +709,7 @@ class DBFUtil(object):
         newfield = widget.get_active_text()
         if newfield is not None:
             newvalue = self.outputs[newfield]['value']
+            self.gui['calcvaluelabel'].set_text(newvalue[1:-1] + ' =')
             valuebuffer = self.gui['calcvalueview'].get_buffer()
             valuebuffer.set_text(newvalue)
 

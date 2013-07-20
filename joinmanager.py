@@ -98,7 +98,32 @@ class JoinManager(object):
                 joinlist.extend(self._joinsdfs(entry.joinalias))
         return joinlist
 
+    def getjoins(self):
+        """Return a list of all join objects, in hierarchical order."""
+        alljoins = []
+        joinorder = self._joinsdfs(self.targetalias)
+        for filealias in joinorder:
+            if filealias in self.joins:
+                alljoins.extend(self.joins[filealias])
+        return alljoins
+
+    def getquery(self, tablemap, sampling=None):
+        """Create an sql query string that will perform the join."""
+        query = ['SELECT * FROM ' + self.targetalias]
+        for join in self.getjoins():
+            query.append('LEFT OUTER JOIN ' + join.joinalias + ' ON ' +
+                         tablemap[join.joinalias] + '.' + join.joinfield +
+                         '=' + tablemap[join.targetalias] + '.' +
+                         join.targetfield)
+        if sampling:
+            indexstr = ', '.join(sampling)
+            query.append('WHERE ' + self.targetalias + '.ROWID IN ('
+                         + ', '.join(sampling) + ')')
+
+        return ' '.join(query)
+
     def __getitem__(self, target):
+        """Get a list of joins to a target."""
         if target in self.joins:
             return self.joins[target]
         return []
