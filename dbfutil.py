@@ -59,7 +59,7 @@ class DBFUtil(object):
         self.sampleindices = []
 
         # sql flag
-        self.usesql = False
+        self.usesql = self.gui['usesqlcheckbox'].get_active()
 
         # needs to be last because control goes to the gui once it's called
         gui.startgui()
@@ -223,19 +223,19 @@ class DBFUtil(object):
             self.tasks_to_process.append(task)
 
     def processtasks(self, task=None):
+        """Build indices and update sample output in the "background"."""
         if task:
             self.tasks_to_process.append(task)
-        """Build indices and update sample output in the "background"."""
         if not self.taskinprogress:
             self.taskinprogress = True
             while self.tasks_to_process:
                 tasktype, taskdata = self.tasks_to_process.pop(0)
-                if tasktype is 'index':
+                if tasktype == 'index':
                     self.buildindex(taskdata)
                     self.updatesample()
-                elif tasktype is 'sample':
+                elif tasktype == 'sample':
                     self.updatesample()
-                elif tasktype is 'sqlite':
+                elif tasktype == 'sqlite':
                     self.converttosql(taskdata)
         # This has to go after indexing too. The execute toggle button can be
         # used to cancel the output while the indices are still building.
@@ -329,7 +329,7 @@ class DBFUtil(object):
                     inputlist.append([newfield['value']])
                     # XXX not the ideal place for this, but most convenient
                     self.calc.addblankvalue(filealias, field)
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     def updatefieldattribute(self, _cell, row, new_value, outputlist, column):
         """Update data when an outputview cell is edited."""
@@ -341,7 +341,7 @@ class DBFUtil(object):
         # update the field
         self.outputs[row][column] = new_value
         # update the output sample
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     # 'add field' button
     def addoutput(self, _widget, _data=None):
@@ -363,7 +363,7 @@ class DBFUtil(object):
         selection.unselect_all()
         selection.select_path(insertindex)
         self.gui['outputview'].scroll_to_cell(insertindex)
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     # 'save field' button
     def copyoutput(self, _widget, _data=None):
@@ -382,7 +382,7 @@ class DBFUtil(object):
                 outputlist.insert(insertindex, fieldcopy.getattributelist())
                 selection.select_path(insertindex)
             self.gui['outputview'].scroll_to_cell(insertindex)
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     # 'del field' button
     def removeoutput(self, _widget, _data=None):
@@ -397,7 +397,7 @@ class DBFUtil(object):
             for row in selectedrows:
                 outputlist.remove(outputlist.get_iter(row))
                 self.outputs.removefield(row[0])
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     # 'move up' button
     def movetop(self, _widget, _data=None):
@@ -416,7 +416,7 @@ class DBFUtil(object):
                 moveindex += 1
             selection.select_range(0, selectedcount - 1)
             self.gui['outputview'].scroll_to_cell(0)
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     # 'move up' button
     def moveup(self, _widget, _data=None):
@@ -440,7 +440,7 @@ class DBFUtil(object):
                 startindex += 1
             self.gui['outputview'].scroll_to_cell(max(selectedrows[0][0] - 1,
                                                       0))
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     # 'move down' button
     def movedown(self, _widget, _data=None):
@@ -466,7 +466,7 @@ class DBFUtil(object):
                 else:
                     selection.select_path(row[0])
                 endindex -= 1
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     # 'move down' button
     def movebottom(self, _widget, _data=None):
@@ -486,7 +486,7 @@ class DBFUtil(object):
                 moveindex -= 1
             selection.select_range(moveindex + 1, endindex)
             self.gui['outputview'].scroll_to_cell(endindex)
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     def abortjoin(self, _widget, _data=None):
         """Set a signal for the output to abort."""
@@ -495,22 +495,38 @@ class DBFUtil(object):
     def getinputfromdbf(self, targetalias, targetfile, i):
         # inputvalues[filealias][fieldname] = value
         inputvalues = {}
-        inputvalues[targetalias] = targetfile[i]
+        targetrec = targetfile[i]
+        for fieldname in targetrec:
+            inputvalues[targetalias + '_' + fieldname] = targetrec[fieldname]
 
-        for joinlist in self.joins:
-            for join in joinlist:
-                if join.targetalias in inputvalues:
-                    targetrecord = inputvalues[join.targetalias]
-                    joinvalue = targetrecord[join.targetfield]
-                    joinfile = self.files[join.joinalias]
-                    # Will be None if there isn't a matching record
-                    temprecord = joinfile.getjoinrecord(join.joinfield,
-                                                        joinvalue)
-                    if temprecord is None:
-                        print (join.joinfield + ':',
-                               joinvalue, ' not found')
-                    else:
-                        inputvalues[join.joinalias] = temprecord
+        for join in self.joins.getjoins():
+            targetkey = join.targetalias + '_' + join.targetfield
+            if targetkey in inputvalues:
+                joinvalue = inputvalues[targetkey]
+                joinfile = self.files[join.joinalias]
+                # will be None if there isn't a matching record
+                temprecord = joinfile.getjoinrecord(join.joinfield, joinvalue)
+                if temprecord is None:
+                    print (join.joinfield + ':', joinvalue, ' not found')
+                else:
+                    joinkey = join.joinalias + '_' + join.joinfield
+                    for fieldname in temprecord:
+                        inputvalues[joinkey] = temprecord[fieldname]
+
+#        for joinlist in self.joins:
+#            for join in joinlist:
+#                if join.targetalias in inputvalues:
+#                    targetrecord = inputvalues[join.targetalias]
+#                    joinvalue = targetrecord[join.targetfield]
+#                    joinfile = self.files[join.joinalias]
+#                    # Will be None if there isn't a matching record
+#                    temprecord = joinfile.getjoinrecord(join.joinfield,
+#                                                        joinvalue)
+#                    if temprecord is None:
+#                        print (join.joinfield + ':',
+#                               joinvalue, ' not found')
+#                    else:
+#                        inputvalues[join.joinalias] = temprecord
         return inputvalues
 
     # 'execute join' button
@@ -542,7 +558,9 @@ class DBFUtil(object):
         # sqlite setup
         cur = None
         if self.usesql:
-            joinquery = self.joins.getquery(self.files.tablesbyalias)
+            fieldnames = self.files.getallfields()
+            joinquery = self.joins.getquery(self.files.tablesbyalias,
+                                            fieldnames)
             # open the database
             conn = sqlite3.connect('temp.db')
             conn.row_factory = sqlite3.Row
@@ -627,9 +645,13 @@ class DBFUtil(object):
         # sqlite setup
         cur = None
         if self.usesql:
-            joinquery = self.joins.getquery(self.files.tablesbyalias)
+            fieldnames = self.files.getallfields()
+            joinquery = self.joins.getquery(self.files.tablesbyalias,
+                                            fieldnames, self.sampleindices)
             # modify it to only get the sampling of records
-            joinquery += ' WHERE
+#            joinquery += (' WHERE ' +
+#                          self.files.tablesbyalias[self.joins.targetalias] +
+#                          '.ROWID IN (' + ', '.join([str(x) for x in self.sampleindices]) + ')')
             # open the database
             conn = sqlite3.connect('temp.db')
             conn.row_factory = sqlite3.Row
@@ -644,7 +666,6 @@ class DBFUtil(object):
             else:
                 inputvalues = self.getinputfromdbf(targetalias,
                                                    targetfile, sampleindex)
-
             outputrecord = []
             outputvalues = self.calc.calculateoutput(inputvalues)
             for _fieldname, fieldvalue in outputvalues:
@@ -771,7 +792,7 @@ class DBFUtil(object):
         # update the value in the output manager and the output table
         self.outputs[fieldname]['value'] = fieldvalue
         self.gui['outputlist'][outputcombo.get_active_iter()][-1] = fieldvalue
-        self.updatesample()
+        self.processtasks(('sample', None))
 
     # XXX dragging dropping columns to reorder attributes, incomplete
     def reordercols(self, widget):

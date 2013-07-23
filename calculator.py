@@ -275,8 +275,8 @@ class Calculator(object):
         # create the function and return it with the list of args it needs
         exec(newfuncstr) in globals(), locals()
         for i in range(len(args)):
-            # trim the leading and trailing '!'s and split at the period
-            args[i] = args[i][1:-1].split('.')
+            # trim the leading and trailing '!'s and replace '.' with '_'
+            args[i] = re.sub(r'\.', '_', args[i][1:-1])
         self.outputfuncs[newfuncname] = (locals()[newfuncname], args)
 
     # needs to be speedy
@@ -290,11 +290,12 @@ class Calculator(object):
             outputfunc, args = self.outputfuncs[outputfieldname]
             argvalues = []
             for arg in args:
-                if arg[0] in inputvalues:
-                    argvalues.append(inputvalues[arg[0]][arg[1]])
+                argvalue = inputvalues[arg]
+                if argvalue is not None:
+                    argvalues.append(argvalue)
                 else:
                     # Missed join for this record, pass a blank default value
-                    argvalues.append(self.inputblanks[arg[0]][arg[1]])
+                    argvalues.append(self.inputblanks[arg])
             outputvalue = outputfunc(self, argvalues)
             outputvalues.append((outputfieldname, outputvalue))
         return outputvalues
@@ -326,10 +327,7 @@ class Calculator(object):
             blankvalue = " " * 10
         elif fieldtype == 'T':
             blankvalue = None
-        if filealias in self.inputblanks:
-            self.inputblanks[filealias][field['name']] = blankvalue
-        else:
-            self.inputblanks[filealias] = {field['name']: blankvalue}
+        self.inputblanks[filealias + '_' + field['name']] = blankvalue
 
     @classmethod
     def reloadcalcfuncs(cls):

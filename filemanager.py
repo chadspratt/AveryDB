@@ -78,12 +78,18 @@ class FileManager(object):
     # long-running, should yield periodically so the GUI can function
     def converttosqlite(self, alias):
         """Create an sqlite table to use instead of the filehandler."""
+        # check that the file wasn't removed before it could be converted
+        if alias not in self.filenamesbyalias:
+            return
         filename = self.filenamesbyalias[alias]
         # check if the sqlite table has already been created
         if filename in self.tablesbyfilename:
             self.tablesbyalias[alias] = self.tablesbyfilename[filename]
             return
-        self.tablesbyalias[alias] = alias
+        # append an arbitrary string to avoid using reserved words
+        self.tablesbyalias[alias] = 'table_' + alias
+        alias = self.tablesbyalias[alias]
+        print self.tablesbyalias
         # open the file and get the field names
         inputfile = self.filesbyfilename[filename]
         fields = inputfile.getfields()
@@ -106,6 +112,7 @@ class FileManager(object):
         recordcount = inputfile.getrecordcount()
         i = 0
         insertquery = 'INSERT INTO "' + alias + '" VALUES (' + qmarks + ');'
+        print insertquery
         while i < recordcount:
             # process however many records before pausing
             for i in range(i, min(i + 250, recordcount)):
@@ -117,13 +124,26 @@ class FileManager(object):
             yield float(i) / recordcount
         # save the name of the table for this filename
         self.tablesbyfilename[filename] = alias
+        conn.commit()
 
     def buildsqlindex(self, indexalias, indexfield):
         # open the database
         conn = sqlite3.connect('temp.db')
         cur = conn.cursor()
-        cur.execute('CREATE INDEX ' + indexfield + 'index ON ' +
-                    self.tablesbyalias[indexalias] + '(' + indexfield + ')')
+        print ('CREATE INDEX ' + indexfield + '_index ON ' +
+               self.tablesbyalias[indexalias] + '(' + indexfield + ')')
+        try:
+            cur.execute('CREATE INDEX ' + indexfield + '_index ON ' +
+                        self.tablesbyalias[indexalias] + '(' + indexfield + ')')
+        # index may already exist
+        except sqlite3.OperationalError:
+            pass
+
+    def getallfields(self):
+        fields = {}
+        for fieldalias in self.filenamesbyalias:
+            fields[fieldalias] = self[fieldalias].getfields()
+        return fields
 
     @classmethod
     def openoutputfile(cls, filename):
