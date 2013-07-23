@@ -58,9 +58,6 @@ class DBFUtil(object):
         # indices of the records used for showing sample output
         self.sampleindices = []
 
-        # sql flag
-        self.usesql = self.gui['usesqlcheckbox'].get_active()
-
         # needs to be last because control goes to the gui once it's called
         gui.startgui()
 
@@ -87,8 +84,8 @@ class DBFUtil(object):
                 self.joins.settarget(newfilealias)
                 self.gui['targetcombo'].set_active_iter(newrow)
         addfiledialog.destroy()
-        if self.usesql:
-            self.processtasks(('sqlite', newfilealias))
+        # convert the file to an sqlite table
+        self.processtasks(('sqlite', newfilealias))
 
     def removefile(self, _widget, _data=None):
         """Close a file and remove all joins that depend on it."""
@@ -249,34 +246,11 @@ class DBFUtil(object):
         self.executejoinqueued = widget.get_active()
         self.processtasks()
 
-    def togglesqluse(self, widget, _data=None):
-        self.usesql = widget.get_active()
-        if self.usesql:
-            for alias in self.files.filenamesbyalias:
-                self.queuetask(('sqlite', alias))
-            self.processtasks()
-        # else could check that all the indices are built, but that's tricky
-
     def buildindex(self, join):
         """Build index in the background"""
         indexalias = join.joinalias
         indexfield = join.joinfield
-        if self.usesql:
-            self.files.buildsqlindex(indexalias, indexfield)
-        else:
-            progresstext = ' '.join(['Building index:', indexalias,
-                                     '-', indexfield])
-            self.gui.setprogress(0, progresstext)
-            # Create a generator that calculates some records then yields
-            indexbuilder = self.files[indexalias].buildindex(indexfield)
-            # Run the generator until it's finished. It yields % progress.
-            for progress in indexbuilder:
-                # this progress update lets the GUI function
-                self.gui.setprogress(progress,
-                                     (str(int(progress * 100)) + '% - '
-                                     + progresstext),
-                                     lockgui=False)
-            self.gui.setprogress(0, '')
+        self.files.buildsqlindex(indexalias, indexfield)
 
     def converttosql(self, alias):
         progresstext = 'Converting to sqlite: ' + alias
@@ -556,17 +530,15 @@ class DBFUtil(object):
         self.joinaborted = False
 
         # sqlite setup
-        cur = None
-        if self.usesql:
-            fieldnames = self.files.getallfields()
-            joinquery = self.joins.getquery(self.files.tablesbyalias,
-                                            fieldnames)
-            # open the database
-            conn = sqlite3.connect('temp.db')
-            conn.row_factory = sqlite3.Row
-            cur = conn.cursor()
-            # create the table
-            cur.execute(joinquery)
+        fieldnames = self.files.getallfields()
+        joinquery = self.joins.getquery(self.files.tablesbyalias,
+                                        fieldnames)
+        # open the database
+        conn = sqlite3.connect('temp.db')
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        # create the table
+        cur.execute(joinquery)
 
         # loop through target file
         i = 0
@@ -596,14 +568,8 @@ class DBFUtil(object):
 
             # process however many records before updating progress
             for i in range(i, min(i + 1000, recordcount)):
-                # inputvalues[filealias][fieldname] = value
-                # XXX move this if-else outside of the while loop
-                if self.usesql:
-                    inputvalues = cur.fetchone()
-                else:
-                    inputvalues = self.getinputfromdbf(targetalias,
-                                                       targetfile, i)
-
+                # inputvalues[filealias_fieldname] = value
+                inputvalues = cur.fetchone()
                 newrec = {}
                 outputvalues = self.calc.calculateoutput(inputvalues)
                 for fieldname, fieldvalue in outputvalues:
@@ -643,29 +609,20 @@ class DBFUtil(object):
                     self.sampleindices.append(newindex)
 
         # sqlite setup
-        cur = None
-        if self.usesql:
-            fieldnames = self.files.getallfields()
-            joinquery = self.joins.getquery(self.files.tablesbyalias,
-                                            fieldnames, self.sampleindices)
-            # modify it to only get the sampling of records
-#            joinquery += (' WHERE ' +
-#                          self.files.tablesbyalias[self.joins.targetalias] +
-#                          '.ROWID IN (' + ', '.join([str(x) for x in self.sampleindices]) + ')')
-            # open the database
-            conn = sqlite3.connect('temp.db')
-            conn.row_factory = sqlite3.Row
-            cur = conn.cursor()
-            # create the table
-            cur.execute(joinquery)
+        fieldnames = self.files.getallfields()
+        joinquery = self.joins.getquery(self.files.tablesbyalias,
+                                        fieldnames, self.sampleindices)
+
+        # open the database
+        conn = sqlite3.connect('temp.db')
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        # create the table
+        cur.execute(joinquery)
 
         # process however many records before updating progress
         for sampleindex in self.sampleindices:
-            if self.usesql:
-                inputvalues = cur.fetchone()
-            else:
-                inputvalues = self.getinputfromdbf(targetalias,
-                                                   targetfile, sampleindex)
+            inputvalues = cur.fetchone()
             outputrecord = []
             outputvalues = self.calc.calculateoutput(inputvalues)
             for _fieldname, fieldvalue in outputvalues:

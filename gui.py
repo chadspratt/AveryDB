@@ -42,7 +42,6 @@ class GUI(object):
         handlers['mainwindow_destroy_cb'] = hfuncs.quitprogram
         handlers['addfilebutton_clicked_cb'] = hfuncs.addfile
         handlers['removefilebutton_clicked_cb'] = hfuncs.removefile
-        handlers['usesqlcheckbox_toggled_cb'] = hfuncs.togglesqluse
         handlers['targetcombo_changed_cb'] = hfuncs.changetarget
         handlers['joinaliascombo_changed_cb'] = hfuncs.loadjoinfields
         handlers['targetaliascombo_changed_cb'] = hfuncs.loadtargetfields
