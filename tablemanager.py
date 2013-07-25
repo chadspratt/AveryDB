@@ -12,22 +12,23 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
-# Template for different filetype wrappers
+
+import table
 
 
-# Is this needed?
-class GenericFile(object):
+class TableManager(object):
     def __init__(self):
-        self.todo = 'define __init__'
+        self.tables = {}
+        # clear the sqlite db. could alternately do this on program close
+        sqlitefile = open('temp.db', 'w')
+        sqlitefile.truncate(0)
+        sqlitefile.close()
 
-    def getfields(self):
-        return 'define getfields'
+    def addtable(self, filealias, filehandler):
+        newtable = table.Table(filealias)
+        self.tables[filealias] = newtable
+        conversiongenerator = newtable.readfile(filehandler)
+        return conversiongenerator
 
-    def close(self):
-        return 'define close'
-
-#    def read(i)
-#    def readnext()
-    def __iter__():
-        return 'define __iter__'
-#    def write()
+    def buildsqlindex(self, indexalias, indexfield):
+        self.tables[indexalias].buildindex(indexfield)

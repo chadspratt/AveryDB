@@ -69,5 +69,12 @@ class DBFFile(genericfile.GenericFile):
         self.filehandler.close()
 
     # returns record at given index as a dictionary of field name:value
-    def __getitem__(self, index):
-        return self.filehandler[index].asDict()
+#    def __getitem__(self, index):
+#        return self.filehandler[index].asDict()
+
+    def __iter__(self):
+        recordcount = self.getrecordcount()
+        i = 0
+        while i < recordcount:
+            yield self.filehandler[i]
+            i += 1

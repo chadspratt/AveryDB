@@ -19,11 +19,10 @@ import re
 from filetypes import dbffile
 
 
-class JoinFile(object):
+class DataFile(object):
     """Used to open, read and write all files of all supported types."""
     def __init__(self, filename='', mode='r'):
         self.filename = filename
-        self.indices = {}
         if filename != '':
             try:
                 self.filehandler = self.openfile(filename, mode=mode)
@@ -76,36 +75,6 @@ class JoinFile(object):
         """Call the file handler's getrecordcount to return the total count."""
         return self.filehandler.getrecordcount()
 
-    def buildindex(self, fieldname):
-        """Builds an index of a given field."""
-        # check if it's already built. highly unlikely
-        if fieldname in self.indices:
-            return
-        print 'building index: ', self.filename, ' - ', fieldname, '\n'
-        recordcount = self.filehandler.getrecordcount()
-        fieldindex = {}
-        i = 0
-        while i < recordcount:
-            # process however many records before pausing
-            for i in range(i, min(i + 250, recordcount)):
-                # store the index of a record by the value of the join field
-                # this doesn't check for duplicates since we can only use one
-                # record when doing a join. If a value appears in more than
-                # one record, the last record is used (out of convenience)
-                fieldindex[self[i][fieldname]] = i
-                i += 1
-            # Take a break so the gui can be used
-            yield float(i) / recordcount
-
-        self.indices[fieldname] = fieldindex
-
-    def getjoinrecord(self, fieldname, fieldvalue):
-        """Returns a record with a given value for a given field."""
-        if fieldname in self.indices:
-            if fieldvalue in self.indices[fieldname]:
-                recordindex = self.indices[fieldname][fieldvalue]
-                return self[recordindex]
-
     def addrecord(self, newrecord):
         """Calls the file handler's addrecord."""
         self.filehandler.addrecord(newrecord)
@@ -114,5 +83,8 @@ class JoinFile(object):
         """Calls the file handler's close."""
         self.filehandler.close()
 
-    def __getitem__(self, index):
-        return self.filehandler[index]
+#    def __getitem__(self, index):
+#        return self.filehandler[index]
+
+    def __iter__(self):
+        return self.filehandler.__iter__()

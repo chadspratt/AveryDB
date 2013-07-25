@@ -107,26 +107,17 @@ class JoinManager(object):
                 alljoins.extend(self.joins[filealias])
         return alljoins
 
-    # if/when i ditch dbf specific logic, i won't need aliasmap
-    def getquery(self, aliasmap, inputs, sampling=None):
+    def getquery(self, sampling=None):
         """Create an sql query string that will perform the join."""
-        query = ['SELECT']
-        # internalalias.fieldname AS externalalias_fieldname
-        for filealias in inputs:
-            for field in inputs[filealias]:
-                query.append(aliasmap[filealias] + '.' + field.name + ' AS ' +
-                             filealias + '_' + field.name)
-                query.append(',')
-        # remove the last comma
-        query.pop()
-        query.append('FROM ' + aliasmap[self.targetalias])
+        query = ['SELECT *']
+        query.append('FROM table_' + self.targetalias)
         for join in self.getjoins():
-            query.append('LEFT OUTER JOIN ' + aliasmap[join.joinalias] + ' ON '
-                         + aliasmap[join.joinalias] + '.' + join.joinfield +
-                         '=' + aliasmap[join.targetalias] + '.' +
-                         join.targetfield)
+            query.append('LEFT OUTER JOIN table_' + join.joinalias +
+                         ' ON table_' + join.joinalias + '.' + join.joinalias +
+                         '_' + join.joinfield + '=table_' + join.targetalias +
+                         '.' + join.targetalias + '_' + join.targetfield)
         if sampling:
-            query.append(' WHERE ' + aliasmap[self.targetalias] + '.ROWID IN ('
+            query.append('WHERE table_' + self.targetalias + '.ROWID IN ('
                          + ', '.join([str(x) for x in sampling]) + ')')
 
         return ' '.join(query)

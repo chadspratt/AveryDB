@@ -32,10 +32,10 @@ import sqlite3
 
 import gui
 import filemanager
+import tablemanager
 import joinmanager
 import outputmanager
 import calculator
-#import joinfile #imported via gui via filemanager
 
 
 class DBFUtil(object):
@@ -45,6 +45,7 @@ class DBFUtil(object):
     def __init__(self):
         self.gui = gui.creategui(self)
         self.files = filemanager.FileManager()
+        self.tables = tablemanager.TableManager()
         self.joins = joinmanager.JoinManager()
         self.outputs = outputmanager.OutputManager()
         self.calc = calculator.Calculator()
@@ -63,8 +64,8 @@ class DBFUtil(object):
 
     def quitprogram(self, _widget, _data=None):
         """Close open files before closing the program."""
-        for joinfile in self.files:
-            joinfile.close()
+        for datafile in self.files:
+            datafile.close()
         gtk.main_quit()
 
     def addfile(self, _widget, _data=None):
@@ -75,6 +76,9 @@ class DBFUtil(object):
         if response == gtk.RESPONSE_OK:
             newfilename = addfiledialog.get_filename()
             newfilealias = self.files.addfile(newfilename)
+            sqlconverter = self.tables.addtable(newfilealias,
+                                                self.files[newfilealias])
+            self.queuetask(('sqlite', (newfilealias, sqlconverter)))
             # add to the file list
             aliaslist = self.gui['aliaslist']
             newrow = aliaslist.append([newfilealias])
@@ -84,8 +88,7 @@ class DBFUtil(object):
                 self.joins.settarget(newfilealias)
                 self.gui['targetcombo'].set_active_iter(newrow)
         addfiledialog.destroy()
-        # convert the file to an sqlite table
-        self.processtasks(('sqlite', newfilealias))
+        self.processtasks()
 
     def removefile(self, _widget, _data=None):
         """Close a file and remove all joins that depend on it."""
@@ -233,7 +236,8 @@ class DBFUtil(object):
                 elif tasktype == 'sample':
                     self.updatesample()
                 elif tasktype == 'sqlite':
-                    self.converttosql(taskdata)
+                    filealias, dataconverter = taskdata
+                    self.converttosql(filealias, dataconverter)
         # This has to go after indexing too. The execute toggle button can be
         # used to cancel the output while the indices are still building.
             if self.executejoinqueued:
@@ -250,13 +254,11 @@ class DBFUtil(object):
         """Build index in the background"""
         indexalias = join.joinalias
         indexfield = join.joinfield
-        self.files.buildsqlindex(indexalias, indexfield)
+        self.tables.buildsqlindex(indexalias, indexfield)
 
-    def converttosql(self, alias):
-        progresstext = 'Converting to sqlite: ' + alias
+    def converttosql(self, filealias, dataconverter):
+        progresstext = 'Converting to sqlite: ' + filealias
         self.gui.setprogress(0, progresstext)
-        # Create a generator that calculates some records then yields
-        dataconverter = self.files.converttosqlite(alias)
         # Run the generator until it's finished. It yields % progress.
         for progress in dataconverter:
             # this progress update lets the GUI function
@@ -466,43 +468,6 @@ class DBFUtil(object):
         """Set a signal for the output to abort."""
         self.joinaborted = True
 
-    def getinputfromdbf(self, targetalias, targetfile, i):
-        # inputvalues[filealias][fieldname] = value
-        inputvalues = {}
-        targetrec = targetfile[i]
-        for fieldname in targetrec:
-            inputvalues[targetalias + '_' + fieldname] = targetrec[fieldname]
-
-        for join in self.joins.getjoins():
-            targetkey = join.targetalias + '_' + join.targetfield
-            if targetkey in inputvalues:
-                joinvalue = inputvalues[targetkey]
-                joinfile = self.files[join.joinalias]
-                # will be None if there isn't a matching record
-                temprecord = joinfile.getjoinrecord(join.joinfield, joinvalue)
-                if temprecord is None:
-                    print (join.joinfield + ':', joinvalue, ' not found')
-                else:
-                    joinkey = join.joinalias + '_' + join.joinfield
-                    for fieldname in temprecord:
-                        inputvalues[joinkey] = temprecord[fieldname]
-
-#        for joinlist in self.joins:
-#            for join in joinlist:
-#                if join.targetalias in inputvalues:
-#                    targetrecord = inputvalues[join.targetalias]
-#                    joinvalue = targetrecord[join.targetfield]
-#                    joinfile = self.files[join.joinalias]
-#                    # Will be None if there isn't a matching record
-#                    temprecord = joinfile.getjoinrecord(join.joinfield,
-#                                                        joinvalue)
-#                    if temprecord is None:
-#                        print (join.joinfield + ':',
-#                               joinvalue, ' not found')
-#                    else:
-#                        inputvalues[join.joinalias] = temprecord
-        return inputvalues
-
     # 'execute join' button
     def executejoin(self, _widget, _data=None):
         """Execute the join and output the result"""
@@ -531,8 +496,8 @@ class DBFUtil(object):
 
         # sqlite setup
         fieldnames = self.files.getallfields()
-        joinquery = self.joins.getquery(self.files.tablesbyalias,
-                                        fieldnames)
+        joinquery = self.joins.getquery()
+        print joinquery
         # open the database
         conn = sqlite3.connect('temp.db')
         conn.row_factory = sqlite3.Row
@@ -610,8 +575,7 @@ class DBFUtil(object):
 
         # sqlite setup
         fieldnames = self.files.getallfields()
-        joinquery = self.joins.getquery(self.files.tablesbyalias,
-                                        fieldnames, self.sampleindices)
+        joinquery = self.joins.getquery(self.sampleindices)
 
         # open the database
         conn = sqlite3.connect('temp.db')
