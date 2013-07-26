@@ -17,6 +17,7 @@ import re
 # import all filetypes even if unreadable (arcpy)?
 # test for ability to read/write gis databases with arcpy
 from filetypes import dbffile
+from filetypes import csvfile
 
 
 class DataFile(object):
@@ -37,6 +38,8 @@ class DataFile(object):
         # This is the only code that treats different file types differently
         if lowercase_filename.endswith('dbf'):
             filehandler = dbffile.DBFFile(filename, mode=mode)
+        elif lowercase_filename.endswith('csv'):
+            filehandler = csvfile.CSVFile(filename, mode=mode)
         else:
             #this won't happen unless selecting invalid files is allowed
             raise ValueError
@@ -67,9 +70,9 @@ class DataFile(object):
         """Returns a modified, hopefully unique, file alias."""
         return self.aliasgenerator.next()
 
-    def addfield(self, field):
-        """Calls the file handler's addfield."""
-        self.filehandler.addfield(field)
+    def setfields(self, fields):
+        """Calls the file handler's setfields."""
+        self.filehandler.setfields(fields)
 
     def getrecordcount(self):
         """Call the file handler's getrecordcount to return the total count."""

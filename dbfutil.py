@@ -262,10 +262,7 @@ class DBFUtil(object):
         # Run the generator until it's finished. It yields % progress.
         for progress in dataconverter:
             # this progress update lets the GUI function
-            self.gui.setprogress(progress,
-                                 (str(int(progress * 100)) + '% - '
-                                 + progresstext),
-                                 lockgui=False)
+            self.gui.setprogress(progress, progresstext, lockgui=False)
         self.gui.setprogress(0, '')
 
     def removejoin(self, _widget, _data=None):
@@ -483,8 +480,8 @@ class DBFUtil(object):
         outputfile = self.files.openoutputfile(outputfilename)
 
         # create fields
-        for fieldname in self.outputs.outputorder:
-            outputfile.addfield(self.outputs[fieldname])
+        outputfields = [self.outputs[fn] for fn in self.outputs.outputorder]
+        outputfile.setfields(outputfields)
 
         self.calc.clear()
         for field in self.outputs:

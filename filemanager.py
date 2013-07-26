@@ -36,6 +36,8 @@ class FileManager(object):
                                                  'application/dbf',
                                                  'application/x-dbf'],
                                        'patterns': ['*.dbf']}
+        self.filetypes['csv files'] = {'mimes': ['text/csv'],
+                                       'patterns': ['*.csv']}
         # If two aliases point to one file, only one will be used as the table
         # name
         # table names by filename

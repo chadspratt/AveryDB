@@ -39,6 +39,10 @@ class OutputManager(object):
     def setoutputtype(self, outputtype):
         """Sets the format of the output. Only dbf is supported right now."""
         self.outputtype = outputtype
+        if outputtype == 'csv':
+            self.fieldattr = ['Name', 'Value']
+        elif outputtype == 'dbf':
+            self.fieldattr = ['Name', 'Type', 'Length', 'Decimals', 'Value']
 
     def getoutputtype(self):
         """Returns the output file format."""

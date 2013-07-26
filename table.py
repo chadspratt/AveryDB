@@ -56,16 +56,10 @@ class Table(object):
             i += 1
             # Take a break so the gui can be used
             if i % 250 == 0:
-                yield float(i) / recordcount
-#        while i < recordcount:
-#            # process however many records before pausing
-#            for i in range(i, min(i + 250, recordcount)):
-#                record = inputfile[i]
-#                values = [record[fn] for fn in self.fields]
-#                cur.execute(insertquery, values)
-#                i += 1
-#            # Take a break so the gui can be used
-#            yield float(i) / recordcount
+                if recordcount is None:
+                    yield 'pulse'
+                else:
+                    yield float(i) / recordcount
         conn.commit()
 
     def buildindex(self, fieldname):

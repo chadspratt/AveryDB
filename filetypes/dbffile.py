@@ -49,14 +49,11 @@ class DBFFile(genericfile.GenericFile):
             fieldlist.append(newfield)
         return fieldlist
 
-    def addfield(self, newfield):
-        """Add a field to an output file. Used before any records are added."""
-        self.filehandler.addField((newfield['name'], newfield['type'],
-                                   newfield['length'], newfield['decimals']))
-
-    def getrecordcount(self):
-        """Returns the number of records in the file."""
-        return self.filehandler.recordCount
+    def setfields(self, fields):
+        """Set the field definitions. Used before any records are added."""
+        for field in fields:
+            self.filehandler.addField((field['name'], field['type'],
+                                       field['length'], field['decimals']))
 
     def addrecord(self, newrecord):
         """Append a new record to an output dbf file."""
@@ -68,12 +65,11 @@ class DBFFile(genericfile.GenericFile):
     def close(self):
         self.filehandler.close()
 
-    # returns record at given index as a dictionary of field name:value
-#    def __getitem__(self, index):
-#        return self.filehandler[index].asDict()
+    def getrecordcount(self):
+        return self.filehandler.recordCount
 
     def __iter__(self):
-        recordcount = self.getrecordcount()
+        recordcount = self.filehandler.recordCount
         i = 0
         while i < recordcount:
             yield self.filehandler[i]
