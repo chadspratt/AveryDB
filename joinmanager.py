@@ -17,6 +17,8 @@ other parts of the application in useful ways."""
 #   limitations under the License.
 ##
 #
+import sqlite3
+
 import join
 
 
@@ -121,6 +123,14 @@ class JoinManager(object):
                          + ', '.join([str(x) for x in sampling]) + ')')
 
         return ' '.join(query)
+
+    def getrecordcount(self):
+        """Get a query that gives the count of rows in the table."""
+        query = 'SELECT COUNT(*) FROM table_' + self.targetalias
+        conn = sqlite3.connect('temp.db')
+        cur = conn.cursor()
+        cur.execute(query)
+        return cur.fetchone()[0]
 
     def __getitem__(self, target):
         """Get a list of joins to a target."""

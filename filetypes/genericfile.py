@@ -19,11 +19,13 @@ class GenericFile(object):
     def __init__(self, filename, mode='r'):
         return 'define __init__'
 
+    # converts fields to universal types
     def getfields(self):
         """Get the field definitions from an input file."""
         return 'define getfields'
 
-    def setfields(self, newfield):
+    # takes universal-type fields and converts to format specific fields
+    def setfields(self, newfields):
         """Set the field definitions of an output file."""
         return 'define setfields'
 
@@ -34,6 +36,14 @@ class GenericFile(object):
     def close(self):
         """Close the output file. Input files close automatically."""
         return 'define close'
+
+    def convertfield(self, genericfield):
+        """Takes a generic field and returns a field of the format type."""
+        return 'define convertfield'
+
+    def detecttype(self, valuelist):
+        """Examine a list of values and determine an appropriate field type."""
+        return 'define detecttype'
 
     def __iter__():
         """Get the records from an input file in sequence."""

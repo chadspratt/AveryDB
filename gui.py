@@ -47,7 +47,7 @@ class GUI(object):
         handlers['targetaliascombo_changed_cb'] = hfuncs.loadtargetfields
         handlers['joinfieldcombo_changed_cb'] = hfuncs.matchtargetfield
         handlers['addjoinbutton_clicked_cb'] = hfuncs.addjoin
-        handlers['outputformatcombo_changed_cb'] = hfuncs.changeoutputformat
+        handlers['outputtypecombo_changed_cb'] = hfuncs.changeoutputformat
         handlers['movetopbutton_clicked_cb'] = hfuncs.movetop
         handlers['moveupbutton_clicked_cb'] = hfuncs.moveup
         handlers['movedownbutton_clicked_cb'] = hfuncs.movedown

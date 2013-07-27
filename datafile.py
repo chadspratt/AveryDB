@@ -86,8 +86,14 @@ class DataFile(object):
         """Calls the file handler's close."""
         self.filehandler.close()
 
-#    def __getitem__(self, index):
-#        return self.filehandler[index]
+    def convertfield(self, sourcefield):
+        return self.filehandler.convertfield(sourcefield)
+
+    def getblankvalue(self, outputfield):
+        return self.filehandler.getblankvalue(outputfield)
+
+    def getfieldattributes(self):
+        return self.filehandler.fieldattrorder
 
     def __iter__(self):
         return self.filehandler.__iter__()

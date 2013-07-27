@@ -33,9 +33,9 @@ class DBFFile(genericfile.GenericFile):
             self.filehandler = dbf.Dbf(filename, readOnly=True)
         else:
             self.filehandler = dbf.Dbf(filename, new=True)
-        # not used from here, but I'd like for it to be
+        self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
+        # not used
         self.fieldtypes = ['C', 'N', 'F', 'I', 'Y', 'L', 'M', 'D', 'T']
-        self.fieldattrorder = ['type', 'length', 'decimals']
 
     def getfields(self):
         """Returns the fields of the file as a list of Field objects"""
@@ -51,9 +51,12 @@ class DBFFile(genericfile.GenericFile):
 
     def setfields(self, fields):
         """Set the field definitions. Used before any records are added."""
-        for field in fields:
-            self.filehandler.addField((field['name'], field['type'],
-                                       field['length'], field['decimals']))
+        for genericfield in fields:
+            dbffield = self.convertfield(genericfield)
+            self.filehandler.addField((dbffield['name'],
+                                       dbffield['type'],
+                                       dbffield['length'],
+                                       dbffield['decimals']))
 
     def addrecord(self, newrecord):
         """Append a new record to an output dbf file."""
@@ -64,6 +67,47 @@ class DBFFile(genericfile.GenericFile):
 
     def close(self):
         self.filehandler.close()
+
+    @classmethod
+    def convertfield(cls, sourcefield):
+        dbffield = sourcefield.copy()
+        dbffield.attributes = {}
+        if 'type' in sourcefield.attributes:
+            dbffield['type'] = sourcefield['type']
+        else:
+            dbffield['type'] = 'C'
+        if 'length' in sourcefield.attributes:
+            dbffield['length'] = sourcefield['length']
+        else:
+            dbffield['length'] = 254
+        if 'decimals' in sourcefield.attributes:
+            dbffield['decimals'] = sourcefield['decimals']
+        else:
+            dbffield['decimals'] = 0
+        return dbffield
+
+    @classmethod
+    def getblankvalue(cls, outputfield):
+        fieldtype = outputfield['type']
+        if fieldtype == 'C':
+            return ''
+        elif fieldtype == 'N':
+            return 0
+        elif fieldtype == 'F':
+            return 0.0
+        # i don't know for this one what a good nonvalue would be
+        elif fieldtype == 'D':
+            return (0, 0, 0)
+        elif fieldtype == 'I':
+            return 0
+        elif fieldtype == 'Y':
+            return 0.0
+        elif fieldtype == 'L':
+            return -1
+        elif fieldtype == 'M':
+            return " " * 10
+        elif fieldtype == 'T':
+            return None
 
     def getrecordcount(self):
         return self.filehandler.recordCount

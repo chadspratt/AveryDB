@@ -21,66 +21,53 @@ import field
 class OutputManager(object):
     """Manages all creation and organization of the output fields."""
     def __init__(self):
-        # hard-coded for dbf for now
-        self.outputfilename = ''
-        self.outputtype = 'dbf'
-        self.fieldtypes = ['C', 'N', 'F', 'I', 'Y', 'L', 'M', 'D', 'T']
+        self.outputfile = None
         self.outputfields = {}  # Field objects stored by uppercase field name
         self.outputorder = []   # field names, stores the order of the fields
-        self.fieldattr = ['Name', 'Type', 'Length', 'Decimals', 'Value']
 
     def clear(self):
         """Clears the output fields."""
         self.outputfields = {}
         self.outputorder = []
 
-    # This function will need to update fieldtypes and fieldattr.
-    # It should also convert any existing outputfields to the new format
-    def setoutputtype(self, outputtype):
-        """Sets the format of the output. Only dbf is supported right now."""
-        self.outputtype = outputtype
-        if outputtype == 'csv':
-            self.fieldattr = ['Name', 'Value']
-        elif outputtype == 'dbf':
-            self.fieldattr = ['Name', 'Type', 'Length', 'Decimals', 'Value']
+    # When output format is changed a file handler for that type is passed so
+    # that fields can be converted.
+    def setoutputfile(self, filehandler):
+        """Update the output file with one of [possibly] a new format."""
+        if self.outputfile is not None:
+            self.outputfile.close()
+        self.outputfile = filehandler
+        for fieldname in self.outputfields:
+            newfield = filehandler.convertfield(self.outputfields[fieldname])
+            self.outputfields[fieldname] = newfield
 
     def getoutputtype(self):
         """Returns the output file format."""
         return self.outputtype
 
-    # XXX could use better design
-    def addfield(self, outputfield, filealias=None, fieldindex='end'):
+    def addfield(self, newfield, fieldindex='end', fieldsource=None,):
         """Takes a field object and adds it to the output."""
-        # filealias will be passed with fields that are taken from files
-        # Make a copy of these fields to use for the output field.
-        if filealias:
-            newfield = outputfield.copy()
-            newfield.value = '!' + filealias + '.' + newfield.name + '!'
-        # If it is a new field, just use the one passed as an argument.
-        else:
-            newfield = outputfield
+        outputfield = self.outputfile.convertfield(newfield)
+        outputfield.source = fieldsource
 
         # dbf is not case sensitive (won't allow 'objectID' and 'objectid')
         # outputfields uses uppercase names to help check for duplicates
-        while newfield.name.upper() in self.outputfields:
-            newfield.createnewname()
+        while outputfield.name.upper() in self.outputfields:
+            outputfield.createnewname()
 
-        self.outputfields[newfield.name.upper()] = newfield
+        self.outputfields[outputfield.name.upper()] = outputfield
         if fieldindex == 'end':
-            self.outputorder.append(newfield.name)
+            self.outputorder.append(outputfield.name)
         else:
-            self.outputorder.insert(fieldindex, newfield.name)
+            self.outputorder.insert(fieldindex, outputfield.name)
 
-        return newfield
+        return outputfield
 
     def addnewfield(self, fieldname='newfield', fieldattributes=None,
                     fieldvalue='', fieldindex='end'):
         """Takes field attributes and adds a field to the output."""
-        if fieldattributes is None:
-            fieldattributes = {'type': 'C', 'length': 254, 'decimals': 0}
         newfield = field.Field(fieldname, fieldattributes, fieldvalue)
-        self.addfield(newfield, fieldindex=fieldindex)
-        return newfield
+        return self.addfield(newfield, fieldindex=fieldindex)
 
     def removefield(self, fieldindex):
         """Removes the field at the specified index."""

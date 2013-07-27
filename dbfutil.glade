@@ -1391,6 +1391,7 @@ File:</property>
                                 <property name="can_focus">False</property>
                                 <property name="model">outputtypelist</property>
                                 <property name="active">0</property>
+                                <signal name="changed" handler="outputtypecombo_changed_cb" swapped="no"/>
                                 <child>
                                   <object class="GtkCellRendererText" id="outputtypetext"/>
                                   <attributes>

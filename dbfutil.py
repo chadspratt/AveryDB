@@ -275,15 +275,33 @@ class DBFUtil(object):
 
     def changeoutputformat(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
-        typeiter = self.gui['outputtypecombo'].get_active_iter()
-        newtype = self.gui['outputtypelist'][typeiter]
-        if newtype is not None and newtype != self.outputs.getoutputtype():
-            self.outputs.setoutputtype(newtype)
+        outputfilename = (self.gui['outputfilenameentry'].get_text() +
+                          self.gui['outputtypecombo'].get_active_text())
+        outputfile = self.files.openoutputfile(outputfilename)
+        self.outputs.setoutputfile(outputfile)
+
+        fieldattributes = outputfile.getfieldattributes()
+        self.gui.replacecolumns('outputlist', 'outputview', fieldattributes)
+        outputlist = self.gui['outputlist']
+        # Field calculator window setup
+        self.gui['calcoutputfieldcombo'].set_model(outputlist)
+
+        for outputfield in self.outputs:
+            outputlist.append(outputfield.getattributelist())
+            # initialize a blank value for this field in the calculator
+            blankvalue = outputfile.getblankvalue(outputfield)
+            self.calc.addblankvalue(outputfield, blankvalue)
 
     # populate the list of output fields with all the input fields
     def initoutput(self, _widget, _data=None):
         """Populate the list view of output fields and the OutputManager."""
-        fieldattributes = self.outputs.fieldattr
+        # create the output file
+        outputfilename = (self.gui['outputfilenameentry'].get_text() +
+                          self.gui['outputtypecombo'].get_active_text())
+        outputfile = self.files.openoutputfile(outputfilename)
+        self.outputs.setoutputfile(outputfile)
+
+        fieldattributes = outputfile.getfieldattributes()
         self.gui.replacecolumns('outputlist', 'outputview', fieldattributes)
         outputlist = self.gui['outputlist']
         # Field calculator window setup
@@ -297,11 +315,14 @@ class DBFUtil(object):
             # add all the fields from the target and everything joined to it
             for filealias in self.joins.getjoinedaliases():
                 for field in self.files[filealias].getfields():
-                    newfield = self.outputs.addfield(field, filealias)
+                    field.value = '!' + filealias + '.' + field.name + '!'
+                    newfield = self.outputs.addfield(field,
+                                                     fieldsource=filealias)
                     outputlist.append(newfield.getattributelist())
                     inputlist.append([newfield['value']])
-                    # XXX not the ideal place for this, but most convenient
-                    self.calc.addblankvalue(filealias, field)
+                    # initialize a blank value for this field in the calculator
+                    blankvalue = outputfile.getblankvalue(newfield)
+                    self.calc.addblankvalue(newfield, blankvalue)
         self.processtasks(('sample', None))
 
     def updatefieldattribute(self, _cell, row, new_value, outputlist, column):
@@ -471,13 +492,7 @@ class DBFUtil(object):
         if len(self.outputs) == 0:
             return
 
-        targetalias = self.joins.gettarget()
-        targetfile = self.files[targetalias]
-
-        # create the output file
-        outputfilename = (self.gui['outputfilenameentry'].get_text() +
-                          self.gui['outputtypecombo'].get_active_text())
-        outputfile = self.files.openoutputfile(outputfilename)
+        outputfile = self.outputs.outputfile
 
         # create fields
         outputfields = [self.outputs[fn] for fn in self.outputs.outputorder]
@@ -492,7 +507,6 @@ class DBFUtil(object):
         self.joinaborted = False
 
         # sqlite setup
-        fieldnames = self.files.getallfields()
         joinquery = self.joins.getquery()
         print joinquery
         # open the database
@@ -504,7 +518,7 @@ class DBFUtil(object):
 
         # loop through target file
         i = 0
-        recordcount = targetfile.getrecordcount()
+        recordcount = self.joins.getrecordcount()
         print 'total records:', recordcount
         starttime = time.time()
         while i < recordcount:
@@ -550,9 +564,6 @@ class DBFUtil(object):
         if len(self.outputs) == 0:
             return
 
-        targetalias = self.joins.gettarget()
-        targetfile = self.files[targetalias]
-
         sampleoutputfields = self.outputs.outputorder
         self.gui.replacecolumns('sampleoutputlist', 'sampleoutputview',
                                 sampleoutputfields)
@@ -563,7 +574,7 @@ class DBFUtil(object):
 
         # generate a selection of records to use
         if len(self.sampleindices) != samplesize:
-            recordcount = targetfile.getrecordcount()
+            recordcount = self.joins.getrecordcount()
             self.sampleindices = []
             while len(self.sampleindices) < samplesize:
                 newindex = random.randint(0, recordcount)
@@ -571,7 +582,6 @@ class DBFUtil(object):
                     self.sampleindices.append(newindex)
 
         # sqlite setup
-        fieldnames = self.files.getallfields()
         joinquery = self.joins.getquery(self.sampleindices)
 
         # open the database

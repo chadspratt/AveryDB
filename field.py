@@ -16,7 +16,8 @@
 
 class Field(object):
     """Stores a field definition."""
-    def __init__(self, fieldname, fieldattributes=None, fieldvalue=''):
+    def __init__(self, fieldname, fieldattributes=None, fieldvalue='',
+                 source=None):
         if fieldattributes is None:
             fieldattributes = {}
         # used for resetting a field
@@ -24,8 +25,9 @@ class Field(object):
         self.originalvalue = fieldvalue
         # name and value that will be used in the output
         self.name = fieldname
+        self.source = source
         self.value = fieldvalue
-        # dictionary of attribute names and values
+        # dictionary of attribute names and values, stored by file format
         self.attributes = fieldattributes
         self.namegen = self.namegenerator()
 
@@ -63,6 +65,7 @@ class Field(object):
         """Creates a deep copy of the field."""
         fieldcopy = Field(self.name, self.attributes, self.value)
         fieldcopy.originalvalue = self.originalvalue
+        fieldcopy.source = self.source
         return fieldcopy
 
     def getattributelist(self):
@@ -86,8 +89,10 @@ class Field(object):
             self.name = value
         elif key == 'value' or key == len(self.attributes) + 1:
             self.value = value
-        elif key in self.attributes:
-            self.attributes[key] = value
-        else:
+        # set attribute by index
+        elif key.isdigit():
             attrname = self.attributes.keys()[key - 1]
             self.attributes[attrname] = value
+        # set attribute by name
+        else:
+            self.attributes[key] = value

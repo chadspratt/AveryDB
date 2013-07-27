@@ -301,33 +301,9 @@ class Calculator(object):
         return outputvalues
 
     # doesn't need to be speedy
-    def addblankvalue(self, filealias, field):
-        """Stores a default blank value to use for each input field.
-
-        This needs to be called once for each field which may need a blank
-        value, which are used when a record doesn't join. The fields in the
-        target file don't need this since they will always exist."""
-        fieldtype = field['type']
-        if fieldtype == 'C':
-            blankvalue = ''
-        elif fieldtype == 'N':
-            blankvalue = 0
-        elif fieldtype == 'F':
-            blankvalue = 0.0
-        # i don't know for this one what a good nonvalue would be
-        elif fieldtype == 'D':
-            blankvalue = (0, 0, 0)
-        elif fieldtype == 'I':
-            blankvalue = 0
-        elif fieldtype == 'Y':
-            blankvalue = 0.0
-        elif fieldtype == 'L':
-            blankvalue = -1
-        elif fieldtype == 'M':
-            blankvalue = " " * 10
-        elif fieldtype == 'T':
-            blankvalue = None
-        self.inputblanks[filealias + '_' + field['name']] = blankvalue
+    def addblankvalue(self, field, blankvalue):
+        """Stores a default blank value to use for each input field."""
+        self.inputblanks[field.source + '_' + field.originalname] = blankvalue
 
     @classmethod
     def reloadcalcfuncs(cls):

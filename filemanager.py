@@ -72,12 +72,6 @@ class FileManager(object):
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
 
-    def getallfields(self):
-        fields = {}
-        for fieldalias in self.filenamesbyalias:
-            fields[fieldalias] = self[fieldalias].getfields()
-        return fields
-
     @classmethod
     def openoutputfile(cls, filename):
         """Returns a file, with the given filename opened for writing."""
