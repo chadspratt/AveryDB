@@ -296,6 +296,8 @@ class Calculator(object):
                 else:
                     # Missed join for this record, pass a blank default value
                     argvalues.append(self.inputblanks[arg])
+            print 'args:', args
+            print 'argvalues:', argvalues
             outputvalue = outputfunc(self, argvalues)
             outputvalues.append((outputfieldname, outputvalue))
         return outputvalues

@@ -45,7 +45,8 @@ class DBFFile(genericfile.GenericFile):
             fieldattrs = OrderedDict([('type', fielddef.typeCode),
                                       ('length', fielddef.length),
                                       ('decimals', fielddef.decimalCount)])
-            newfield = field.Field(fielddef.name, fieldattributes=fieldattrs)
+            newfield = field.Field(fielddef.name, fieldattributes=fieldattrs,
+                                   fileformat='dbf')
             fieldlist.append(newfield)
         return fieldlist
 
@@ -71,19 +72,22 @@ class DBFFile(genericfile.GenericFile):
     @classmethod
     def convertfield(cls, sourcefield):
         dbffield = sourcefield.copy()
-        dbffield.attributes = {}
-        if 'type' in sourcefield.attributes:
-            dbffield['type'] = sourcefield['type']
+        if 'dbf' in dbffield.attributesbyformat:
+            dbffield.attributes = dbffield.attributesbyformat['dbf'].copy()
         else:
-            dbffield['type'] = 'C'
-        if 'length' in sourcefield.attributes:
-            dbffield['length'] = sourcefield['length']
-        else:
-            dbffield['length'] = 254
-        if 'decimals' in sourcefield.attributes:
-            dbffield['decimals'] = sourcefield['decimals']
-        else:
-            dbffield['decimals'] = 0
+            dbffield.attributes = OrderedDict()
+            if 'type' in sourcefield.attributes:
+                dbffield['type'] = sourcefield['type']
+            else:
+                dbffield['type'] = 'C'
+            if 'length' in sourcefield.attributes:
+                dbffield['length'] = sourcefield['length']
+            else:
+                dbffield['length'] = 254
+            if 'decimals' in sourcefield.attributes:
+                dbffield['decimals'] = sourcefield['decimals']
+            else:
+                dbffield['decimals'] = 0
         return dbffield
 
     @classmethod

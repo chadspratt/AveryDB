@@ -15,8 +15,6 @@
 # wrapper for dbfpy utility
 import csv
 
-from filetypes.libraries.dbfpy import dbf
-
 import genericfile
 import field
 

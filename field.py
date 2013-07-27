@@ -17,11 +17,16 @@
 class Field(object):
     """Stores a field definition."""
     def __init__(self, fieldname, fieldattributes=None, fieldvalue='',
-                 source=None):
+                 source=None, fileformat=None):
         if fieldattributes is None:
             fieldattributes = {}
         # used for resetting a field
         self.originalname = fieldname
+        if fileformat is not None:
+        # preserves field attributes if output format is changed, changed back
+            self.attributesbyformat = {fileformat: fieldattributes.copy()}
+        else:
+            self.attributesbyformat = {}
         self.originalvalue = fieldvalue
         # name and value that will be used in the output
         self.name = fieldname
@@ -64,6 +69,7 @@ class Field(object):
     def copy(self):
         """Creates a deep copy of the field."""
         fieldcopy = Field(self.name, self.attributes, self.value)
+        fieldcopy.attributesbyformat = self.attributesbyformat.copy()
         fieldcopy.originalvalue = self.originalvalue
         fieldcopy.source = self.source
         return fieldcopy

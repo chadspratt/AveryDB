@@ -171,7 +171,7 @@ class DBFUtil(object):
         if joinalias is not None:
             joinfields = self.files[joinalias].getfields()
             for joinfield in joinfields:
-                joinfieldlist.append([joinfield.name])
+                joinfieldlist.append([joinfield.originalname])
 
     def loadtargetfields(self, _widget, _data=None):
         """Update target field combo when target alias combo changes."""
@@ -184,7 +184,7 @@ class DBFUtil(object):
         if targetalias is not None:
             targetfields = self.files[targetalias].getfields()
             for targetfield in targetfields:
-                targetfieldlist.append([targetfield.name])
+                targetfieldlist.append([targetfield.originalname])
 
     def matchtargetfield(self, widget, _data=None):
         """Sets the target field if there is one with a matching name."""
@@ -315,7 +315,8 @@ class DBFUtil(object):
             # add all the fields from the target and everything joined to it
             for filealias in self.joins.getjoinedaliases():
                 for field in self.files[filealias].getfields():
-                    field.value = '!' + filealias + '.' + field.name + '!'
+                    field.value = ('!' + filealias + '.' +
+                                   field.originalname + '!')
                     newfield = self.outputs.addfield(field,
                                                      fieldsource=filealias)
                     outputlist.append(newfield.getattributelist())
@@ -594,6 +595,7 @@ class DBFUtil(object):
         # process however many records before updating progress
         for sampleindex in self.sampleindices:
             inputvalues = cur.fetchone()
+            print 'inputvalues:', inputvalues
             outputrecord = []
             outputvalues = self.calc.calculateoutput(inputvalues)
             for _fieldname, fieldvalue in outputvalues:
