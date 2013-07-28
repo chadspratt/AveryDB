@@ -57,7 +57,7 @@ class DBFUtil(object):
         self.taskinprogress = False
 
         # indices of the records used for showing sample output
-        self.sampleindices = []
+        self.samplerecords = []
 
         # needs to be last because control goes to the gui once it's called
         gui.startgui()
@@ -537,6 +537,7 @@ class DBFUtil(object):
                                      time.strftime('%I:%M %p', timeend)])
             print progresstext
             self.gui.setprogress(progress, progresstext)
+
             if self.joinaborted:
                 self.gui.setprogress(0, 'Output aborted')
                 stopbutton.set_sensitive(False)
@@ -574,28 +575,28 @@ class DBFUtil(object):
             self.calc.createoutputfunc(self.outputs[fieldname])
 
         # generate a selection of records to use
-        if len(self.sampleindices) != samplesize:
+        if len(self.samplerecords) != samplesize:
+            self.samplerecords = []
             recordcount = self.joins.getrecordcount()
-            self.sampleindices = []
-            while len(self.sampleindices) < samplesize:
+            samplesize = min(samplesize, recordcount)
+            sampleindices = []
+            while len(sampleindices) < samplesize:
                 newindex = random.randint(0, recordcount)
-                if newindex not in self.sampleindices:
-                    self.sampleindices.append(newindex)
+                if newindex not in sampleindices:
+                    sampleindices.append(newindex)
 
-        # sqlite setup
-        joinquery = self.joins.getquery(self.sampleindices)
+            # sqlite setup
+            joinquery = self.joins.getquery(sampleindices)
 
-        # open the database
-        conn = sqlite3.connect('temp.db')
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
-        # create the table
-        cur.execute(joinquery)
+            # open the database
+            conn = sqlite3.connect('temp.db')
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            # create the table
+            cur.execute(joinquery)
+            self.samplerecords = cur.fetchall()
 
-        # process however many records before updating progress
-        for sampleindex in self.sampleindices:
-            inputvalues = cur.fetchone()
-            print 'inputvalues:', inputvalues
+        for inputvalues in self.samplerecords:
             outputrecord = []
             outputvalues = self.calc.calculateoutput(inputvalues)
             for _fieldname, fieldvalue in outputvalues:

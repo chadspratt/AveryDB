@@ -14,6 +14,7 @@
 ##
 # wrapper for dbfpy utility
 import csv
+import re
 
 import genericfile
 import field
@@ -44,9 +45,25 @@ class CSVFile(genericfile.GenericFile):
         with open(self.filename, 'r') as inputfile:
             reader = csv.DictReader(inputfile, dialect=self.dialect)
             fieldnames = reader.fieldnames
+            fieldtype = {}
+            for fieldname in fieldnames:
+                fieldtype[fieldname] = None
+            for i in range(20):
+                record = reader.next()
+                for fieldname in fieldnames:
+                    currenttype = fieldtype[fieldname]
+                    if (currenttype in ['INTEGER', None] and
+                            re.search('^[0-9]+$', record[fieldname])):
+                        fieldtype[fieldname] = 'INTEGER'
+                    elif (currenttype in ['REAL', 'INTEGER', 'NONE'] and
+                          re.search('^[.0-9]+$', record[fieldname])):
+                        fieldtype[fieldname] = 'REAL'
+                    else:
+                        fieldtype[fieldname] = 'TEXT'
             fieldlist = []
             for fieldname in fieldnames:
-                newfield = field.Field(fieldname)
+                attributes = {'type': fieldtype[fieldname]}
+                newfield = field.Field(fieldname, attributes)
                 fieldlist.append(newfield)
             return fieldlist
 

@@ -1641,7 +1641,7 @@ File:</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="text_xalign">0.019999999552965164</property>
-                <property name="pulse_step">0</property>
+                <property name="pulse_step">0.01</property>
               </object>
               <packing>
                 <property name="expand">True</property>

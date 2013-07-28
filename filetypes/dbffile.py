@@ -34,15 +34,20 @@ class DBFFile(genericfile.GenericFile):
         else:
             self.filehandler = dbf.Dbf(filename, new=True)
         self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
-        # not used
-        self.fieldtypes = ['C', 'N', 'F', 'I', 'Y', 'L', 'M', 'D', 'T']
+        # used to convert between dbf library and sqlite types
+        self.types = {'C': 'TEXT', 'N': 'NUMERIC', 'F': 'REAL',
+                      'T': 'TIME', 'L': 'LOGICAL', 'M': 'MEMOTEXT',
+                      'D': 'DATE', 'I': 'INTEGER', 'Y': 'CURRENCY',
+                      'TEXT': 'C', 'NUMERIC': 'N', 'REAL': 'F',
+                      'TIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
+                      'DATE': 'D', 'INTEGER': 'I', 'CURRENCY': 'C'}
 
     def getfields(self):
         """Returns the fields of the file as a list of Field objects"""
         fieldlist = []
         for fielddef in self.filehandler.fieldDefs:
             # use ordereddict to enable accessing attributes by index
-            fieldattrs = OrderedDict([('type', fielddef.typeCode),
+            fieldattrs = OrderedDict([('type', self.types[fielddef.typeCode]),
                                       ('length', fielddef.length),
                                       ('decimals', fielddef.decimalCount)])
             newfield = field.Field(fielddef.name, fieldattributes=fieldattrs,
@@ -55,7 +60,7 @@ class DBFFile(genericfile.GenericFile):
         for genericfield in fields:
             dbffield = self.convertfield(genericfield)
             self.filehandler.addField((dbffield['name'],
-                                       dbffield['type'],
+                                       self.types[dbffield['type']],
                                        dbffield['length'],
                                        dbffield['decimals']))
 
@@ -79,7 +84,7 @@ class DBFFile(genericfile.GenericFile):
             if 'type' in sourcefield.attributes:
                 dbffield['type'] = sourcefield['type']
             else:
-                dbffield['type'] = 'C'
+                dbffield['type'] = 'TEXT'
             if 'length' in sourcefield.attributes:
                 dbffield['length'] = sourcefield['length']
             else:
@@ -93,24 +98,24 @@ class DBFFile(genericfile.GenericFile):
     @classmethod
     def getblankvalue(cls, outputfield):
         fieldtype = outputfield['type']
-        if fieldtype == 'C':
+        if fieldtype == 'TEXT':
             return ''
-        elif fieldtype == 'N':
+        elif fieldtype == 'NUMERIC':
             return 0
-        elif fieldtype == 'F':
+        elif fieldtype == 'REAL':
             return 0.0
         # i don't know for this one what a good nonvalue would be
-        elif fieldtype == 'D':
+        elif fieldtype == 'DATE':
             return (0, 0, 0)
-        elif fieldtype == 'I':
+        elif fieldtype == 'INTEGER':
             return 0
-        elif fieldtype == 'Y':
+        elif fieldtype == 'CURRENCY':
             return 0.0
-        elif fieldtype == 'L':
+        elif fieldtype == 'LOGICAL':
             return -1
-        elif fieldtype == 'M':
+        elif fieldtype == 'MEMOTEXT':
             return " " * 10
-        elif fieldtype == 'T':
+        elif fieldtype == 'TIME':
             return None
 
     def getrecordcount(self):

@@ -28,7 +28,8 @@ class Table(object):
         """Read the contents of a data file in to an SQLite table."""
         for field in inputfile.getfields():
             self.fields[field.originalname] = field
-            field.sqlname = self.tablename + '_' + field.originalname
+            field.sqlname = (self.tablename + '_' + field.originalname + ' ' +
+                             field['type'])
         # create a string of question marks for the queries
         # one question mark for each field. four fields = '?, ?, ?, ?'
         qmarklist = []
