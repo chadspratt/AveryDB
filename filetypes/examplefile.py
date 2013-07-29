@@ -34,6 +34,7 @@ FILETYPEDESCRIP = 'example file'
 
 
 class ExampleFile(object):
+    """Handle all input and output for "example" files (not a real format)."""
     def __init__(self, filename, mode='r'):
         self.filename = filename
         # filehandler would be
@@ -96,9 +97,9 @@ class ExampleFile(object):
                 fieldtype = 'TEXT'
         return fieldtype
 
-    def getblankvalue(self, field):
+    def getblankvalue(self, outputfield):
         """Return a blank value that matches the type of the field."""
-        return self.blankvalues[field['type']]
+        return self.blankvalues[outputfield['type']]
 
     def getrecordcount(self):
         """Return number of records, or None if it's too costly to count."""

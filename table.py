@@ -1,3 +1,4 @@
+"""Table stores an input file as an SQLite table and adds indexes to it."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +18,7 @@ from collections import OrderedDict
 
 
 class Table(object):
+    """Controls an SQLite table used for storing values from an input file."""
     def __init__(self, filealias):
         self.tablename = filealias
         self.sqlname = 'table_' + filealias
@@ -33,7 +35,7 @@ class Table(object):
         # create a string of question marks for the queries
         # one question mark for each field. four fields = '?, ?, ?, ?'
         qmarklist = []
-        for x in range(len(self.fields)):
+        for _counter in range(len(self.fields)):
             qmarklist.append('?')
         qmarks = ', '.join(qmarklist)
 
@@ -64,16 +66,15 @@ class Table(object):
         conn.commit()
 
     def buildindex(self, fieldname):
+        """Create an index for a given field."""
         # open the database
         conn = sqlite3.connect('temp.db')
         cur = conn.cursor()
-        print ('CREATE INDEX ' + self.fields[fieldname].sqlname +
+        print ('CREATE INDEX IF NOT EXISTS ' +
+               self.fields[fieldname].sqlname +
                '_index ON ' + self.sqlname + '(' +
                self.fields[fieldname].sqlname + ')')
-        try:
-            cur.execute('CREATE INDEX ' + self.fields[fieldname].sqlname +
-                        '_index ON ' + self.sqlname + '(' +
-                        self.fields[fieldname].sqlname + ')')
-        # index may already exist
-        except sqlite3.OperationalError:
-            pass
+        cur.execute('CREATE INDEX IF NOT EXISTS ' +
+                    self.fields[fieldname].sqlname +
+                    '_index ON ' + self.sqlname + '(' +
+                    self.fields[fieldname].sqlname + ')')

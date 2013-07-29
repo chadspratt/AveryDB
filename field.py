@@ -1,3 +1,7 @@
+"""Field stores all information about a given field.
+
+The field object is used to represent fields from any data format and assists
+with converting fields between the inputs and the output."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +21,7 @@
 class Field(object):
     """Stores a field definition."""
     def __init__(self, fieldname, fieldattributes=None, fieldvalue='',
-                 source=None, dataformat=None):
+                 source=None, dataformat=None, namelen=10):
         if fieldattributes is None:
             fieldattributes = {}
         # used for resetting a field
@@ -34,31 +38,37 @@ class Field(object):
         self.value = fieldvalue
         # dictionary of attribute names and values, stored by file format
         self.attributes = fieldattributes
-        self.namegen = self.namegenerator()
+        self.namelenlimit = namelen
+        self.namegen = self.namegenerator(namelen)
 
-    def namegenerator(self, lenlimit=10):
+    def namegenerator(self, lenlimit):
         """Yields alternate field names for when there's a naming conflict."""
-        namelen = len(self.originalname)  # store original length
         # append a number to create a different name
         dupecount = 1
-        countlen = 1
-        namelen = lenlimit - countlen
-        while True:
-            # append next number to original alias
-            self.name = self.originalname[:namelen] + str(dupecount)
-            yield self.name
-            dupecount += 1
-            countlen = len(str(dupecount))
+        if lenlimit is None:
+            while True:
+                yield self.originalname + str(dupecount)
+                dupecount += 1
+        # append a number and trim the name as needed to meet the limit
+        else:
+            namelen = len(self.originalname)  # store original length
+            countlen = 1
             namelen = lenlimit - countlen
+            while True:
+                # append next number to original alias
+                yield self.originalname[:namelen] + str(dupecount)
+                dupecount += 1
+                countlen = len(str(dupecount))
+                namelen = lenlimit - countlen
 
-    def createnewname(self):
+    def getnewname(self):
         """Supplies a new unique name candidate."""
         self.namegen.next()
 
     def resetname(self):
         """Resets the field name, though it will be changed if it conflicts."""
         self.name = self.originalname
-        self.namegen = self.namegenerator()
+        self.namegen = self.namegenerator(self.namelenlimit)
 
     # Not currently used
     def resetvalue(self):
@@ -87,9 +97,11 @@ class Field(object):
 
     def setformat(self, dataformat, newattributes=None):
         """Set new attributes for the field when the format is changed."""
+        # Check if the attributes have already been defined for dataformat
         if dataformat in self.attributesbyformat:
             self.attributes = self.attributesbyformat[dataformat]
         else:
+            # If the format isn't already defined, attributes are required
             if newattributes is None:
                 raise ValueError('Field.setformat: ' + dataformat + ' not ' +
                                  'defined, need attribute dictionary')
@@ -97,6 +109,7 @@ class Field(object):
             self.attributesbyformat[dataformat] = newattributes
 
     def hasformat(self, dataformat):
+        """Check if a format is defined for this field."""
         return dataformat in self.attributesbyformat
 
     def __getitem__(self, key):

@@ -54,7 +54,8 @@ class OutputManager(object):
         # outputfields uses uppercase names to help check for duplicates
         fieldname = outputfield.name
         while fieldname.upper() in self.outputfields:
-            fieldname = outputfield.createnewname()
+            fieldname = outputfield.getnewname()
+        outputfield.name = fieldname
 
         self.outputfields[outputfield.name.upper()] = outputfield
         if fieldindex == 'end':
@@ -94,7 +95,7 @@ class OutputManager(object):
         tempfield = field.Field(fieldname)
         uniquename = tempfield.name
         while uniquename.upper() in self.outputfields:
-            uniquename = tempfield.createnewname()
+            uniquename = tempfield.getnewname()
         return uniquename
 
     def updatename(self, fieldpos, newname):

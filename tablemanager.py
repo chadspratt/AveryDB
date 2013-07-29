@@ -1,3 +1,4 @@
+"""TableManager manages SQLite tables that are created from the input files."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +18,7 @@ import table
 
 
 class TableManager(object):
+    """Orchestrates converting input files to SQLite tables."""
     def __init__(self):
         self.tables = {}
         # clear the sqlite db. could alternately do this on program close
@@ -25,10 +27,12 @@ class TableManager(object):
         sqlitefile.close()
 
     def addtable(self, filealias, filehandler):
+        """Get a generator that converts the input file to an SQLite table."""
         newtable = table.Table(filealias)
         self.tables[filealias] = newtable
         conversiongenerator = newtable.readfile(filehandler)
         return conversiongenerator
 
     def buildsqlindex(self, indexalias, indexfield):
+        """Build an index on the given field of the given table."""
         self.tables[indexalias].buildindex(indexfield)

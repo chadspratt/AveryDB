@@ -113,11 +113,12 @@ class JoinManager(object):
         """Create an sql query string that will perform the join."""
         query = ['SELECT *']
         query.append('FROM table_' + self.targetalias)
-        for join in self.getjoins():
-            query.append('LEFT OUTER JOIN table_' + join.joinalias +
-                         ' ON table_' + join.joinalias + '.' + join.joinalias +
-                         '_' + join.joinfield + '=table_' + join.targetalias +
-                         '.' + join.targetalias + '_' + join.targetfield)
+        for curjoin in self.getjoins():
+            query.append('LEFT OUTER JOIN table_' + curjoin.joinalias +
+                         ' ON table_' + curjoin.joinalias + '.' +
+                         curjoin.joinalias + '_' + curjoin.joinfield +
+                         '=table_' + curjoin.targetalias + '.' +
+                         curjoin.targetalias + '_' + curjoin.targetfield)
         if sampling:
             query.append('WHERE table_' + self.targetalias + '.ROWID IN ('
                          + ', '.join([str(x) for x in sampling]) + ')')

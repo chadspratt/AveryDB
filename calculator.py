@@ -82,6 +82,7 @@ class Calculator(object):
                                                        [libname])
 
     def createlib(self, libname):
+        """Create a new library file in the fieldcalcs directory."""
         if libname not in self.moremodules:
             os.chdir('fieldcalcs')
             newlib = open(libname + '.py', 'w')

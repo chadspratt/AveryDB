@@ -219,11 +219,12 @@ class DBFUtil(object):
                 self.processtasks()
 
     def queuetask(self, task=None):
+        """Add a task to the process queue but don't start processing."""
         if task:
             self.tasks_to_process.append(task)
 
     def processtasks(self, task=None):
-        """Build indices and update sample output in the "background"."""
+        """Process all the queued "background" tasks, like converting files."""
         if task:
             self.tasks_to_process.append(task)
         if not self.taskinprogress:
@@ -257,6 +258,7 @@ class DBFUtil(object):
         self.tables.buildsqlindex(indexalias, indexfield)
 
     def converttosql(self, filealias, dataconverter):
+        """Convert a file to an SQLite table."""
         progresstext = 'Converting to sqlite: ' + filealias
         self.gui.setprogress(0, progresstext)
         # Run the generator until it's finished. It yields % progress.

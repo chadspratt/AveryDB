@@ -74,37 +74,42 @@ class DBFFile(object):
         rec.store()
 
     def close(self):
+        """Close the dbf file handler."""
         self.filehandler.close()
 
     @classmethod
-    def convertfield(cls, sourcefield):
-        dbffield = sourcefield.copy()
+    def convertfield(cls, unknownfield):
+        """Convert a field of unknown type to a dbf field."""
+        dbffield = unknownfield.copy()
         if dbffield.hasformat('dbf'):
             dbffield.setformat('dbf')
         else:
             dbfattributes = OrderedDict()
-            if sourcefield.hasattribute('type'):
-                dbfattributes['type'] = sourcefield['type']
+            if unknownfield.hasattribute('type'):
+                dbfattributes['type'] = unknownfield['type']
             else:
                 dbfattributes['type'] = 'TEXT'
-            if sourcefield.hasattribute('length'):
-                dbfattributes['length'] = sourcefield['length']
+            if unknownfield.hasattribute('length'):
+                dbfattributes['length'] = unknownfield['length']
             else:
                 dbfattributes['length'] = 254
-            if sourcefield.hasattribute('decimals'):
-                dbfattributes['decimals'] = sourcefield['decimals']
+            if unknownfield.hasattribute('decimals'):
+                dbfattributes['decimals'] = unknownfield['decimals']
             else:
                 dbfattributes['decimals'] = 0
             dbffield.setformat('dbf', dbfattributes)
         return dbffield
 
     def getblankvalue(self, outputfield):
+        """Get a blank value that matches the type of a field."""
         return self.blankvalues[outputfield['type']]
 
     def getrecordcount(self):
+        """Return the number of records in the file."""
         return self.filehandler.recordCount
 
     def __iter__(self):
+        """Iterate through all the records in the file."""
         recordcount = self.filehandler.recordCount
         i = 0
         while i < recordcount:
