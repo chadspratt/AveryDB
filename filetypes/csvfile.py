@@ -16,7 +16,6 @@
 import csv
 import re
 
-import genericfile
 import field
 
 FILETYPEEXT = '.csv'
@@ -24,19 +23,19 @@ FILETYPEDESCRIP = 'csv file'
 
 
 # GenericFile is just an interface
-class CSVFile(genericfile.GenericFile):
+class CSVFile(object):
     """Wraps the dbfpy library with a set of standard functions."""
     def __init__(self, filename, mode='r'):
         self.filename = filename
         self.outputfile = None
         self.writer = None
         if mode == 'r':
-            self.dialect = self.getdialect()
+            self.dialect = self._getdialect()
         else:
             self.dialect = None
         self.fieldattrorder = ['Name', 'Value']
 
-    def getdialect(self):
+    def _getdialect(self):
         with open(self.filename, 'r') as inputfile:
             return csv.Sniffer().sniff(inputfile.read(1024), '\b\t,')
 

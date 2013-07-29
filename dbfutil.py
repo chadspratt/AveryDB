@@ -287,7 +287,7 @@ class DBFUtil(object):
         self.gui['calcoutputfieldcombo'].set_model(outputlist)
 
         for outputfield in self.outputs:
-            outputlist.append(outputfield.getattributelist())
+            outputlist.append(outputfield.getattributes())
             # initialize a blank value for this field in the calculator
             blankvalue = outputfile.getblankvalue(outputfield)
             self.calc.addblankvalue(outputfield, blankvalue)
@@ -319,7 +319,7 @@ class DBFUtil(object):
                                    field.originalname + '!')
                     newfield = self.outputs.addfield(field,
                                                      fieldsource=filealias)
-                    outputlist.append(newfield.getattributelist())
+                    outputlist.append(newfield.getattributes())
                     inputlist.append([newfield['value']])
                     # initialize a blank value for this field in the calculator
                     blankvalue = outputfile.getblankvalue(newfield)
@@ -353,7 +353,7 @@ class DBFUtil(object):
 
         # add an empty row after the last selected
         newfield = self.outputs.addnewfield(fieldindex=insertindex)
-        outputlist.insert(insertindex, newfield.getattributelist())
+        outputlist.insert(insertindex, newfield.getattributes())
 
         selection.unselect_all()
         selection.select_path(insertindex)
@@ -374,7 +374,7 @@ class DBFUtil(object):
                 insertindex = row[0] + 1
                 fieldcopy = self.outputs[row[0]].copy()
                 self.outputs.addfield(fieldcopy, fieldindex=insertindex)
-                outputlist.insert(insertindex, fieldcopy.getattributelist())
+                outputlist.insert(insertindex, fieldcopy.getattributes())
                 selection.select_path(insertindex)
             self.gui['outputview'].scroll_to_cell(insertindex)
         self.processtasks(('sample', None))

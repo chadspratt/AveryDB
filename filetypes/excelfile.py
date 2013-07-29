@@ -1,4 +1,3 @@
-"""DBFFile is used to provide standard interfaces to the dbfpy library."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +12,16 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
+# wrapper for xlrd and xlwt libraries
 from collections import OrderedDict
 
-from filetypes.libraries.dbfpy import dbf
+import xlrd
+import xlwt
 
 import field
 
-FILETYPEEXT = '.dbf'
-FILETYPEDESCRIP = 'dbase file'
+FILETYPEEXT = '.xls, .xlsx'
+FILETYPEDESCRIP = 'excel file'
 
 
 # GenericFile is just an interface
@@ -28,21 +29,18 @@ class DBFFile(object):
     """Wraps the dbfpy library with a set of standard functions."""
     def __init__(self, filename, mode='r'):
         self.filename = filename
-        if mode == 'r':
-            self.filehandler = dbf.Dbf(filename, readOnly=True)
-        else:
-            self.filehandler = dbf.Dbf(filename, new=True)
-        self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
-        # used to convert between dbf library and sqlite types
-        self.types = {'C': 'TEXT', 'N': 'NUMERIC', 'F': 'REAL',
-                      'T': 'TIME', 'L': 'LOGICAL', 'M': 'MEMOTEXT',
-                      'D': 'DATE', 'I': 'INTEGER', 'Y': 'CURRENCY',
-                      'TEXT': 'C', 'NUMERIC': 'N', 'REAL': 'F',
-                      'TIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
-                      'DATE': 'D', 'INTEGER': 'I', 'CURRENCY': 'C'}
-        self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0,
-                            'TIME': None, 'LOGICAL': -1, 'MEMOTEXT': '     ',
-                            'DATE': (0, 0, 0), 'INTEGER': 0, 'CURRENCY': 0.0}
+#        if mode == 'r':
+#            self.filehandler = dbf.Dbf(filename, readOnly=True)
+#        else:
+#            self.filehandler = dbf.Dbf(filename, new=True)
+#        self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
+#        # used to convert between dbf library and sqlite types
+#        self.types = {'C': 'TEXT', 'N': 'NUMERIC', 'F': 'REAL',
+#                      'T': 'TIME', 'L': 'LOGICAL', 'M': 'MEMOTEXT',
+#                      'D': 'DATE', 'I': 'INTEGER', 'Y': 'CURRENCY',
+#                      'TEXT': 'C', 'NUMERIC': 'N', 'REAL': 'F',
+#                      'TIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
+#                      'DATE': 'D', 'INTEGER': 'I', 'CURRENCY': 'C'}
 
     def getfields(self):
         """Returns the fields of the file as a list of Field objects"""
@@ -79,27 +77,46 @@ class DBFFile(object):
     @classmethod
     def convertfield(cls, sourcefield):
         dbffield = sourcefield.copy()
-        if dbffield.hasformat('dbf'):
-            dbffield.setformat('dbf')
+        if 'dbf' in dbffield.attributesbyformat:
+            dbffield.attributes = dbffield.attributesbyformat['dbf'].copy()
         else:
-            dbfattributes = OrderedDict()
-            if sourcefield.hasattribute('type'):
-                dbfattributes['type'] = sourcefield['type']
+            dbffield.attributes = OrderedDict()
+            if 'type' in sourcefield.attributes:
+                dbffield['type'] = sourcefield['type']
             else:
-                dbfattributes['type'] = 'TEXT'
-            if sourcefield.hasattribute('length'):
-                dbfattributes['length'] = sourcefield['length']
+                dbffield['type'] = 'TEXT'
+            if 'length' in sourcefield.attributes:
+                dbffield['length'] = sourcefield['length']
             else:
-                dbfattributes['length'] = 254
-            if sourcefield.hasattribute('decimals'):
-                dbfattributes['decimals'] = sourcefield['decimals']
+                dbffield['length'] = 254
+            if 'decimals' in sourcefield.attributes:
+                dbffield['decimals'] = sourcefield['decimals']
             else:
-                dbfattributes['decimals'] = 0
-            dbffield.setformat('dbf', dbfattributes)
+                dbffield['decimals'] = 0
         return dbffield
 
-    def getblankvalue(self, outputfield):
-        return self.blankvalues[outputfield['type']]
+    @classmethod
+    def getblankvalue(cls, outputfield):
+        fieldtype = outputfield['type']
+        if fieldtype == 'TEXT':
+            return ''
+        elif fieldtype == 'NUMERIC':
+            return 0
+        elif fieldtype == 'REAL':
+            return 0.0
+        # i don't know for this one what a good nonvalue would be
+        elif fieldtype == 'DATE':
+            return (0, 0, 0)
+        elif fieldtype == 'INTEGER':
+            return 0
+        elif fieldtype == 'CURRENCY':
+            return 0.0
+        elif fieldtype == 'LOGICAL':
+            return -1
+        elif fieldtype == 'MEMOTEXT':
+            return " " * 10
+        elif fieldtype == 'TIME':
+            return None
 
     def getrecordcount(self):
         return self.filehandler.recordCount

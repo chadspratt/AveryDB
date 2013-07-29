@@ -50,10 +50,11 @@ class OutputManager(object):
         outputfield = self.outputfile.convertfield(newfield)
         outputfield.source = fieldsource
 
-        # dbf is not case sensitive (won't allow 'objectID' and 'objectid')
+        # Check uppercase name to prevent case-insensitive duplicates
         # outputfields uses uppercase names to help check for duplicates
-        while outputfield.name.upper() in self.outputfields:
-            outputfield.createnewname()
+        fieldname = outputfield.name
+        while fieldname.upper() in self.outputfields:
+            fieldname = outputfield.createnewname()
 
         self.outputfields[outputfield.name.upper()] = outputfield
         if fieldindex == 'end':
@@ -89,11 +90,12 @@ class OutputManager(object):
         return self.outputorder.index(outputfield.name)
 
     def getuniquename(self, fieldname):
-        """Supplies a unique version of a field name."""
+        """Supplies a unique variation on a field name."""
         tempfield = field.Field(fieldname)
-        while tempfield['name'].upper() in self.outputfields:
-            tempfield.createnewname()
-        return tempfield['name']
+        uniquename = tempfield.name
+        while uniquename.upper() in self.outputfields:
+            uniquename = tempfield.createnewname()
+        return uniquename
 
     def updatename(self, fieldpos, newname):
         # Check that the name was changed

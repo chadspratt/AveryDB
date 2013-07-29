@@ -290,12 +290,12 @@ class Calculator(object):
             outputfunc, args = self.outputfuncs[outputfieldname]
             argvalues = []
             for arg in args:
-                argvalues.append(inputvalues[arg])
-                # Missed join for this record, pass a blank default value
-                if argvalues[-1] is None:
-                    argvalues[-1] = self.inputblanks[arg]
-#            print 'args:', args
-#            print 'argvalues:', argvalues
+                argvalue = inputvalues[arg]
+                if argvalue is not None:
+                    argvalues.append(argvalue)
+                else:
+                    # Missed join for this record, pass a blank default value
+                    argvalues.append(self.inputblanks[arg])
             outputvalue = outputfunc(self, argvalues)
             outputvalues.append((outputfieldname, outputvalue))
         return outputvalues

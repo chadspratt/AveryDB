@@ -17,14 +17,14 @@
 class Field(object):
     """Stores a field definition."""
     def __init__(self, fieldname, fieldattributes=None, fieldvalue='',
-                 source=None, fileformat=None):
+                 source=None, dataformat=None):
         if fieldattributes is None:
             fieldattributes = {}
         # used for resetting a field
         self.originalname = fieldname
-        if fileformat is not None:
+        if dataformat is not None:
         # preserves field attributes if output format is changed, changed back
-            self.attributesbyformat = {fileformat: fieldattributes.copy()}
+            self.attributesbyformat = {dataformat: fieldattributes.copy()}
         else:
             self.attributesbyformat = {}
         self.originalvalue = fieldvalue
@@ -36,7 +36,6 @@ class Field(object):
         self.attributes = fieldattributes
         self.namegen = self.namegenerator()
 
-    # it yields the new name, but it isn't used. Field.name is checked directly
     def namegenerator(self, lenlimit=10):
         """Yields alternate field names for when there's a naming conflict."""
         namelen = len(self.originalname)  # store original length
@@ -69,17 +68,36 @@ class Field(object):
     def copy(self):
         """Creates a deep copy of the field."""
         fieldcopy = Field(self.name, self.attributes, self.value)
-        fieldcopy.attributesbyformat = self.attributesbyformat.copy()
+        for dataformat in self.attributesbyformat:
+            fieldcopy.attributesbyformat[dataformat] = self.attributesbyformat[dataformat].copy()
         fieldcopy.originalvalue = self.originalvalue
         fieldcopy.source = self.source
         return fieldcopy
 
-    def getattributelist(self):
+    def hasattribute(self, attributename):
+        """Check if the field has an attribute by the given name."""
+        return attributename in self.attributes
+
+    def getattributes(self):
         """Returns all attributes (eg: name, type) of a field as a list."""
         attrlist = [self.name]
         attrlist.extend(self.attributes.values())
         attrlist.append(self.value)
         return attrlist
+
+    def setformat(self, dataformat, newattributes=None):
+        """Set new attributes for the field when the format is changed."""
+        if dataformat in self.attributesbyformat:
+            self.attributes = self.attributesbyformat[dataformat]
+        else:
+            if newattributes is None:
+                raise ValueError('Field.setformat: ' + dataformat + ' not ' +
+                                 'defined, need attribute dictionary')
+            self.attributes = newattributes
+            self.attributesbyformat[dataformat] = newattributes
+
+    def hasformat(self, dataformat):
+        return dataformat in self.attributesbyformat
 
     def __getitem__(self, key):
         if key == 'name' or key == 0:
