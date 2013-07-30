@@ -92,7 +92,8 @@ class DataFile(object):
     def getblankvalue(self, outputfield):
         return self.filehandler.getblankvalue(outputfield)
 
-    def getfieldattributes(self):
+    # XXX call getattributeorder() instead?
+    def getattributenames(self):
         return self.filehandler.fieldattrorder
 
     def __iter__(self):

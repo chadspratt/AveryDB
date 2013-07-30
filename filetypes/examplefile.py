@@ -3,7 +3,11 @@
 The functions in this class must all be defined by a data format class.
 The bodies of the functions are examples meant to show the format of values
 that get passed, values that get returned, and suggestions on how to implement
-each function. There are no required attributes. Extra functions can be defined
+each function.
+
+Required constants are FILETYPEEXT and FILETYPEDESCRIP.
+The only required attributes is
+        self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']. Extra functions can be defined
 as needed."""
 ##
 #   Copyright 2013 Chad Spratt
@@ -36,6 +40,12 @@ FILETYPEDESCRIP = 'example file'
 class ExampleFile(object):
     """Handle all input and output for "example" files (not a real format)."""
     def __init__(self, filename, mode='r'):
+        ##
+        # This attribute is required. It should list the attributes for a field
+        # in this format. Name should be first and Value, last.
+        ##
+        self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
+
         self.filename = filename
         # filehandler would be
         self.filehandler = open(filename, mode)

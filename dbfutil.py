@@ -275,14 +275,14 @@ class DBFUtil(object):
         self.joins.removealias(joinalias)
         self.refreshjoinlists()
 
-    def changeoutputformat(self, _widget, _data=None):
+    def setoutputfile(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
         outputfilename = (self.gui['outputfilenameentry'].get_text() +
                           self.gui['outputtypecombo'].get_active_text())
         outputfile = self.files.openoutputfile(outputfilename)
         self.outputs.setoutputfile(outputfile)
 
-        fieldattributes = outputfile.getfieldattributes()
+        fieldattributes = outputfile.getattributenames()
         self.gui.replacecolumns('outputlist', 'outputview', fieldattributes)
         outputlist = self.gui['outputlist']
         # Field calculator window setup
@@ -303,7 +303,7 @@ class DBFUtil(object):
         outputfile = self.files.openoutputfile(outputfilename)
         self.outputs.setoutputfile(outputfile)
 
-        fieldattributes = outputfile.getfieldattributes()
+        fieldattributes = outputfile.getattributenames()
         self.gui.replacecolumns('outputlist', 'outputview', fieldattributes)
         outputlist = self.gui['outputlist']
         # Field calculator window setup
@@ -495,6 +495,8 @@ class DBFUtil(object):
         if len(self.outputs) == 0:
             return
 
+        # call this to set the filename for the output
+        self.setoutputfile(None)
         outputfile = self.outputs.outputfile
 
         # create fields
