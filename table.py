@@ -19,9 +19,9 @@ from collections import OrderedDict
 
 class Table(object):
     """Controls an SQLite table used for storing values from an input file."""
-    def __init__(self, filealias):
-        self.tablename = filealias
-        self.sqlname = 'table_' + filealias
+    def __init__(self, tablename):
+        self.tablename = tablename
+        self.sqlname = 'table_' + tablename
         # fields[fieldname] = field
         self.fields = OrderedDict()
 

@@ -66,7 +66,7 @@ class DataFile(object):
             yield alias
             dupecount += 1
 
-    def generatealias(self):
+    def getnewalias(self):
         """Returns a modified, hopefully unique, file alias."""
         return self.aliasgenerator.next()
 

@@ -56,9 +56,9 @@ class FileManager(object):
             self.filesbyfilename[filename] = newfile
 
         # get a unique alias (in case another loaded file has the same name)
-        filealias = newfile.generatealias()
+        filealias = newfile.getnewalias()
         while filealias in self.filenamesbyalias:
-            filealias = newfile.generatealias()
+            filealias = newfile.getnewalias()
         self.filenamesbyalias[filealias] = filename
 
         return filealias
