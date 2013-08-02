@@ -97,8 +97,8 @@ class DbfFieldDef(object):
         self.name = name
         # FIXME: validate length according to the specification at
         # http://www.clicketyclick.dk/databases/xbase/format/data_types.html
-        self.length = length
-        self.decimalCount = decimalCount
+        self.length = int(length)
+        self.decimalCount = int(decimalCount)
         self.ignoreErrors = ignoreErrors
         self.start = start
         self.end = stop

@@ -235,7 +235,12 @@ class DBFUtil(object):
                     self.buildindex(taskdata)
                     self.updatesample()
                 elif tasktype == 'sample':
-                    self.updatesample()
+                    # a needed sql table might not be created yet
+                    try:
+                        self.updatesample()
+                    # if it fails, add it back to the end of the task list
+                    except sqlite3.OperationalError:
+                        self.tasks_to_process.append((tasktype, taskdata))
                 elif tasktype == 'sqlite':
                     filealias, dataconverter = taskdata
                     self.converttosql(filealias, dataconverter)
@@ -292,7 +297,7 @@ class DBFUtil(object):
             outputlist.append(outputfield.getattributes())
             # initialize a blank value for this field in the calculator
             blankvalue = outputfile.getblankvalue(outputfield)
-            self.calc.addblankvalue(outputfield, blankvalue)
+            self.calc.setblankvalue(outputfield, blankvalue)
 
     # populate the list of output fields with all the input fields
     def initoutput(self, _widget, _data=None):
@@ -325,7 +330,7 @@ class DBFUtil(object):
                     inputlist.append([newfield['value']])
                     # initialize a blank value for this field in the calculator
                     blankvalue = outputfile.getblankvalue(newfield)
-                    self.calc.addblankvalue(newfield, blankvalue)
+                    self.calc.setblankvalue(newfield, blankvalue)
         self.processtasks(('sample', None))
 
     def updatefieldattribute(self, _cell, row, new_value, outputlist, column):

@@ -302,9 +302,10 @@ class Calculator(object):
         return outputvalues
 
     # doesn't need to be speedy
-    def addblankvalue(self, field, blankvalue):
+    def setblankvalue(self, field, value):
         """Stores a default blank value to use for each input field."""
-        self.inputblanks[field.source + '_' + field.originalname] = blankvalue
+        if field.source is not None:
+            self.inputblanks[field.source + '_' + field.originalname] = value
 
     @classmethod
     def reloadcalcfuncs(cls):
