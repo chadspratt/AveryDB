@@ -128,7 +128,7 @@ class Field(object):
         elif key == 'value' or key == len(self.attributes) + 1:
             self.value = value
         # set attribute by index
-        elif key.isdigit():
+        elif type(key) == int or key.isdigit():
             attrname = self.attributes.keys()[key - 1]
             self.attributes[attrname] = value
         # set attribute by name

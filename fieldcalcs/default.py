@@ -19,3 +19,14 @@ def halfstring(inputstr):
     """Return the first half of a string."""
     strlen = len(inputstr)
     return  inputstr[:strlen / 2]
+
+
+def propertyfrompropid(propid):
+    """Convert int propid to R0* padded string."""
+    strid = str(propid)
+    idlen = len(strid)
+    prefix = 'R'
+    padding = 4 - idlen
+    if padding > 0:
+        prefix += '0' * padding
+    return prefix + strid

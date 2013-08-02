@@ -26,7 +26,7 @@ from collections import OrderedDict
 
 # libraries to preload and list in the calculator dialog
 # XXX needs a menu setting to edit it. in place or make a config file?
-DEFAULT_LIBRARIES = ['math']
+DEFAULT_LIBRARIES = ['default', 'temporary', 'math']
 
 
 class Calculator(object):
@@ -249,14 +249,14 @@ class Calculator(object):
                 if components[0] in dir(self.moremodules['temporary']):
                     # prepend 'temporary.' to the function name
                     newfuncbody = re.sub(funcname,
-                                         'temporary.' + funcname,
-                                         newfuncbody)
+                                         'self.moremodules["temporary"].' +
+                                         funcname, newfuncbody)
                 # then check if it's in default
                 elif components[0] in dir(self.moremodules['default']):
                     # prepend 'default.' to the function name
                     newfuncbody = re.sub(funcname,
-                                         'default.' + funcname,
-                                         newfuncbody)
+                                         'self.moremodules["default"].' +
+                                         funcname, newfuncbody)
                 # otherwise assume it's a builtin and leave it alone
                 # XXX should check builtins and do something if it isn't there
             else:
