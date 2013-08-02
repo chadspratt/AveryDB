@@ -56,6 +56,7 @@ class Field(object):
             namelen = lenlimit - countlen
             while True:
                 # append next number to original alias
+#                print self.originalname[:namelen] + str(dupecount)
                 yield self.originalname[:namelen] + str(dupecount)
                 dupecount += 1
                 countlen = len(str(dupecount))
@@ -63,7 +64,7 @@ class Field(object):
 
     def getnewname(self):
         """Supplies a new unique name candidate."""
-        self.namegen.next()
+        return self.namegen.next()
 
     def resetname(self):
         """Resets the field name, though it will be changed if it conflicts."""
@@ -133,3 +134,7 @@ class Field(object):
         # set attribute by name
         else:
             self.attributes[key] = value
+
+    def __str__(self):
+        return ('name: ' + self.name + '\nattr: ' + str(self.attributes) +
+                '\nvalue: ' + self.value)

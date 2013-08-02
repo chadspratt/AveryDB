@@ -28,10 +28,13 @@ class Table(object):
     # long-running, should yield periodically so the GUI can function
     def readfile(self, inputfile):
         """Read the contents of a data file in to an SQLite table."""
+        # make a list of the field names with type, for creating the table
+        fieldnameswithtype = []
         for field in inputfile.getfields():
             self.fields[field.originalname] = field
-            field.sqlname = (self.tablename + '_' + field.originalname + ' ' +
-                             field['type'])
+            field.sqlname = self.tablename + '_' + field.originalname
+            fieldnameswithtype.append(field.sqlname + ' ' + field['type'])
+
         # create a string of question marks for the queries
         # one question mark for each field. four fields = '?, ?, ?, ?'
         qmarklist = []
@@ -42,12 +45,9 @@ class Table(object):
         # open the database
         conn = sqlite3.connect('temp.db')
         cur = conn.cursor()
-        # make a list of the field names, as they'll be in the table
-#        sqlfieldnames = [f.sqlname for f in self.fields.values()]
-        sqlfieldnames = [self.fields[fn].sqlname for fn in self.fields]
         # create the table
         cur.execute('CREATE TABLE ' + self.sqlname + ' (' +
-                    ', '.join(sqlfieldnames) + ')')
+                    ', '.join(fieldnameswithtype) + ')')
         recordcount = inputfile.getrecordcount()
         i = 0
         insertquery = ('INSERT INTO ' + self.sqlname +

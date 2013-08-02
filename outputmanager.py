@@ -55,6 +55,8 @@ class OutputManager(object):
         fieldname = outputfield.name
         while fieldname.upper() in self.outputfields:
             fieldname = outputfield.getnewname()
+#            print type(fieldname)
+#            print fieldname
         outputfield.name = fieldname
 
         self.outputfields[outputfield.name.upper()] = outputfield
