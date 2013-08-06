@@ -1,0 +1,6 @@
+file extension,format wrapper
+.dbf,dbffile
+.csv,csvfile
+.xls,excelfile
+.xlsx,excelfile
+.db,sqlitefile

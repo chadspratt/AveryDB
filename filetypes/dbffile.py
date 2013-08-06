@@ -16,7 +16,6 @@
 from collections import OrderedDict
 
 from filetypes.libraries.dbfpy import dbf
-
 import field
 
 FILETYPEEXT = '.dbf'
