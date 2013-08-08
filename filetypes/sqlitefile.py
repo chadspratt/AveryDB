@@ -17,6 +17,7 @@ from collections import OrderedDict
 import re
 import sqlite3
 
+import datafile
 # Every format needs to create Field objects in getfields()
 import field
 
@@ -25,9 +26,10 @@ FILETYPEEXT = '.db'
 FILETYPEDESCRIP = 'SQLite Database'
 
 
-class SQLiteFile(object):
+class SQLiteFile(datafile.DataFile):
     """Handle all input and output for "example" files (not a real format)."""
     def __init__(self, filename, mode='r'):
+        datafile.DataFile.__init__(self, filename)
         # connect to the database
         conn = sqlite3.connect(filename)
         cur = conn.cursor()
@@ -40,7 +42,7 @@ class SQLiteFile(object):
 
         # ask the user which tables they want to
 
-        self.filename = filename
+        # XXX very incomplete
         # filehandler would be
         self.filehandler = open(filename, mode)
         # suggested method for defining blank values for field types

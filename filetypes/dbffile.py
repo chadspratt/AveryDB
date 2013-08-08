@@ -16,6 +16,7 @@
 from collections import OrderedDict
 
 from filetypes.libraries.dbfpy import dbf
+import datafile
 import field
 
 FILETYPEEXT = '.dbf'
@@ -23,10 +24,10 @@ FILETYPEDESCRIP = 'dbase file'
 
 
 # GenericFile is just an interface
-class DBFFile(object):
+class DBFFile(datafile.DataFile):
     """Wraps the dbfpy library with a set of standard functions."""
     def __init__(self, filename, mode='r'):
-        self.filename = filename
+        datafile.DataFile.__init__(self, filename)
         if mode == 'r':
             self.filehandler = dbf.Dbf(filename, readOnly=True)
         else:

@@ -80,6 +80,8 @@ class GUI(object):
         handlers['funcaddlibrarybutton_clicked_cb'] = hfuncs.getlibraryname
         handlers['newlibcreate_clicked_cb'] = hfuncs.createlibrary
         handlers['newlibcancel_clicked_cb'] = hfuncs.cancelcreatelibrary
+        # table selection dialog
+        handlers['tableok_clicked_cb'] = hfuncs.addtables
 
         # experimental
         handlers['sampleoutputview_columns_changed_cb'] = hfuncs.reordercols
@@ -111,6 +113,16 @@ class GUI(object):
                 filefilter.add_pattern(pattern)
             dialog.add_filter(filefilter)
 
+        return dialog
+
+    def tabledialog(self, filename, tablenames):
+        """Give a list of tables within a file to choose which to load."""
+        dialog = self['tabledialog']
+        tablelist = self['tablelist']
+        self['tablefilenamelabel'].set_text(filename)
+        tablelist.clear()
+        for tablename in tablenames:
+            tablelist.append([tablename])
         return dialog
 
     @classmethod

@@ -14,41 +14,16 @@
 ##
 
 import re
-# import all filetypes even if unreadable (arcpy)?
-# test for ability to read/write gis databases with arcpy
-from filetypes import dbffile
-from filetypes import csvfile
+
+import table
 
 
 class DataFile(object):
     """Used to open, read and write all files of all supported types."""
-    def __init__(self, filename='', mode='r'):
+    def __init__(self, filename):
         self.filename = filename
-        if filename != '':
-            try:
-                self.filehandler = self.openfile(filename, mode=mode)
-            except ValueError:
-                print 'Invalid file type'
         self.aliasgenerator = self._generatealias()
-
-    @classmethod
-    def openfile(cls, filename, mode='r'):
-        """Supplies an abstracted file handler for different file formats."""
-        lowercase_filename = filename.lower()
-        # This is the only code that treats different file types differently
-        if lowercase_filename.endswith('dbf'):
-            filehandler = dbffile.DBFFile(filename, mode=mode)
-        elif lowercase_filename.endswith('csv'):
-            filehandler = csvfile.CSVFile(filename, mode=mode)
-        else:
-            #this won't happen unless selecting invalid files is allowed
-            raise ValueError
-
-        return filehandler
-
-    def getfields(self):
-        """Returns a list of field objects."""
-        return self.filehandler.getfields()
+#        self.sqltable = table.Table()
 
     # generate and return an alias for the file. Each time a file is opened
     def _generatealias(self):
@@ -70,31 +45,9 @@ class DataFile(object):
         """Returns a modified, hopefully unique, file alias."""
         return self.aliasgenerator.next()
 
-    def setfields(self, fields):
-        """Calls the file handler's setfields."""
-        self.filehandler.setfields(fields)
-
-    def getrecordcount(self):
-        """Call the file handler's getrecordcount to return the total count."""
-        return self.filehandler.getrecordcount()
-
-    def addrecord(self, newrecord):
-        """Calls the file handler's addrecord."""
-        self.filehandler.addrecord(newrecord)
-
-    def close(self):
-        """Calls the file handler's close."""
-        self.filehandler.close()
-
-    def convertfield(self, sourcefield):
-        return self.filehandler.convertfield(sourcefield)
-
-    def getblankvalue(self, outputfield):
-        return self.filehandler.getblankvalue(outputfield)
-
     # XXX call getattributeorder() instead?
     def getattributenames(self):
-        return self.filehandler.fieldattrorder
+        return self.fieldattrorder
 
     def __iter__(self):
         return self.filehandler.__iter__()

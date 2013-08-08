@@ -29,6 +29,7 @@ as needed."""
 from collections import OrderedDict
 import re
 
+import datafile
 # Every format needs to create Field objects in getfields()
 import field
 
@@ -37,9 +38,11 @@ FILETYPEEXT = '.example, .ex'
 FILETYPEDESCRIP = 'example file'
 
 
-class ExampleFile(object):
+class ExampleFile(datafile.DataFile):
     """Handle all input and output for "example" files (not a real format)."""
     def __init__(self, filename, mode='r'):
+        # must call this, which handles the filename/alias and sql table
+        datafile.DataFile.__init__(self, filename)
         ##
         # This attribute is required. It is only used to give the column names
         # for the output field list in the gui, so the names don't need to
@@ -49,8 +52,7 @@ class ExampleFile(object):
         ##
         self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
 
-        self.filename = filename
-        # filehandler would be
+        # filehandler would be opened using a library for that format
         self.filehandler = open(filename, mode)
         # suggested method for defining blank values for field types
         self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0, 'INT': 0}

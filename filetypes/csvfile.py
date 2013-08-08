@@ -16,6 +16,7 @@
 import csv
 import re
 
+import datafile
 import field
 
 FILETYPEEXT = '.csv'
@@ -23,10 +24,10 @@ FILETYPEDESCRIP = 'csv file'
 
 
 # GenericFile is just an interface
-class CSVFile(object):
+class CSVFile(datafile.DataFile):
     """Wraps the csv library with a set of standard functions."""
     def __init__(self, filename, mode='r'):
-        self.filename = filename
+        datafile.DataFile.__init__(self, filename)
         self.outputfile = None
         self.writer = None
         if mode == 'r':

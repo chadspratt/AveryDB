@@ -25,19 +25,32 @@ class GUI_Files(object):
         if response == gtk.RESPONSE_OK:
             newfilename = addfiledialog.get_filename()
             newfilealias = self.files.addfile(newfilename)
-            sqlconverter = self.tables.addtable(newfilealias,
-                                                self.files[newfilealias])
-            self.queuetask(('sqlite', (newfilealias, sqlconverter)))
-            # add to the file list
-            aliaslist = self.gui['aliaslist']
-            newrow = aliaslist.append([newfilealias])
+            if type(newfilealias) is list:
+                dialog = self.gui.tabledialog(newfilename, newfilealias)
+                dialog.show_all()
+            else:
+                sqlconverter = self.tables.addtable(newfilealias,
+                                                    self.files[newfilealias])
+                self.queuetask(('sqlite', (newfilealias, sqlconverter)))
+                # add to the file list
+                aliaslist = self.gui['aliaslist']
+                newrow = aliaslist.append([newfilealias])
 
-            # set as target if no target is set
-            if self.joins.gettarget() == '':
-                self.joins.settarget(newfilealias)
-                self.gui['targetcombo'].set_active_iter(newrow)
+                # set as target if no target is set
+                if self.joins.gettarget() == '':
+                    self.joins.settarget(newfilealias)
+                    self.gui['targetcombo'].set_active_iter(newrow)
         addfiledialog.destroy()
+        # dbfutil.py, handles "background" processing
         self.processtasks()
+
+    # XXX incomplete, needed for formats which contain multiple tables
+    def addtables(self, _widget, _data=None):
+        filename = self.gui['tablefilenamelabel'].get_text()
+        selection = self.gui['tableview'].get_selection()
+        (tablelist, selectedrows) = selection.get_selected_rows()
+        for row in selectedrows:
+            newfilealias = self.files.addfile(filename, row[0])
 
     def removefile(self, _widget, _data=None):
         """Close a file and remove all joins that depend on it."""

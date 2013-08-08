@@ -16,6 +16,8 @@ It doesn't do anything further with the files."""
 #   limitations under the License.
 ##
 #
+import csv
+import os
 
 import datafile
 
@@ -40,19 +42,37 @@ class FileManager(object):
                                        'patterns': ['*.csv']}
         # If two aliases point to one file, only one will be used as the table
         # name
-        # table names by filename
-        self.tablesbyfilename = {}
-        # table names by alias
-        self.tablesbyalias = {}
+        self.filehandlers = {}
+        # XXX do this separate from init?
+        self.inithandlers()
+
+    def inithandlers(self):
+        os.chdir('filetypes')
+        registryfile = open('registry', 'r')
+        reader = csv.DictReader(registryfile)
+        for row in reader:
+            # store a reference to each class by file extension
+            extension = row['extension']
+            if extension[0] == '.':
+                extension = extension[1:]
+            modulename = row['module']
+            classname = row['class']
+
+            module = __import__('filetypes.' + modulename, fromlist=[None])
+            self.filehandlers[extension] = module.__dict__[classname]
+        registryfile.close()
+        os.chdir('..')
 
     def addfile(self, filename):
         """Open a new file. If file is already open, add an alias for it."""
         # check if file is already opened
         if filename in self.filesbyfilename:
+            # use existing file
             newfile = self.filesbyfilename[filename]
         else:
-            # open the file. need to catch exceptions in DataFile
-            newfile = datafile.DataFile(filename)
+            # create new file
+            fileext = filename.split('.')[-1]
+            newfile = self.filehandlers[fileext](filename)
             self.filesbyfilename[filename] = newfile
 
         # get a unique alias (in case another loaded file has the same name)
@@ -72,10 +92,10 @@ class FileManager(object):
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
 
-    @classmethod
-    def openoutputfile(cls, filename):
+    def openoutputfile(self, filename):
         """Returns a file, with the given filename opened for writing."""
-        return datafile.DataFile(filename, mode='w')
+        fileext = filename.split('.')[-1]
+        return self.filehandlers[fileext](filename, mode='w')
 
     def __getitem__(self, key):
         """Return a file object given either a file name or alias"""

@@ -1,6 +1,6 @@
-file extension,format wrapper
-.dbf,dbffile
-.csv,csvfile
-.xls,excelfile
-.xlsx,excelfile
-.db,sqlitefile
+extension,module,class
+.dbf,dbffile,DBFFile
+.csv,csvfile,CSVFile
+.xls,excelfile,ExcelFile
+.xlsx,excelfile,ExcelFile
+.db,sqlitefile,SQLiteFile

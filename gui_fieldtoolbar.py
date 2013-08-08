@@ -49,8 +49,8 @@ class GUI_FieldToolbar(object):
                     blankvalue = outputfile.getblankvalue(newfield)
                     self.calc.setblankvalue(newfield, blankvalue)
         self.processtasks(('sample', None))
-    # 'add field' button
 
+    # 'add field' button
     def addoutput(self, _widget, _data=None):
         """Add a new field after the last selected. Append if none selected."""
         # get the selected row from the output list
@@ -59,7 +59,7 @@ class GUI_FieldToolbar(object):
         (outputlist, selectedrows) = selection.get_selected_rows()
         if selectedrows:
             lastselectedindex = selectedrows[-1][0]
-            insertindex = lastselectedindex + 1
+            insertindex = lastselectedindex
         else:
             insertindex = len(self.gui['outputlist'])
 

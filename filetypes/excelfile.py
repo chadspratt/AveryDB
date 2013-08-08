@@ -15,9 +15,10 @@
 # wrapper for xlrd and xlwt libraries
 from collections import OrderedDict
 
-import xlrd
-import xlwt
+from filetypes.libraries import xlrd
+from filetypes.libraries import xlwt
 
+import datafile
 import field
 
 FILETYPEEXT = '.xls, .xlsx'
@@ -25,10 +26,12 @@ FILETYPEDESCRIP = 'excel file'
 
 
 # GenericFile is just an interface
-class DBFFile(object):
+class ExcelFile(datafile.DataFile):
     """Wraps the dbfpy library with a set of standard functions."""
     def __init__(self, filename, mode='r'):
-        self.filename = filename
+        datafile.DataFile.__init__(self, filename)
+
+        # XXX very incomplete
 #        if mode == 'r':
 #            self.filehandler = dbf.Dbf(filename, readOnly=True)
 #        else:
