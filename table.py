@@ -1,4 +1,3 @@
-"""Table stores an input file as an SQLite table and adds indexes to it."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,21 +17,23 @@ from collections import OrderedDict
 
 
 class Table(object):
-    """Controls an SQLite table used for storing values from an input file."""
-    def __init__(self, tablename):
+    """Used to open, read and write all files of all supported types."""
+    def __init__(self, filename, tablename=None):
+        self.filename = filename
         self.tablename = tablename
-        self.sqlname = 'table_' + tablename
-        # fields[fieldname] = field
+        self.sqlname = None
+        # fields[fieldname] = Field
         self.fields = OrderedDict()
 
     # long-running, should yield periodically so the GUI can function
-    def readfile(self, inputfile):
+    def convertdata(self, alias):
         """Read the contents of a data file in to an SQLite table."""
+        self.sqlname = 'table_' + alias
         # make a list of the field names with type, for creating the table
         fieldnameswithtype = []
-        for field in inputfile.getfields():
+        for field in self.getfields():
             self.fields[field.originalname] = field
-            field.sqlname = self.tablename + '_' + field.originalname
+            field.sqlname = alias + '_' + field.originalname
             fieldnameswithtype.append(field.sqlname + ' ' + field['type'])
 
         # create a string of question marks for the queries
@@ -43,38 +44,41 @@ class Table(object):
         qmarks = ', '.join(qmarklist)
 
         # open the database
-        conn = sqlite3.connect('temp.db')
-        cur = conn.cursor()
-        # create the table
-        cur.execute('CREATE TABLE ' + self.sqlname + ' (' +
-                    ', '.join(fieldnameswithtype) + ')')
-        recordcount = inputfile.getrecordcount()
-        i = 0
-        insertquery = ('INSERT INTO ' + self.sqlname +
-                       ' VALUES (' + qmarks + ');')
-        # insert each record from the input file
-        for record in inputfile:
-            values = [record[fn] for fn in self.fields]
-            cur.execute(insertquery, values)
-            i += 1
-            # Take a break so the gui can be used
-            if i % 250 == 0:
-                if recordcount is None:
-                    yield 'pulse'
-                else:
-                    yield float(i) / recordcount
-        conn.commit()
+        with sqlite3.connect('temp.db') as conn:
+#        conn = sqlite3.connect('temp.db')
+            cur = conn.cursor()
+            # create the table
+            cur.execute('CREATE TABLE ' + self.sqlname + ' (' +
+                        ', '.join(fieldnameswithtype) + ')')
+            recordcount = self.getrecordcount()
+            i = 0
+            insertquery = ('INSERT INTO ' + self.sqlname +
+                           ' VALUES (' + qmarks + ');')
+            # insert each record from the input file
+            for record in self:
+                values = [record[fn] for fn in self.fields]
+                cur.execute(insertquery, values)
+                i += 1
+                # Take a break so the gui can be used
+                if i % 250 == 0:
+                    if recordcount is None:
+                        yield 'pulse'
+                    else:
+                        yield float(i) / recordcount
+            conn.commit()
 
-    def buildindex(self, fieldname):
+    def buildindex(self, indexfield):
         """Create an index for a given field."""
         # open the database
-        conn = sqlite3.connect('temp.db')
-        cur = conn.cursor()
-        print ('CREATE INDEX IF NOT EXISTS ' +
-               self.fields[fieldname].sqlname +
-               '_index ON ' + self.sqlname + '(' +
-               self.fields[fieldname].sqlname + ')')
-        cur.execute('CREATE INDEX IF NOT EXISTS ' +
-                    self.fields[fieldname].sqlname +
-                    '_index ON ' + self.sqlname + '(' +
-                    self.fields[fieldname].sqlname + ')')
+        with sqlite3.connect('temp.db') as conn:
+#        conn = sqlite3.connect('temp.db')
+            cur = conn.cursor()
+            query = ('CREATE INDEX IF NOT EXISTS ' + indexfield.sqlname +
+                     '_index ON ' + self.sqlname + '(' + indexfield.sqlname +
+                     ')')
+            print query
+            cur.execute(query)
+
+    # XXX call getattributeorder() instead?
+    def getattributenames(self):
+        return self.fieldattrorder

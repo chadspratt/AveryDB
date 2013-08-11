@@ -56,23 +56,26 @@ class GUI_JoinConfig(object):
         """Save join using the selected fields in the gui."""
         # get combobox selections
         joinalias = self.gui['joinaliascombo'].get_active_text()
-        joinfield = self.gui['joinfieldcombo'].get_active_text()
+        joinfieldname = self.gui['joinfieldcombo'].get_active_text()
         targetalias = self.gui['targetaliascombo'].get_active_text()
-        targetfield = self.gui['targetfieldcombo'].get_active_text()
+        targetfieldname = self.gui['targetfieldcombo'].get_active_text()
 
-        if joinfield is not None and targetfield is not None:
+        if joinfieldname is not None and targetfieldname is not None:
+            # check if joinalias is in use, and if it is, create a new alias
+            # this simplifies the data model since it prevents loops
+            if joinalias in self.joins.getjoinedaliases():
+                joinalias = self.files.addnewalias(joinalias)
+            jointable = self.files[joinalias]
+            joinfield = jointable.fields[joinfieldname]
+            targettable = self.files[targetalias]
+            targetfield = targettable.fields[targetfieldname]
             # save to joins
-            result = self.joins.addjoin(joinalias, joinfield,
-                                        targetalias, targetfield)
-            # check if the result is an error message
-            if type(result) == str:
-                self.gui.messagedialog(result)
-            # otherwise result is the new Join
-            else:
-                self.refreshjoinlists()
-                self.queuetask(('index', result))
-                self.queuetask(('sample', None))
-                self.processtasks()
+            newjoin = self.joins.addjoin(joinalias, jointable, joinfield,
+                                         targetalias, targettable, targetfield)
+            self.refreshjoinlists()
+            self.queuetask(('index', newjoin))
+            self.queuetask(('sample', None))
+            self.processtasks()
 
     def removejoin(self, _widget, _data=None):
         """Removes the selected joins and any child joins dependent on it."""
@@ -81,3 +84,38 @@ class GUI_JoinConfig(object):
         joinalias = outputlist[selectedrow][0]
         self.joins.removealias(joinalias)
         self.refreshjoinlists()
+
+    def refreshjoinlists(self):
+        """Update when a join is added/removed or main target is changed."""
+        # refresh the target alias combobox list
+        targetaliaslist = self.gui['targetaliaslist']
+        targetcombo = self.gui['targetaliascombo']
+        # save the current selection
+        activealias = targetcombo.get_active_text()
+        # refresh the list of valid targets
+        targetaliaslist.clear()
+        for alias in self.joins.joinedaliases:
+            targetaliaslist.append([alias])
+        # reselect the previous selection, if it's still there
+        for row in targetaliaslist:
+            if activealias in row:
+                targetcombo.set_active_iter(row.iter)
+
+        # refresh the list of joins
+        self.gui['jointree'].clear()
+        # add the main target
+        targetalias = self.joins.gettarget()
+        targetiter = self.gui['jointree'].append(None, [targetalias,
+                                                        '', ''])
+        # add all the joins
+        for childjoin in self.joins[targetalias]:
+            self.rebuildjointree(targetiter, childjoin)
+        self.gui['joinview'].expand_all()
+
+    # recursive function to fill jointree from
+    def rebuildjointree(self, parentiter, join):
+        """Update the join tree store by reading from the JoinManager."""
+        newrow = [join.joinalias, join.joinfield.name, join.targetfield.name]
+        newparent = self.gui['jointree'].append(parentiter, newrow)
+        for childjoin in self.joins[join.joinalias]:
+            self.rebuildjointree(newparent, childjoin)

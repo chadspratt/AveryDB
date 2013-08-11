@@ -29,8 +29,7 @@ class GUI_Files(object):
                 dialog = self.gui.tabledialog(newfilename, newfilealias)
                 dialog.show_all()
             else:
-                sqlconverter = self.tables.addtable(newfilealias,
-                                                    self.files[newfilealias])
+                sqlconverter = self.files[newfilealias].convertdata(newfilealias)
                 self.queuetask(('sqlite', (newfilealias, sqlconverter)))
                 # add to the file list
                 aliaslist = self.gui['aliaslist']
@@ -38,7 +37,8 @@ class GUI_Files(object):
 
                 # set as target if no target is set
                 if self.joins.gettarget() == '':
-                    self.joins.settarget(newfilealias)
+                    self.joins.settarget(newfilealias,
+                                         self.files[newfilealias])
                     self.gui['targetcombo'].set_active_iter(newrow)
         addfiledialog.destroy()
         # dbfutil.py, handles "background" processing
@@ -51,11 +51,21 @@ class GUI_Files(object):
         (tablelist, selectedrows) = selection.get_selected_rows()
         for row in selectedrows:
             newfilealias = self.files.addfile(filename, row[0])
+            sqlconverter = self.files[newfilealias].convertdata(newfilealias)
+            self.queuetask(('sqlite', (newfilealias, sqlconverter)))
+            # add to the file list
+            aliaslist = self.gui['aliaslist']
+            newrow = aliaslist.append([newfilealias])
+
+            # set as target if no target is set
+            if self.joins.gettarget() == '':
+                self.joins.settarget(newfilealias, self.files[newfilealias])
+                self.gui['targetcombo'].set_active_iter(newrow)
 
     def removefile(self, _widget, _data=None):
         """Close a file and remove all joins that depend on it."""
         # get the selection from the list of files
-        selection = self.gui['fileview'].get_selection()
+        selection = self.gui['dataview'].get_selection()
         (aliaslist, selectedpath) = selection.get_selected()
         if selectedpath:
             filealias = aliaslist.get_value(selectedpath, 0)
@@ -83,5 +93,5 @@ class GUI_Files(object):
     def changetarget(self, _widget, _data=None):
         """Set an open file as the main target for joining."""
         newtarget = self.gui['targetcombo'].get_active_text()
-        self.joins.settarget(newtarget)
+        self.joins.settarget(newtarget, self.files[newtarget])
         self.refreshjoinlists()

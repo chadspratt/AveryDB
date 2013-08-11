@@ -16,18 +16,15 @@
 import csv
 import re
 
-import datafile
+import table
 import field
-
-FILETYPEEXT = '.csv'
-FILETYPEDESCRIP = 'csv file'
 
 
 # GenericFile is just an interface
-class CSVFile(datafile.DataFile):
+class CSVData(table.Table):
     """Wraps the csv library with a set of standard functions."""
-    def __init__(self, filename, mode='r'):
-        datafile.DataFile.__init__(self, filename)
+    def __init__(self, filename, tablename=None, mode='r'):
+        super(CSVData, self).__init__(filename, tablename=None)
         self.outputfile = None
         self.writer = None
         if mode == 'r':

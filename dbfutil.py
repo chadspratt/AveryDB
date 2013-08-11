@@ -32,7 +32,6 @@ import sqlite3
 
 import gui
 import filemanager
-import tablemanager
 import joinmanager
 import outputmanager
 import calculator
@@ -54,7 +53,6 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
     def __init__(self):
         self.gui = gui.creategui(self)
         self.files = filemanager.FileManager()
-        self.tables = tablemanager.TableManager()
         self.joins = joinmanager.JoinManager()
         self.outputs = outputmanager.OutputManager()
         self.calc = calculator.Calculator()
@@ -65,8 +63,13 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         self.tasks_to_process = []
         self.taskinprogress = False
 
-        # indices of the records used for showing sample output
+        # records used for showing sample output
         self.samplerecords = []
+
+        # clear the sqlite database that's used to store all the data
+        sqlitefile = open('temp.db', 'w')
+        sqlitefile.truncate(0)
+        sqlitefile.close()
 
         # needs to be last because control goes to the gui once it's called
         gui.startgui()
@@ -76,42 +79,6 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         for datafile in self.files:
             datafile.close()
         gtk.main_quit()
-
-    def refreshjoinlists(self):
-        """Update when a join is added/removed or main target is changed."""
-        # refresh the target alias combobox list
-        targetaliaslist = self.gui['targetaliaslist']
-        targetcombo = self.gui['targetaliascombo']
-        # save the current selection
-        activealias = targetcombo.get_active_text()
-        # refresh the list of valid targets
-        targetaliaslist.clear()
-        for alias in self.joins.joinedaliases:
-            targetaliaslist.append([alias])
-        # reselect the previous selection, if it's still there
-        for row in targetaliaslist:
-            if activealias in row:
-                targetcombo.set_active_iter(row.iter)
-
-        # refresh the list of joins
-        self.gui['jointree'].clear()
-        # add the main target
-        targetalias = self.joins.gettarget()
-        targetiter = self.gui['jointree'].append(None, [targetalias,
-                                                        '', ''])
-        # add all the joins
-        for childjoin in self.joins[targetalias]:
-            self.rebuildjointree(targetiter, childjoin)
-        self.gui['joinview'].expand_all()
-
-    # recursive function to fill jointree from
-    def rebuildjointree(self, parentiter, join):
-        """Update the join tree store by reading from the JoinManager."""
-        newparent = self.gui['jointree'].append(parentiter, [join.joinalias,
-                                                             join.joinfield,
-                                                             join.targetfield])
-        for childjoin in self.joins[join.joinalias]:
-            self.rebuildjointree(newparent, childjoin)
 
     def queuetask(self, task=None):
         """Add a task to the process queue but don't start processing."""
@@ -155,7 +122,7 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         """Build index in the background"""
         indexalias = join.joinalias
         indexfield = join.joinfield
-        self.tables.buildsqlindex(indexalias, indexfield)
+        self.files[indexalias].buildindex(indexfield)
 
     def converttosql(self, filealias, dataconverter):
         """Convert a file to an SQLite table."""
@@ -292,14 +259,16 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
 
             # sqlite setup
             joinquery = self.joins.getquery(sampleindices)
+            print joinquery
 
             # open the database
-            conn = sqlite3.connect('temp.db')
-            conn.row_factory = sqlite3.Row
-            cur = conn.cursor()
-            # create the table
-            cur.execute(joinquery)
-            self.samplerecords = cur.fetchall()
+            with sqlite3.connect('temp.db') as conn:
+#            conn = sqlite3.connect('temp.db')
+                conn.row_factory = sqlite3.Row
+                cur = conn.cursor()
+                # create the table
+                cur.execute(joinquery)
+                self.samplerecords = cur.fetchall()
 
         for inputvalues in self.samplerecords:
             outputrecord = []

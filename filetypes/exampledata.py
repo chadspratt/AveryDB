@@ -1,4 +1,13 @@
-"""SQLiteFile is used to provide a standardized interface to sqlite3."""
+"""ExampleFile contains the methods every format needs to implement.
+
+The functions in this class must all be defined by a data format class.
+The bodies of the functions are examples meant to show the format of values
+that get passed, values that get returned, and suggestions on how to implement
+each function.
+
+The only required attributes is
+    self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value'].
+    Extra functions can be defined as needed."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,37 +22,32 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
+
+# if a format has extra attributes for fields (beyond a field name), they
+# need to be stored in an OrderedDict, so that the order will be consistent
 from collections import OrderedDict
 import re
-import sqlite3
 
-import datafile
+import table
 # Every format needs to create Field objects in getfields()
 import field
 
-# define the file extentions this class should be used with
-FILETYPEEXT = '.db'
-FILETYPEDESCRIP = 'SQLite Database'
 
-
-class SQLiteFile(datafile.DataFile):
+class ExampleData(table.Table):
     """Handle all input and output for "example" files (not a real format)."""
-    def __init__(self, filename, mode='r'):
-        datafile.DataFile.__init__(self, filename)
-        # connect to the database
-        conn = sqlite3.connect(filename)
-        cur = conn.cursor()
-        # get a list of the tables
-        cur.execute("SELECT name FROM sqlite_master" +
-                    "WHERE type='table' ORDER BY name")
-        tablenames = [result[0] for result in cur.fetchall()]
+    def __init__(self, filename, tablename=None, mode='r'):
+        # must call this, which handles the filename/alias and sql table
+        super(ExampleData, self).__init__(filename, tablename=None)
+        ##
+        # This attribute is required. It is only used to give the column names
+        # for the output field list in the gui, so the names don't need to
+        # match any internally used name. Name should be first, Value, last,
+        # and in between should be the field attributes in the order that
+        # getfields() puts them in
+        ##
+        self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
 
-        self.fieldattrorder = ['Name', 'Affinity']
-
-        # ask the user which tables they want to
-
-        # XXX very incomplete
-        # filehandler would be
+        # filehandler would be opened using a library for that format
         self.filehandler = open(filename, mode)
         # suggested method for defining blank values for field types
         self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0, 'INT': 0}

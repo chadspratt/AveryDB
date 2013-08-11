@@ -55,8 +55,6 @@ class OutputManager(object):
         fieldname = outputfield.name
         while fieldname.upper() in self.outputfields:
             fieldname = outputfield.getnewname()
-#            print type(fieldname)
-#            print fieldname
         outputfield.name = fieldname
 
         self.outputfields[outputfield.name.upper()] = outputfield
@@ -112,6 +110,7 @@ class OutputManager(object):
             self.outputorder[fieldindex] = newname
             self.outputfields[newname.upper()] = self.outputfields[oldname.upper()]
             del self.outputfields[oldname.upper()]
+        return newname
 
     def __getitem__(self, key):
         """Retrieve a Field object by index or by output name"""

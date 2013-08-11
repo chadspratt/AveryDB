@@ -18,17 +18,20 @@ It doesn't do anything further with the files."""
 #
 import csv
 import os
+import re
 
-import datafile
+import needtableerror
 
 
 class FileManager(object):
     """Manages opening, closing, and providing access to files."""
     def __init__(self):
         # all variables are meant to be accessed through functions
-        # filesbyfilename[filename] = DataFile
+        # filesbyfilename[filename] = Table
+        # or for files with multiple tables
+        # filesbyfilename[filename_tablename] = Table
         self.filesbyfilename = {}
-        # filenamesbyalias[alias] = filename
+        # filenamesbyalias[alias] = filename or filename_tablename
         self.filenamesbyalias = {}
         # usable filetypes (and initial directory)
         self.filetypes = {}
@@ -47,6 +50,7 @@ class FileManager(object):
         self.inithandlers()
 
     def inithandlers(self):
+        """Parses filetypes/registry and loads all the defined modules."""
         os.chdir('filetypes')
         registryfile = open('registry', 'r')
         reader = csv.DictReader(registryfile)
@@ -63,25 +67,57 @@ class FileManager(object):
         registryfile.close()
         os.chdir('..')
 
-    def addfile(self, filename):
+    def addfile(self, filename, tablename=None):
         """Open a new file. If file is already open, add an alias for it."""
-        # check if file is already opened
-        if filename in self.filesbyfilename:
+        # check if file is already opened. files are referenced by filepath or
+        # by path_tablename if the file contains multiple tables
+        fullfilename = filename
+        if tablename is not None:
+            fullfilename += '_' + tablename
+        alias = self.createalias(filename, tablename)
+        if fullfilename in self.filesbyfilename:
             # use existing file
+            # XXX just return here when automatic aliasing is added
             newfile = self.filesbyfilename[filename]
         else:
             # create new file
             fileext = filename.split('.')[-1]
-            newfile = self.filehandlers[fileext](filename)
-            self.filesbyfilename[filename] = newfile
+            # If a table name was not passed
+            if tablename is None:
+                # try opening the file as if it only contains one table of data
+                try:
+                    newfile = self.filehandlers[fileext](filename)
+                # if it contains more than one table, return the list of tables
+                except needtableerror.NeedTableError as e:
+                    return e.tablelist
+            else:
+                # if a table name was passed, then open that table
+                newfile = self.filehandlers[fileext](filename, tablename)
+            self.filesbyfilename[fullfilename] = newfile
 
-        # get a unique alias (in case another loaded file has the same name)
-        filealias = newfile.getnewalias()
-        while filealias in self.filenamesbyalias:
-            filealias = newfile.getnewalias()
-        self.filenamesbyalias[filealias] = filename
+        self.filenamesbyalias[alias] = fullfilename
 
-        return filealias
+        return alias
+
+    def createalias(self, inputname, tablename=None):
+        """Creates a unique alias for a file."""
+        filenamesplit = re.findall('[a-zA-Z0-9]+', inputname)
+        alias = filenamesplit[-2]
+        if tablename is not None:
+            alias += tablename
+        # append a number for successive alias requests
+        dupecount = 1
+        aliaslen = len(alias)  # store original length
+        while alias in self.filenamesbyalias:
+            # append next number to original alias
+            alias = alias[:aliaslen] + str(dupecount)
+            dupecount += 1
+        return alias
+
+    def addnewalias(self, alias):
+        """Add a new alias to a table (table is specificed by alias)."""
+        datatable = self[alias]
+        return self.addfile(datatable.filename, datatable.tablename)
 
     def removealias(self, alias):
         """Remove an alias and remove the file if it has no other aliases."""

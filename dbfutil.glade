@@ -801,20 +801,20 @@
                 <property name="can_focus">True</property>
                 <property name="border_width">2</property>
                 <child>
-                  <object class="GtkVBox" id="filebox">
+                  <object class="GtkVBox" id="databox">
                     <property name="width_request">150</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkHBox" id="filebuttonsbox">
+                      <object class="GtkHBox" id="databuttonsbox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="spacing">1</property>
                         <child>
-                          <object class="GtkLabel" id="fileslabel">
+                          <object class="GtkLabel" id="datalabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Files</property>
+                            <property name="label" translatable="yes">Data</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -823,7 +823,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkToolbar" id="filetoolbar">
+                          <object class="GtkToolbar" id="datatoolbar">
                             <property name="width_request">74</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -832,14 +832,14 @@
                             <property name="icon_size">1</property>
                             <property name="icon_size_set">True</property>
                             <child>
-                              <object class="GtkToolButton" id="addfilebutton">
+                              <object class="GtkToolButton" id="adddatabutton">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="use_action_appearance">False</property>
                                 <property name="is_important">True</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-add</property>
-                                <signal name="clicked" handler="addfilebutton_clicked_cb" swapped="no"/>
+                                <signal name="clicked" handler="adddatabutton_clicked_cb" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="expand">True</property>
@@ -847,13 +847,13 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkToolButton" id="removefilebutton">
+                              <object class="GtkToolButton" id="removedatabutton">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="use_action_appearance">False</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-remove</property>
-                                <signal name="clicked" handler="removefilebutton_clicked_cb" swapped="no"/>
+                                <signal name="clicked" handler="removedatabutton_clicked_cb" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="expand">True</property>
@@ -919,14 +919,14 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow" id="filewindow">
+                      <object class="GtkScrolledWindow" id="datawindow">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="border_width">1</property>
                         <property name="vscrollbar_policy">never</property>
                         <property name="shadow_type">in</property>
                         <child>
-                          <object class="GtkTreeView" id="fileview">
+                          <object class="GtkTreeView" id="dataview">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="model">aliaslist</property>
@@ -934,11 +934,11 @@
                             <property name="headers_clickable">False</property>
                             <property name="search_column">0</property>
                             <child>
-                              <object class="GtkTreeViewColumn" id="alias">
+                              <object class="GtkTreeViewColumn" id="dataaliascol">
                                 <property name="sizing">autosize</property>
                                 <property name="title" translatable="yes">FIle Alias</property>
                                 <child>
-                                  <object class="GtkCellRendererText" id="filealiastext"/>
+                                  <object class="GtkCellRendererText" id="dataaliastext"/>
                                   <attributes>
                                     <attribute name="text">0</attribute>
                                   </attributes>
@@ -1797,8 +1797,8 @@ File:</property>
       </row>
     </data>
   </object>
-  <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkListStore" id="sampleoutputlist"/>
+  <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkWindow" id="tabledialog">
     <property name="width_request">200</property>
     <property name="height_request">200</property>

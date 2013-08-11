@@ -48,6 +48,7 @@ class GUI_FieldToolbar(object):
                     # initialize a blank value for this field in the calculator
                     blankvalue = outputfile.getblankvalue(newfield)
                     self.calc.setblankvalue(newfield, blankvalue)
+        self.samplerecords = []
         self.processtasks(('sample', None))
 
     # 'add field' button

@@ -20,7 +20,7 @@ class GUI_OutputView(object):
         """Update data when an outputview cell is edited."""
         # Update output manager if the field name was changed
         if column == 0:
-            self.outputs.updatename(row, new_value)
+            new_value = self.outputs.updatename(row, new_value)
         # update the view
         outputlist[row][column] = new_value
         # update the field
@@ -31,6 +31,7 @@ class GUI_OutputView(object):
     # XXX dragging dropping columns to reorder attributes, incomplete
     def reordercols(self, widget):
         """Update the column order when they are drug around in the GUI."""
+        return
         columns = widget.get_columns()
         columnnames = [col.get_title() for col in columns]
         outputlist = self.gui['outputlist']

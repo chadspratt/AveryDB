@@ -28,15 +28,17 @@ class JoinManager(object):
         # joins[alias] = [Join0, Join1, ...]
         self.joins = {}
         self.targetalias = ''
+        self.targetdata = None
         # List of currently joined aliases. each file is limited to joining
         # once for successive joins, the file needs to be reopened to get a new
         # alias The target alias also can't be joined to any other files
         self.joinedaliases = []
 
-    def settarget(self, targetalias):
+    def settarget(self, targetalias, targetdata):
         """Updates the main target alias and clears all configured joins."""
         if targetalias != self.targetalias:
             self.targetalias = targetalias
+            self.targetdata = targetdata
             self.joins = {}
             self.joinedaliases = [targetalias]
 
@@ -68,15 +70,11 @@ class JoinManager(object):
         if alias in self.joinedaliases:
             self.joinedaliases.remove(alias)
 
-    def addjoin(self, joinalias, joinfield, targetalias, targetfield):
+    def addjoin(self, joinalias, jointable, joinfield,
+                targetalias, targettable, targetfield):
         """Create a Join and add it to the dictionary of all Joins."""
-        # Limit files to joining once. This avoids problems with circular
-        # joins, removing joins, and unexpected messes in rare cases
-        if joinalias in self.joinedaliases:
-            # XXX raising an exception would be better?
-            return (joinalias +
-                    ' already in use. Open the file again for a new alias.')
-        newjoin = join.Join(joinalias, joinfield, targetalias, targetfield)
+        newjoin = join.Join(joinalias, jointable, joinfield,
+                            targetalias, targettable, targetfield)
         if targetalias in self.joins:
             self.joins[targetalias].append(newjoin)
         else:
@@ -84,8 +82,8 @@ class JoinManager(object):
         self.joinedaliases.append(joinalias)
         return newjoin
 
-    # If I have __iter__ do I need this?
-    # used in initoutput() and dojoin()
+    # used to check for duplicates, so the calling function can get a new
+    # alias from filemanager
     def getjoinedaliases(self, start='target'):
         """Returns a list of all joined aliases in depth-first order."""
         if start == 'target':
@@ -111,14 +109,28 @@ class JoinManager(object):
 
     def getquery(self, sampling=None):
         """Create an sql query string that will perform the join."""
-        query = ['SELECT *']
+        query = ['SELECT']
+        selectfieldaliases = []
+        for fieldname in self.targetdata.fields:
+            sqlname = (self.targetdata.sqlname + '.' +
+                       self.targetdata.fields[fieldname].sqlname)
+            selectfieldaliases.append(sqlname)
+        for curjoin in self.getjoins():
+            for fieldname in curjoin.jointable.fields:
+                sqlname = (curjoin.jointable.sqlname + '.' +
+                           curjoin.jointable.fields[fieldname].sqlname)
+                selectstr = (sqlname + ' AS ' +
+                             curjoin.joinalias + '_' + fieldname)
+                selectfieldaliases.append(selectstr)
+        query.append(', '.join(selectfieldaliases))
         query.append('FROM table_' + self.targetalias)
         for curjoin in self.getjoins():
-            query.append('LEFT OUTER JOIN table_' + curjoin.joinalias +
+            query.append('LEFT OUTER JOIN ' + curjoin.jointable.sqlname +
+                         ' AS table_' + curjoin.joinalias +
                          ' ON table_' + curjoin.joinalias + '.' +
-                         curjoin.joinalias + '_' + curjoin.joinfield +
+                         curjoin.joinfield.sqlname +
                          '=table_' + curjoin.targetalias + '.' +
-                         curjoin.targetalias + '_' + curjoin.targetfield)
+                         curjoin.targetfield.sqlname)
         if sampling:
             query.append('WHERE table_' + self.targetalias + '.ROWID IN ('
                          + ', '.join([str(x) for x in sampling]) + ')')

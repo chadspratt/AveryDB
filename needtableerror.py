@@ -1,4 +1,4 @@
-"""Contains a simple class for storing join configurations."""
+"""Thrown when a table name isn't supplied for formats with multiple tables."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +15,6 @@
 ##
 
 
-class Join(object):
-    """A struct for storing a join definition."""
-    def __init__(self, joinalias, jointable, joinfield,
-                 targetalias, targettable, targetfield):
-        self.joinalias = joinalias
-        self.jointable = jointable
-        self.joinfield = joinfield
-        self.targetalias = targetalias
-        self.targettable = targettable
-        self.targetfield = targetfield
+class NeedTableError(Exception):
+    def __init__(self, tablelist):
+        self.tablelist = tablelist
