@@ -82,3 +82,8 @@ class Table(object):
     # XXX call getattributeorder() instead?
     def getattributenames(self):
         return self.fieldattrorder
+
+
+class NeedTableError(Exception):
+    def __init__(self, tablelist):
+        self.tablelist = tablelist

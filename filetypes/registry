@@ -1,6 +1,6 @@
 extension,module,class,description
-.dbf,dbfdata,DBFData,DBF file
-.csv,csvdata,CSVData,CSV file
-.xls,exceldata,ExcelData,Excel spreadsheet
-.xlsx,exceldata,ExcelData,Excel spreadsheet
-.db,sqlitedata,SQLiteData,SQLite database
+.dbf,dbfdata,DBFData,DBF files
+.csv,csvdata,CSVData,CSV files
+.xls,exceldata,ExcelData,Excel spreadsheets
+.xlsx,exceldata,ExcelData,Excel spreadsheets
+.db,sqlitedata,SQLiteData,SQLite databases

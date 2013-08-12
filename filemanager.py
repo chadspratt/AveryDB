@@ -19,14 +19,14 @@ It doesn't do anything further with the files."""
 import csv
 import os
 import re
+from collections import OrderedDict
 
-import needtableerror
+from table import NeedTableError
 
 
 class FileManager(object):
     """Manages opening, closing, and providing access to files."""
     def __init__(self):
-        # all variables are meant to be accessed through functions
         # filesbyfilename[filename] = Table
         # or for files with multiple tables
         # filesbyfilename[filename_tablename] = Table
@@ -34,20 +34,21 @@ class FileManager(object):
         # filenamesbyalias[alias] = filename or filename_tablename
         self.filenamesbyalias = {}
         # usable filetypes (and initial directory)
-        self.filetypes = {}
-        self.filetypes['All files'] = {'mimes': [], 'patterns': ['*']}
-        self.filetypes['dbf files'] = {'mimes': ['application/dbase',
-                                                 'application/x-dbase',
-                                                 'application/dbf',
-                                                 'application/x-dbf'],
-                                       'patterns': ['*.dbf']}
-        self.filetypes['csv files'] = {'mimes': ['text/csv'],
-                                       'patterns': ['*.csv']}
-        # If two aliases point to one file, only one will be used as the table
-        # name
+        # XXX generate this from the registry file
+        self.filetypes = OrderedDict()
+#        self.filetypes['All files'] = {'mimes': [], 'patterns': ['*']}
+#        self.filetypes['dbf files'] = {'mimes': ['application/dbase',
+#                                                 'application/x-dbase',
+#                                                 'application/dbf',
+#                                                 'application/x-dbf'],
+#                                       'patterns': ['*.dbf']}
+#        self.filetypes['csv files'] = {'mimes': ['text/csv'],
+#                                       'patterns': ['*.csv']}
+        # filehandlers['.fileextension'] = format handler object from filetypes
         self.filehandlers = {}
         # XXX do this separate from init?
         self.inithandlers()
+        self.initdialogpatterns()
 
     def inithandlers(self):
         """Parses filetypes/registry and loads all the defined modules."""
@@ -64,6 +65,29 @@ class FileManager(object):
 
             module = __import__('filetypes.' + modulename, fromlist=[None])
             self.filehandlers[extension] = module.__dict__[classname]
+        registryfile.close()
+        os.chdir('..')
+
+    def initdialogpatterns(self):
+        """Create a dictionary for use by a file dialog to filter files."""
+        # By putting this first, it will be the default option
+        self.filetypes['All supported'] = {'mimes': [], 'patterns': []}
+        # open the registry file
+        os.chdir('filetypes')
+        registryfile = open('registry', 'r')
+        reader = csv.DictReader(registryfile)
+        for row in reader:
+            descrip = row['description']
+            extension = row['extension']
+            # store/group extensions by description
+            if descrip in self.filetypes:
+                self.filetypes[descrip]['patterns'].append('*' + extension)
+            else:
+                self.filetypes[descrip] = {'mimes': [],
+                                           'patterns': ['*' + extension]}
+            self.filetypes['All supported']['patterns'].append('*' + extension)
+        # put last so it appears last, catchall in case a file isn't named well
+        self.filetypes['All files'] = {'mimes': [], 'patterns': ['*']}
         registryfile.close()
         os.chdir('..')
 
@@ -88,7 +112,7 @@ class FileManager(object):
                 try:
                     newfile = self.filehandlers[fileext](filename)
                 # if it contains more than one table, return the list of tables
-                except needtableerror.NeedTableError as e:
+                except NeedTableError as e:
                     return e.tablelist
             else:
                 # if a table name was passed, then open that table

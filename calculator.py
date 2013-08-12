@@ -130,13 +130,14 @@ class Calculator(object):
     # this is only used for custom functions defined in a fieldcalcs module
     @classmethod
     def _getfuncbounds(cls, libtext, funcname):
-        """Parse a library file and get the full text of a given function."""
+        """Parse a library file and get the start/end of a given function."""
         i = 0
         funcstart = -1
         funcend = -1
         # find the start of the function
+        startpattern = re.compile('def ' + funcname)
         while i < len(libtext):
-            if re.findall('^def ' + funcname, libtext[i]):
+            if startpattern.match(libtext[i]):
                 funcstart = i
                 # backtrack and grab comments that precede the function
                 while libtext[funcstart - 1].strip().startswith('#'):
@@ -148,9 +149,12 @@ class Calculator(object):
             return (None, None)
         # move to the first indented line
         i += 1
-        # find the end of the function
+        # find the end of the function (a non-indented line)
+        # XXX foreseeable issue with this and comments
+#         like this. not a high priority though
+        endpattern = re.compile(r'    ')
         while i < len(libtext):
-            if re.findall(r'^    ', libtext[i]):
+            if endpattern.match(libtext[i]):
                 funcend = i
                 i += 1
             else:

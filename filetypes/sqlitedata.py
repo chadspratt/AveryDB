@@ -25,42 +25,63 @@ class SQLiteData(table.Table):
     """Handle all input and output for "example" files (not a real format)."""
     def __init__(self, filename, tablename=None, mode='r'):
         super(SQLiteData, self).__init__(filename, tablename=None)
-        # connect to the database
-        conn = sqlite3.connect(filename)
-        cur = conn.cursor()
+        # If no table name was passed
         if tablename is None:
-            # get a list of the tables
-            cur.execute("SELECT name FROM sqlite_master" +
-                        "WHERE type='table' ORDER BY name")
-            tablenames = [result[0] for result in cur.fetchall()]
-            return tablenames
+            # connect to the database
+            with sqlite3.connect(filename) as conn:
+                cur = conn.cursor()
+                # get a list of the tables
+                cur.execute("SELECT name FROM sqlite_master " +
+                            "WHERE type='table' ORDER BY name")
+                tablenames = [result[0] for result in cur.fetchall()]
+                # and return the list in an exception
+                raise table.NeedTableError(tablenames)
 
         self.fieldattrorder = ['Name', 'Affinity']
-
-        # ask the user which tables they want to
-
-        # XXX very incomplete
-        # filehandler would be
-        self.filehandler = open(filename, mode)
-        # suggested method for defining blank values for field types
         self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0, 'INT': 0}
 
     # converts fields to universal types
     def getfields(self):
         """Get the field definitions from an input file."""
-        fieldlist = []
-        fieldattributes = OrderedDict
-        fieldlist.append(field.Field('newfield', fieldattributes,
-                                     dataformat='example'))
-        return fieldlist
+        # connect to the database
+        with sqlite3.connect(self.filename) as conn:
+            cur = conn.cursor()
+            # get the string that creates the table
+            # ex: 'CREATE TABLE newtable (itemID INTEGER, itemName TEXT)'
+            cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='" +
+                        self.tablename + "' AND type='table'")
+            tablestr = cur.fetchone()[0]
+            # extract the field names and types (affinities)
+            fields = re.findall('(\w+) (NULL|INTEGER|REAL|TEXT|BLOB)',
+                                tablestr)
+            # construct the list of fields
+            fieldlist = []
+            for curfield in fields:
+                # store affinity in a dictionary, by the general name 'type'
+                fieldattributes = OrderedDict()
+                fieldattributes['type'] = curfield[1]
+                # create the field and add it to the list
+                newfield = field.Field(curfield[0], fieldattributes,
+                                       namelen=None, dataformat='sqlite')
+                fieldlist.append(newfield)
+            return fieldlist
 
     # takes universal-type fields and converts to format specific fields
     def setfields(self, newfields):
         """Set the field definitions of an output file."""
+        # make a list of all the fieldnames with their types
+        fieldlist = []
         for unknownfield in newfields:
-            # "addfield" is a hypothetical function of the format library
-            # save the field however you need to
-            self.filehandler.addfield(self.convertfield(unknownfield))
+            fieldlist.append(unknownfield.name + ' ' + unknownfield['type'])
+        # combine them into one string
+        # ex: 'itemID INTEGER, itemName TEXT'
+        fields = ', '.join(fieldlist)
+        # connect to the database
+        with sqlite3.connect(self.filename) as conn:
+            cur = conn.cursor()
+            # create the table
+            # XXX what if the table exists
+            cur.execute('CREATE TABLE ' + self.tablename + '(' + fields + ')')
 
     def addrecord(self, newrecord):
         """Write a record (stored as a dictionary) to the output file."""
