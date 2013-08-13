@@ -100,9 +100,8 @@ class FileManager(object):
             fullfilename += '_' + tablename
         alias = self.createalias(filename, tablename)
         if fullfilename in self.filesbyfilename:
-            # use existing file
-            # XXX just return here when automatic aliasing is added
-            newfile = self.filesbyfilename[filename]
+            # data has already been added
+            return None
         else:
             # create new file
             fileext = filename.split('.')[-1]
@@ -141,7 +140,9 @@ class FileManager(object):
     def addnewalias(self, alias):
         """Add a new alias to a table (table is specificed by alias)."""
         datatable = self[alias]
-        return self.addfile(datatable.filename, datatable.tablename)
+        newalias = self.createalias(datatable.filename, datatable.tablename)
+        self.filenamesbyalias[newalias] = self.filenamesbyalias[alias]
+        return newalias
 
     def removealias(self, alias):
         """Remove an alias and remove the file if it has no other aliases."""

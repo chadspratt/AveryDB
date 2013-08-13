@@ -115,11 +115,10 @@ class GUI(object):
 
         return dialog
 
-    def tabledialog(self, filename, tablenames):
+    def tabledialog(self, tablenames):
         """Give a list of tables within a file to choose which to load."""
         dialog = self['tabledialog']
         tablelist = self['tablelist']
-        self['tablefilenamelabel'].set_text(filename)
         tablelist.clear()
         for tablename in tablenames:
             tablelist.append([tablename])

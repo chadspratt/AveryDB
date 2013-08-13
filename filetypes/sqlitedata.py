@@ -36,7 +36,7 @@ class SQLiteData(table.Table):
                 tablenames = [result[0] for result in cur.fetchall()]
                 # and return the list in an exception
                 raise table.NeedTableError(tablenames)
-
+        self.tablename = tablename
         self.fieldattrorder = ['Name', 'Affinity']
         self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0, 'INT': 0}
 
@@ -91,7 +91,7 @@ class SQLiteData(table.Table):
 
     def close(self):
         """Close the open file, if any."""
-        self.filehandler.close()
+        pass
 
     def convertfield(self, unknownfield):
         """Take a field of unknown type, return a field of the format type."""
@@ -127,11 +127,18 @@ class SQLiteData(table.Table):
 
     def getrecordcount(self):
         """Return number of records, or None if it's too costly to count."""
-        # hypothetical
-        return self.filehandler.getrecordcount()
+        # connect to the database
+        with sqlite3.connect(self.filename) as conn:
+            cur = conn.cursor()
+            # get the row count
+            cur.execute("SELECT count(*) FROM " + self.tablename)
+            return cur.fetchone()[0]
 
     def __iter__(self):
         """Get the records from an input file in sequence."""
-        # hypothetical
-        for record in self.filehandler:
-            yield record
+        # connect to the database
+        with sqlite3.connect(self.filename) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM " + self.tablename)
+            yield cur.fetchone()
