@@ -141,4 +141,5 @@ class SQLiteData(table.Table):
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute("SELECT * FROM " + self.tablename)
-            yield cur.fetchone()
+            for row in cur:
+                yield row

@@ -32,7 +32,8 @@ class Table(object):
         # make a list of the field names with type, for creating the table
         fieldnameswithtype = []
         for field in self.getfields():
-            self.fields[field.originalname] = field
+            # cast originalname to str in case it's a unicode str
+            self.fields[str(field.originalname)] = field
             field.sqlname = alias + '_' + field.originalname
             fieldnameswithtype.append(field.sqlname + ' ' + field['type'])
 
@@ -56,6 +57,13 @@ class Table(object):
                            ' VALUES (' + qmarks + ');')
             # insert each record from the input file
             for record in self:
+                print 'record.keys():', record.keys()
+                print 'self.fields:', self.fields
+                print 'self.fields.keys():', self.fields.keys()
+                values = []
+                for fn in self.fields:
+                    print 'fn:', fn
+                    values.append(record[fn])
                 values = [record[fn] for fn in self.fields]
                 cur.execute(insertquery, values)
                 i += 1

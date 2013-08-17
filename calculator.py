@@ -234,11 +234,12 @@ class Calculator(object):
         newfuncbody = field['value']
         argpos = 0
         # Convert all !filealias.fieldname! to usable argument references
-        args = re.findall(r'![a-zA-Z0-9]+\.[a-zA-Z0-9_]+!', newfuncbody)
+        args = re.findall(r'![a-zA-Z0-9_]+\.[a-zA-Z0-9_]+!', newfuncbody)
         for arg in args:
             internalname = 'args[' + str(argpos) + ']'
             argpos += 1
             newfuncbody = re.sub(arg, internalname, newfuncbody)
+
 
         # Convert all the function calls to callable references
         funcs = re.findall(r'([a-zA-Z]+[a-zA-Z0-9\._]*)\(', newfuncbody)
@@ -281,7 +282,9 @@ class Calculator(object):
         exec(newfuncstr) in globals(), locals()
         for i in range(len(args)):
             # trim the leading and trailing '!'s and replace '.' with '_'
-            args[i] = re.sub(r'\.', '_', args[i][1:-1])
+            # cast to str in case it's unicode. sqlite3.Row uses ascii keys
+            # and the dictionary of input values is an sqlite3.Row
+            args[i] = str(re.sub(r'\.', '_', args[i][1:-1]))
         self.outputfuncs[newfuncname] = (locals()[newfuncname], args)
 
     # needs to be speedy
@@ -294,6 +297,7 @@ class Calculator(object):
         for outputfieldname in self.outputfuncs:
             outputfunc, args = self.outputfuncs[outputfieldname]
             argvalues = []
+            print 'args:', args
             for arg in args:
                 argvalue = inputvalues[arg]
                 if argvalue is not None:
