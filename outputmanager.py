@@ -15,7 +15,6 @@
 # handles the initialization and configuration of the output
 
 import field
-#from filetypes import dbffile
 
 
 class OutputManager(object):

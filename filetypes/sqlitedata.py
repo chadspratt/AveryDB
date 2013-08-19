@@ -83,6 +83,7 @@ class SQLiteData(table.Table):
             # XXX what if the table exists
             cur.execute('CREATE TABLE ' + self.tablename + '(' + fields + ')')
 
+    # XXX not rewritten yet
     def addrecord(self, newrecord):
         """Write a record (stored as a dictionary) to the output file."""
         for fieldname in newrecord:
@@ -93,6 +94,7 @@ class SQLiteData(table.Table):
         """Close the open file, if any."""
         pass
 
+    # XXX not rewritten yet
     def convertfield(self, unknownfield):
         """Take a field of unknown type, return a field of the format type."""
         examplefield = unknownfield.copy()
@@ -107,6 +109,7 @@ class SQLiteData(table.Table):
             examplefield.setformat('example', exampleattributes)
         return examplefield
 
+    # XXX not rewritten yet
     def detecttype(self, valuelist):
         """Examine a list of values and determine an appropriate field type."""
         fieldtype = None
@@ -121,6 +124,7 @@ class SQLiteData(table.Table):
                 fieldtype = 'TEXT'
         return fieldtype
 
+    # XXX not rewritten yet
     def getblankvalue(self, outputfield):
         """Return a blank value that matches the type of the field."""
         return self.blankvalues[outputfield['type']]

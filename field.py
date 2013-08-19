@@ -56,7 +56,6 @@ class Field(object):
             namelen = lenlimit - countlen
             while True:
                 # append next number to original alias
-#                print self.originalname[:namelen] + str(dupecount)
                 yield self.originalname[:namelen] + str(dupecount)
                 dupecount += 1
                 countlen = len(str(dupecount))

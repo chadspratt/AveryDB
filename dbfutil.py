@@ -35,6 +35,7 @@ import filemanager
 import joinmanager
 import outputmanager
 import calculator
+import table  # for NeedTableError
 
 #callback handlers
 from gui_files import GUI_Files
@@ -70,6 +71,9 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         sqlitefile = open('temp.db', 'w')
         sqlitefile.truncate(0)
         sqlitefile.close()
+
+        # init the output format combobox with the data pulled from registry
+        self.gui.initoutputformatcombo(self.files.filetypes)
 
         # needs to be last because control goes to the gui once it's called
         gui.startgui()
@@ -136,9 +140,26 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
 
     def setoutputfile(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
-        outputfilename = (self.gui['outputfilenameentry'].get_text() +
-                          self.gui['outputtypecombo'].get_active_text())
-        outputfile = self.files.openoutputfile(outputfilename)
+        outputfilename = self.gui['outputfilenameentry'].get_text()
+        outputfiletype = self.gui['outputtypecombo'].get_active_text()
+        try:
+            outputfile = self.files.openoutputfile(outputfilename,
+                                                   outputfiletype)
+            # if NeedTableError isn't raised, disable the table entry
+            # it may already be disabled, but there's no harm in being sure.
+            self.gui['outputtablelabel'].set_sensitive(False)
+            self.gui['outputtablenameentry'].set_sensitive(False)
+        except table.NeedTableError:
+            self.gui['outputtablelabel'].set_sensitive(True)
+            self.gui['outputtablenameentry'].set_sensitive(True)
+            # set a default table name
+            outputtablename = self.joins.gettarget()
+            self.gui['outputtablenameentry'].set_text(outputtablename)
+            outputfile = self.files.openoutputfile(outputfilename,
+                                                   outputfiletype,
+                                                   outputtablename)
+        if outputfile is None:
+            return
         self.outputs.setoutputfile(outputfile)
 
         fieldattributes = outputfile.getattributenames()

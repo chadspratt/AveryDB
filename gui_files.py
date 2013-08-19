@@ -41,6 +41,8 @@ class GUI_Files(object):
                 if self.joins.gettarget() == '':
                     self.joins.settarget(newfilealias, newfile)
                     self.gui['targetcombo'].set_active_iter(newrow)
+                    # set the default output filename to the target alias
+                    self.gui['outputfilenameentry'].set_text(newfilealias)
         addfiledialog.destroy()
         # dbfutil.py, handles "background" processing
         self.processtasks()
@@ -66,6 +68,8 @@ class GUI_Files(object):
                 if self.joins.gettarget() == '':
                     self.joins.settarget(newfilealias, newfile)
                     self.gui['targetcombo'].set_active_iter(newrow)
+                    # set the default output filename to the target alias
+                    self.gui['outputfilenameentry'].set_text(newfilealias)
         tabledialog.destroy()
         self.processtasks()
 

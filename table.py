@@ -57,12 +57,8 @@ class Table(object):
                            ' VALUES (' + qmarks + ');')
             # insert each record from the input file
             for record in self:
-                print 'record.keys():', record.keys()
-                print 'self.fields:', self.fields
-                print 'self.fields.keys():', self.fields.keys()
                 values = []
                 for fn in self.fields:
-                    print 'fn:', fn
                     values.append(record[fn])
                 values = [record[fn] for fn in self.fields]
                 cur.execute(insertquery, values)

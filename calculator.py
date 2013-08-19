@@ -297,7 +297,6 @@ class Calculator(object):
         for outputfieldname in self.outputfuncs:
             outputfunc, args = self.outputfuncs[outputfieldname]
             argvalues = []
-            print 'args:', args
             for arg in args:
                 argvalue = inputvalues[arg]
                 if argvalue is not None:

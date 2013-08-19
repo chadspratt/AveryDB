@@ -81,7 +81,7 @@ class GUI(object):
         handlers['newlibcreate_clicked_cb'] = hfuncs.createlibrary
         handlers['newlibcancel_clicked_cb'] = hfuncs.cancelcreatelibrary
         # table selection dialog
-        handlers['tableok_clicked_cb'] = hfuncs.addtables
+#        handlers['tableok_clicked_cb'] = hfuncs.addtables
 
         # experimental
         handlers['sampleoutputview_columns_changed_cb'] = hfuncs.reordercols
@@ -94,6 +94,19 @@ class GUI(object):
 
         self.mainwindow = self.builder.get_object('mainwindow')
         self.mainwindow.show_all()
+
+    def initoutputformatcombo(self, filetypes):
+        typelist = self['outputtypelist']
+        typelist.clear()
+        for filetype in filetypes:
+            if filetype not in ['All supported', 'All files']:
+                extensions = filetypes[filetype]['patterns']
+                # trim the wildcard asterisk from each extension
+                for i in range(len(extensions)):
+                    extensions[i] = extensions[i][1:]
+                typelist.append([', '.join(extensions),
+                                 filetype])
+        self['outputtypecombo'].set_active(0)
 
     @classmethod
     def filedialog(cls, filetypes):

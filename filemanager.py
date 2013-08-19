@@ -36,19 +36,11 @@ class FileManager(object):
         # usable filetypes (and initial directory)
         # XXX generate this from the registry file
         self.filetypes = OrderedDict()
-#        self.filetypes['All files'] = {'mimes': [], 'patterns': ['*']}
-#        self.filetypes['dbf files'] = {'mimes': ['application/dbase',
-#                                                 'application/x-dbase',
-#                                                 'application/dbf',
-#                                                 'application/x-dbf'],
-#                                       'patterns': ['*.dbf']}
-#        self.filetypes['csv files'] = {'mimes': ['text/csv'],
-#                                       'patterns': ['*.csv']}
         # filehandlers['.fileextension'] = format handler object from filetypes
         self.filehandlers = {}
         # XXX do this separate from init?
         self.inithandlers()
-        self.initdialogpatterns()
+        self.initfiletypes()
 
     def inithandlers(self):
         """Parses filetypes/registry and loads all the defined modules."""
@@ -58,8 +50,6 @@ class FileManager(object):
         for row in reader:
             # store a reference to each class by file extension
             extension = row['extension']
-            if extension[0] == '.':
-                extension = extension[1:]
             modulename = row['module']
             classname = row['class']
 
@@ -68,7 +58,7 @@ class FileManager(object):
         registryfile.close()
         os.chdir('..')
 
-    def initdialogpatterns(self):
+    def initfiletypes(self):
         """Create a dictionary for use by a file dialog to filter files."""
         # By putting this first, it will be the default option
         self.filetypes['All supported'] = {'mimes': [], 'patterns': []}
@@ -104,7 +94,7 @@ class FileManager(object):
             return None
         else:
             # create new file
-            fileext = filename.split('.')[-1]
+            fileext = '.' + filename.split('.')[-1]
             # If a table name was not passed
             if tablename is None:
                 # try opening the file as if it only contains one table of data
@@ -153,10 +143,17 @@ class FileManager(object):
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
 
-    def openoutputfile(self, filename):
+    def openoutputfile(self, filename, fileext, tablename=None):
         """Returns a file, with the given filename opened for writing."""
-        fileext = filename.split('.')[-1]
-        return self.filehandlers[fileext](filename, mode='w')
+        if fileext is None:
+            return None
+        # if the filext string contains a list of extensions, use the first
+        if re.search(r'\,', fileext):
+            fileext = re.match(r'^[\,]+', fileext)
+        # instantiate a filehandler
+        outputfile = self.filehandlers[fileext](filename + fileext,
+                                                tablename, mode='w')
+        return outputfile
 
     def __getitem__(self, key):
         """Return a file object given either a file name or alias"""

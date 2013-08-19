@@ -20,9 +20,15 @@ class GUI_FieldToolbar(object):
     def initoutput(self, _widget, _data=None):
         """Populate the list view of output fields and the OutputManager."""
         # create the output file
-        outputfilename = (self.gui['outputfilenameentry'].get_text() +
-                          self.gui['outputtypecombo'].get_active_text())
-        outputfile = self.files.openoutputfile(outputfilename)
+        outputfilename = self.gui['outputfilenameentry'].get_text()
+        outputfiletype = self.gui['outputtypecombo'].get_active_text()
+        tableentry = self.gui['outputtablenameentry']
+        if tableentry.get_sensitive():
+            tablename = None
+        else:
+            tablename = tableentry.get_text()
+        outputfile = self.files.openoutputfile(outputfilename, outputfiletype,
+                                               tablename)
         self.outputs.setoutputfile(outputfile)
 
         fieldattributes = outputfile.getattributenames()
