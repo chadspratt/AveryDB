@@ -70,7 +70,7 @@ class GUI_Files(object):
                     self.gui['targetcombo'].set_active_iter(newrow)
                     # set the default output filename to the target alias
                     self.gui['outputfilenameentry'].set_text(newfilealias)
-        tabledialog.destroy()
+        tabledialog.hide()
         self.processtasks()
 
     def removefile(self, _widget, _data=None):

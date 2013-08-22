@@ -24,9 +24,9 @@ class GUI_FieldToolbar(object):
         outputfiletype = self.gui['outputtypecombo'].get_active_text()
         tableentry = self.gui['outputtablenameentry']
         if tableentry.get_sensitive():
-            tablename = None
-        else:
             tablename = tableentry.get_text()
+        else:
+            tablename = None
         outputfile = self.files.openoutputfile(outputfilename, outputfiletype,
                                                tablename)
         self.outputs.setoutputfile(outputfile)

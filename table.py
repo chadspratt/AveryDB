@@ -57,9 +57,6 @@ class Table(object):
                            ' VALUES (' + qmarks + ');')
             # insert each record from the input file
             for record in self:
-                values = []
-                for fn in self.fields:
-                    values.append(record[fn])
                 values = [record[fn] for fn in self.fields]
                 cur.execute(insertquery, values)
                 i += 1

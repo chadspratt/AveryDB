@@ -37,8 +37,16 @@ class SQLiteData(table.Table):
                 # and return the list in an exception
                 raise table.NeedTableError(tablenames)
         self.tablename = tablename
-        self.fieldattrorder = ['Name', 'Affinity']
-        self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0, 'INT': 0}
+        self.fieldattrorder = ['Name', 'Affinity', 'Value']
+        self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0,
+                            'INTEGER': 0}
+        # used for ordering the values of output records
+        self.fieldnames = []
+        # list of ?'s used for insert queries, initialized when fields are set
+        self.qmarks = ''
+        # connection/cursor used for insert queries, closed by self.close()
+        self.conn = None
+        self.cur = None
 
     # converts fields to universal types
     def getfields(self):
@@ -59,9 +67,9 @@ class SQLiteData(table.Table):
             for curfield in fields:
                 # store affinity in a dictionary, by the general name 'type'
                 fieldattributes = OrderedDict()
-                fieldattributes['type'] = curfield[1]
+                fieldattributes['type'] = str(curfield[1])
                 # create the field and add it to the list
-                newfield = field.Field(curfield[0], fieldattributes,
+                newfield = field.Field(str(curfield[0]), fieldattributes,
                                        namelen=None, dataformat='sqlite')
                 fieldlist.append(newfield)
             return fieldlist
@@ -73,58 +81,56 @@ class SQLiteData(table.Table):
         fieldlist = []
         for unknownfield in newfields:
             fieldlist.append(unknownfield.name + ' ' + unknownfield['type'])
+            self.fieldnames.append(unknownfield.name)
         # combine them into one string
         # ex: 'itemID INTEGER, itemName TEXT'
-        fields = ', '.join(fieldlist)
+        fieldstr = ', '.join(fieldlist)
         # connect to the database
         with sqlite3.connect(self.filename) as conn:
             cur = conn.cursor()
             # create the table
             # XXX what if the table exists
-            cur.execute('CREATE TABLE ' + self.tablename + '(' + fields + ')')
+#            print 'tablename:', self.tablename
+#            print 'fieldstr:', fieldstr
+            cur.execute('CREATE TABLE ' + self.tablename +
+                        '(' + fieldstr + ')')
+        # init the string of ?'s used for insertion queries
+        qmarklist = []
+        for _counter in range(len(newfields)):
+            qmarklist.append('?')
+        qmarks = ', '.join(qmarklist)
+        self.insertquery = ('INSERT INTO ' + self.tablename +
+                            ' VALUES (' + qmarks + ');')
 
-    # XXX not rewritten yet
     def addrecord(self, newrecord):
         """Write a record (stored as a dictionary) to the output file."""
-        for fieldname in newrecord:
-            fieldvalue = newrecord[fieldname]
-            # store fieldvalue somehow
+        if self.cur is None:
+            self.conn = sqlite3.connect(self.filename)
+            self.cur = self.conn.cursor()
+        else:
+            values = [newrecord[fn] for fn in self.fieldnames]
+            self.cur.execute(self.insertquery, values)
 
     def close(self):
         """Close the open file, if any."""
-        pass
+        if self.conn is not None:
+            self.conn.commit()
+            self.conn.close()
 
-    # XXX not rewritten yet
     def convertfield(self, unknownfield):
         """Take a field of unknown type, return a field of the format type."""
-        examplefield = unknownfield.copy()
-        if examplefield.hasformat('example'):
-            examplefield.setformat('example')
+        sqlitefield = unknownfield.copy()
+        if sqlitefield.hasformat('sqlite'):
+            sqlitefield.setformat('sqlite')
         else:
-            exampleattributes = OrderedDict()
-            if unknownfield.hasattribute('attr0'):
-                exampleattributes['attr0'] = unknownfield['attr0']
+            sqlattributes = OrderedDict()
+            if sqlitefield.hasattribute('type'):
+                sqlattributes['type'] = unknownfield['type']
             else:
-                exampleattributes['attr0'] = 'attr0_defaultval'
-            examplefield.setformat('example', exampleattributes)
-        return examplefield
+                sqlattributes['type'] = 'TEXT'
+            sqlitefield.setformat('sqlite', sqlattributes)
+        return sqlitefield
 
-    # XXX not rewritten yet
-    def detecttype(self, valuelist):
-        """Examine a list of values and determine an appropriate field type."""
-        fieldtype = None
-        for value in valuelist:
-            if (fieldtype in ['INTEGER', None] and
-                    re.search('^[0-9]+$', value)):
-                fieldtype = 'INTEGER'
-            elif (fieldtype in ['REAL', 'INTEGER', 'NONE'] and
-                  re.search('^[.0-9]+$', value)):
-                fieldtype = 'REAL'
-            else:
-                fieldtype = 'TEXT'
-        return fieldtype
-
-    # XXX not rewritten yet
     def getblankvalue(self, outputfield):
         """Return a blank value that matches the type of the field."""
         return self.blankvalues[outputfield['type']]

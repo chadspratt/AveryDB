@@ -141,10 +141,15 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
     def setoutputfile(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
         outputfilename = self.gui['outputfilenameentry'].get_text()
+        if self.gui['outputtablenameentry'].get_sensitive():
+            outputtablename = self.gui['outputtablenameentry'].get_text()
+        else:
+            outputtablename = None
         outputfiletype = self.gui['outputtypecombo'].get_active_text()
         try:
             outputfile = self.files.openoutputfile(outputfilename,
-                                                   outputfiletype)
+                                                   outputfiletype,
+                                                   outputtablename)
             # if NeedTableError isn't raised, disable the table entry
             # it may already be disabled, but there's no harm in being sure.
             self.gui['outputtablelabel'].set_sensitive(False)
@@ -158,6 +163,7 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
             outputfile = self.files.openoutputfile(outputfilename,
                                                    outputfiletype,
                                                    outputtablename)
+        # do something more here? will it ever be None?
         if outputfile is None:
             return
         self.outputs.setoutputfile(outputfile)
