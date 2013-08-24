@@ -27,6 +27,7 @@ class ExcelData(table.Table):
     """Wraps the dbfpy library with a set of standard functions."""
     def __init__(self, filename, tablename=None, mode='r'):
         super(ExcelData, self).__init__(filename, tablename=None)
+        self.namelenlimit = 255  # not sure about this
 
         # XXX very incomplete
 #        if mode == 'r':
@@ -51,7 +52,7 @@ class ExcelData(table.Table):
                                       ('length', fielddef.length),
                                       ('decimals', fielddef.decimalCount)])
             newfield = field.Field(fielddef.name, fieldattributes=fieldattrs,
-                                   dataformat='dbf')
+                                   dataformat='dbf', namelen=None)
             fieldlist.append(newfield)
         return fieldlist
 
@@ -76,24 +77,26 @@ class ExcelData(table.Table):
 
     @classmethod
     def convertfield(cls, sourcefield):
-        dbffield = sourcefield.copy()
-        if 'dbf' in dbffield.attributesbyformat:
-            dbffield.attributes = dbffield.attributesbyformat['dbf'].copy()
+        excelfield = sourcefield.copy()
+        if 'xls' in excelfield.attributesbyformat:
+            excelfield.attributes = excelfield.attributesbyformat['xls'].copy()
         else:
-            dbffield.attributes = OrderedDict()
+            excelfield.attributes = OrderedDict()
             if 'type' in sourcefield.attributes:
-                dbffield['type'] = sourcefield['type']
+                excelfield['type'] = sourcefield['type']
             else:
-                dbffield['type'] = 'TEXT'
+                excelfield['type'] = 'TEXT'
             if 'length' in sourcefield.attributes:
-                dbffield['length'] = sourcefield['length']
+                excelfield['length'] = sourcefield['length']
             else:
-                dbffield['length'] = 254
+                excelfield['length'] = 254
             if 'decimals' in sourcefield.attributes:
-                dbffield['decimals'] = sourcefield['decimals']
+                excelfield['decimals'] = sourcefield['decimals']
             else:
-                dbffield['decimals'] = 0
-        return dbffield
+                excelfield['decimals'] = 0
+        excelfield.namelenlimit = None
+        excelfield.resetname()
+        return excelfield
 
     @classmethod
     def getblankvalue(cls, outputfield):

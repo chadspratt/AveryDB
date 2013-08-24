@@ -32,6 +32,7 @@ class CSVData(table.Table):
         else:
             self.dialect = None
         self.fieldattrorder = ['Name', 'Value']
+        self.namelenlimit = None
 
     def _getdialect(self):
         """Get the dialect of the csv file."""
@@ -91,6 +92,8 @@ class CSVData(table.Table):
         csvfield = unknownfield.copy()
         # strip the attributes
         csvfield.attributes = {}
+        csvfield.namelenlimit = None
+        csvfield.resetname()
         return csvfield
 
     @classmethod

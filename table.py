@@ -46,7 +46,6 @@ class Table(object):
 
         # open the database
         with sqlite3.connect('temp.db') as conn:
-#        conn = sqlite3.connect('temp.db')
             cur = conn.cursor()
             # create the table
             cur.execute('CREATE TABLE ' + self.sqlname + ' (' +
@@ -72,7 +71,6 @@ class Table(object):
         """Create an index for a given field."""
         # open the database
         with sqlite3.connect('temp.db') as conn:
-#        conn = sqlite3.connect('temp.db')
             cur = conn.cursor()
             query = ('CREATE INDEX IF NOT EXISTS ' + indexfield.sqlname +
                      '_index ON ' + self.sqlname + '(' + indexfield.sqlname +
@@ -88,3 +86,8 @@ class Table(object):
 class NeedTableError(Exception):
     def __init__(self, tablelist):
         self.tablelist = tablelist
+
+
+class InvalidDataError(Exception):
+    def __init__(self):
+        pass

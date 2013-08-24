@@ -33,7 +33,7 @@ class Field(object):
             self.attributesbyformat = {}
         self.originalvalue = fieldvalue
         # name and value that will be used in the output
-        self.name = fieldname
+        self.name = fieldname[:namelen]
         self.source = source
         self.value = fieldvalue
         # dictionary of attribute names and values, stored by file format
@@ -67,7 +67,7 @@ class Field(object):
 
     def resetname(self):
         """Resets the field name, though it will be changed if it conflicts."""
-        self.name = self.originalname
+        self.name = self.originalname[:self.namelenlimit]
         self.namegen = self.namegenerator(self.namelenlimit)
 
     # Not currently used

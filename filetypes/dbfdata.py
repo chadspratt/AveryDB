@@ -26,7 +26,10 @@ class DBFData(table.Table):
     def __init__(self, filename, tablename=None, mode='r'):
         super(DBFData, self).__init__(filename, tablename=None)
         if mode == 'r':
-            self.filehandler = dbf.Dbf(filename, readOnly=True)
+            try:
+                self.filehandler = dbf.Dbf(filename, readOnly=True)
+            except dbf.header.struct.error:
+                raise table.InvalidDataError
         else:
             self.filehandler = dbf.Dbf(filename, new=True)
         self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
@@ -40,6 +43,7 @@ class DBFData(table.Table):
         self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0,
                             'TIME': None, 'LOGICAL': -1, 'MEMOTEXT': '     ',
                             'DATE': (0, 0, 0), 'INTEGER': 0, 'CURRENCY': 0.0}
+        self.namelenlimit = 10
 
     def getfields(self):
         """Returns the fields of the file as a list of Field objects"""
@@ -50,7 +54,7 @@ class DBFData(table.Table):
                                       ('length', fielddef.length),
                                       ('decimals', fielddef.decimalCount)])
             newfield = field.Field(fielddef.name, fieldattributes=fieldattrs,
-                                   dataformat='dbf')
+                                   dataformat='dbf', namelen=self.namelenlimit)
             fieldlist.append(newfield)
         return fieldlist
 
@@ -95,6 +99,8 @@ class DBFData(table.Table):
             else:
                 dbfattributes['decimals'] = 0
             dbffield.setformat('dbf', dbfattributes)
+        dbffield.namelenlimit = 10
+        dbffield.resetname()
         return dbffield
 
     def getblankvalue(self, outputfield):

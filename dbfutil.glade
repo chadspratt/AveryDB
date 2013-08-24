@@ -600,6 +600,12 @@
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="tablelist">
+    <columns>
+      <!-- column-name tablename -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="librarylist">
     <columns>
       <!-- column-name libraryname -->
@@ -929,10 +935,13 @@
                           <object class="GtkTreeView" id="dataview">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
                             <property name="model">aliaslist</property>
                             <property name="headers_visible">False</property>
                             <property name="headers_clickable">False</property>
                             <property name="search_column">0</property>
+                            <signal name="drag-drop" handler="dataview_drag_drop_cb" swapped="no"/>
+                            <signal name="drag-data-received" handler="dataview_drag_data_received_cb" swapped="no"/>
                             <child>
                               <object class="GtkTreeViewColumn" id="dataaliascol">
                                 <property name="sizing">autosize</property>
@@ -1828,12 +1837,6 @@
         <col id="1" translatable="yes">(csv file)</col>
       </row>
     </data>
-  </object>
-  <object class="GtkListStore" id="tablelist">
-    <columns>
-      <!-- column-name tablename -->
-      <column type="gchararray"/>
-    </columns>
   </object>
   <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkListStore" id="sampleoutputlist"/>

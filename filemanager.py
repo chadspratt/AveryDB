@@ -22,6 +22,7 @@ import re
 from collections import OrderedDict
 
 from table import NeedTableError
+from table import InvalidDataError
 
 
 class FileManager(object):
@@ -102,7 +103,13 @@ class FileManager(object):
                     newfile = self.filehandlers[fileext](filename)
                 # if it contains more than one table, return the list of tables
                 except NeedTableError as e:
+                    if len(e.tablelist) == 0:
+                        print 'No data in file.'
+                        return None
                     return e.tablelist
+                except InvalidDataError as e:
+                    print 'Data not readable'
+                    return None
             else:
                 # if a table name was passed, then open that table
                 newfile = self.filehandlers[fileext](filename, tablename)

@@ -51,6 +51,7 @@ class ExampleData(table.Table):
         self.filehandler = open(filename, mode)
         # suggested method for defining blank values for field types
         self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0, 'INT': 0}
+        self.namelenlimit = 10 # or None if no limit
 
     # converts fields to universal types
     def getfields(self):
@@ -91,6 +92,8 @@ class ExampleData(table.Table):
             else:
                 exampleattributes['attr0'] = 'attr0_defaultval'
             examplefield.setformat('example', exampleattributes)
+        examplefield.namelenlimit = None
+        examplefield.resetname()
         return examplefield
 
     def detecttype(self, valuelist):

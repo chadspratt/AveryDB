@@ -91,7 +91,8 @@ class OutputManager(object):
 
     def getuniquename(self, fieldname):
         """Supplies a unique variation on a field name."""
-        tempfield = field.Field(fieldname)
+        tempfield = field.Field(fieldname,
+                                namelen=self.outputfile.namelenlimit)
         uniquename = tempfield.name
         while uniquename.upper() in self.outputfields:
             uniquename = tempfield.getnewname()
@@ -101,6 +102,9 @@ class OutputManager(object):
         # Check that the name was changed
         fieldindex = int(fieldpos)
         oldname = self.outputorder[fieldindex]
+        if self.outputfile.namelenlimit is not None:
+            # trim front or back?
+            newname = newname[:self.outputfile.namelenlimit]
         if oldname.upper() != newname.upper():
             # Check if the name is already in use.
             if newname.upper() in self.outputfields:

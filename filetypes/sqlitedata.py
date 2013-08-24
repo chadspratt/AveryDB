@@ -47,6 +47,7 @@ class SQLiteData(table.Table):
         # connection/cursor used for insert queries, closed by self.close()
         self.conn = None
         self.cur = None
+        self.namelenlimit = None
 
     # converts fields to universal types
     def getfields(self):
@@ -129,6 +130,8 @@ class SQLiteData(table.Table):
             else:
                 sqlattributes['type'] = 'TEXT'
             sqlitefield.setformat('sqlite', sqlattributes)
+        sqlitefield.namelenlimit = None
+        sqlitefield.resetname()
         return sqlitefield
 
     def getblankvalue(self, outputfield):

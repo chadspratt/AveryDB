@@ -133,9 +133,12 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         progresstext = 'Converting to sqlite: ' + filealias
         self.gui.setprogress(0, progresstext)
         # Run the generator until it's finished. It yields % progress.
-        for progress in dataconverter:
-            # this progress update lets the GUI function
-            self.gui.setprogress(progress, progresstext, lockgui=False)
+        try:
+            for progress in dataconverter:
+                # this progress update lets the GUI function
+                self.gui.setprogress(progress, progresstext, lockgui=False)
+        except ValueError:
+            print 'File removed, aborting conversion.'
         self.gui.setprogress(0, '')
 
     def setoutputfile(self, _widget, _data=None):

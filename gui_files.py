@@ -28,7 +28,7 @@ class GUI_Files(object):
             if type(newfilealias) is list:
                 addfiledialog.destroy()
                 self.addtables(newfilename, newfilealias)
-            # will be None if data was already added
+            # will be None if data was already added or the data isn't readable
             elif newfilealias is not None:
                 newfile = self.files[newfilealias]
                 sqlconverter = newfile.convertdata(newfilealias)
@@ -46,6 +46,10 @@ class GUI_Files(object):
         addfiledialog.destroy()
         # dbfutil.py, handles "background" processing
         self.processtasks()
+
+    def dropfiles(self, widget, data=None):
+        print widget
+        print data
 
     # needed for formats which contain multiple tables
     def addtables(self, filename, tablelist):

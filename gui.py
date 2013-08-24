@@ -41,6 +41,7 @@ class GUI(object):
         handlers = {}
         handlers['mainwindow_destroy_cb'] = hfuncs.quitprogram
         handlers['adddatabutton_clicked_cb'] = hfuncs.addfile
+        handlers['dataview_drag_drop_cb'] = hfuncs.dropfiles
         handlers['removedatabutton_clicked_cb'] = hfuncs.removefile
         handlers['targetcombo_changed_cb'] = hfuncs.changetarget
         handlers['joinaliascombo_changed_cb'] = hfuncs.loadjoinfields
