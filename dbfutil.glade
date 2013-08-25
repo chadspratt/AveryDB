@@ -600,12 +600,6 @@
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="tablelist">
-    <columns>
-      <!-- column-name tablename -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="librarylist">
     <columns>
       <!-- column-name libraryname -->
@@ -940,7 +934,6 @@
                             <property name="headers_visible">False</property>
                             <property name="headers_clickable">False</property>
                             <property name="search_column">0</property>
-                            <signal name="drag-drop" handler="dataview_drag_drop_cb" swapped="no"/>
                             <signal name="drag-data-received" handler="dataview_drag_data_received_cb" swapped="no"/>
                             <child>
                               <object class="GtkTreeViewColumn" id="dataaliascol">
@@ -2006,6 +1999,12 @@
       <action-widget response="1">tableok</action-widget>
       <action-widget response="0">tablecancel</action-widget>
     </action-widgets>
+  </object>
+  <object class="GtkListStore" id="tablelist">
+    <columns>
+      <!-- column-name tablename -->
+      <column type="gchararray"/>
+    </columns>
   </object>
   <object class="GtkListStore" id="targetaliaslist">
     <columns>

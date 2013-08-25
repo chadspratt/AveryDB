@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
+import urllib
+
 import gtk
 
 
@@ -47,9 +49,30 @@ class GUI_Files(object):
         # dbfutil.py, handles "background" processing
         self.processtasks()
 
-    def dropfiles(self, widget, data=None):
-        print widget
-        print data
+    def dropfiles(self, widget, context, x, y, selection, info, time, data):
+        if info == self.gui.TARGET_TYPE_URI_LIST:
+            uri = selection.data.strip('\r\n\x00')
+            print 'uri', uri
+            uri_splitted = uri.split()
+            for uri in uri_splitted:
+                path = self.get_file_path_from_dnd_dropped_uri(uri)
+                print 'path to open', path
+
+    # taken from the pygtk faq 23.31
+    def get_file_path_from_dnd_dropped_uri(uri):
+        # get the path to file
+        path = ""
+        if uri.startswith('file:\\\\\\'):  # windows
+            path = uri[8:]  # 8 is len('file:///')
+        elif uri.startswith('file://'):  # nautilus, rox
+            path = uri[7:]  # 7 is len('file://')
+        elif uri.startswith('file:'):  # xffm
+            path = uri[5:]  # 5 is len('file:')
+
+        path = urllib.url2pathname(path)  # escape special chars
+        path = path.strip('\r\n\x00')  # remove \r\n and NULL
+
+        return path
 
     # needed for formats which contain multiple tables
     def addtables(self, filename, tablelist):

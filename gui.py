@@ -19,6 +19,8 @@ import re
 import gtk
 import gobject
 
+TARGET_TYPE_URI_LIST = 80
+
 
 class GUI(object):
     """Initializes the GUI from the Glade file and provides widget access.
@@ -41,7 +43,7 @@ class GUI(object):
         handlers = {}
         handlers['mainwindow_destroy_cb'] = hfuncs.quitprogram
         handlers['adddatabutton_clicked_cb'] = hfuncs.addfile
-        handlers['dataview_drag_drop_cb'] = hfuncs.dropfiles
+        handlers['dataview_drag_data_received_cb'] = hfuncs.dropfiles
         handlers['removedatabutton_clicked_cb'] = hfuncs.removefile
         handlers['targetcombo_changed_cb'] = hfuncs.changetarget
         handlers['joinaliascombo_changed_cb'] = hfuncs.loadjoinfields
@@ -92,6 +94,11 @@ class GUI(object):
         # other setup
         outputselection = self.builder.get_object('outputview').get_selection()
         outputselection.set_mode(gtk.SELECTION_MULTIPLE)
+        dataview = self.builder.get_object('dataview')
+        dataview.drag_dest_set(gtk.DEST_DEFAULT_HIGHLIGHT |
+                               gtk.DEST_DEFAULT_DROP,
+                               [('text/uri-list', 0, TARGET_TYPE_URI_LIST)],
+                               gtk.gdk.ACTION_COPY)
 
         self.mainwindow = self.builder.get_object('mainwindow')
         self.mainwindow.show_all()
