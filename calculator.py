@@ -55,8 +55,8 @@ class Calculator(object):
         # import everything from the fieldcalcs directory
         customfuncs = os.listdir('fieldcalcs')
         for funcname in customfuncs:
-            name, extension = funcname.split('.')
-            if extension == 'py':
+            if funcname.endswith('.py'):
+                name = funcname.split('.')[0]
                 self._importlib(name)
                 self.custommodules.append(name)
 

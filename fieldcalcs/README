@@ -13,3 +13,19 @@ There are two special files:
 default.py - functions in this file can be called without prefixing "default."
 temporary.py - same as default.py except this file is cleared each time the
 program starts
+
+These files can all be edited directly or from within the program using the
+calculator window.
+
+If you include a docstring, like:
+def somefunc(val1, val2):
+    """Does something with some values"""
+The string will be used for the tooltip when you hover over the function in the
+calc window.
+
+To clean up unwanted calc libraries you have to manually delete them from the
+fieldcalcs directory. For one-off functions.
+
+If you edit the files directly, use 4 spaces for indentation. The in-program
+editor can use tabs, but it converts them to spaces when it writes the function
+to a file.
