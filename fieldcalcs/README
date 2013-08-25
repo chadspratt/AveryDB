@@ -1,0 +1,15 @@
+The files in this directory are treated as different libraries of functions for
+the field calculator. Any .py file will be parsed and loaded, so it's important
+to not have any syntax errors.
+
+Within the program, functions are called by appending the filename to the
+function name. For example, if addresses.py contained a function called
+concataddr(num, stname, stdir, sttype)
+then within the program you would put addresses.concataddr() and pass it either
+constant values (101, 'Elm', 'N', 'St') or
+references to values from an input file (!roads.hnum!, !roads.stname!...)
+
+There are two special files:
+default.py - functions in this file can be called without prefixing "default."
+temporary.py - same as default.py except this file is cleared each time the
+program starts
