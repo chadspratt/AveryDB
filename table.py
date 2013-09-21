@@ -25,16 +25,24 @@ class Table(object):
         # fields[fieldname] = Field
         self.fields = OrderedDict()
 
+    # this is done separately so that joins can be set up and the fields can
+    # be edited without waiting on the sqlite conversion
+    def initfields(self):
+        for field in self.getfields():
+            # cast originalname to str in case it's a unicode str
+            self.fields[str(field.originalname)] = field
+
     # long-running, should yield periodically so the GUI can function
     def convertdata(self, alias):
         """Read the contents of a data file in to an SQLite table."""
         self.sqlname = 'table_' + alias
         # make a list of the field names with type, for creating the table
         fieldnameswithtype = []
-        for field in self.getfields():
+        # finish setting up the fields that were added by initfields()
+        for fieldname in self.fields:
+            field = self.fields[fieldname]
             # cast originalname to str in case it's a unicode str
-            self.fields[str(field.originalname)] = field
-            field.sqlname = alias + '_' + field.originalname
+            field.sqlname = alias + '_' + fieldname
             fieldnameswithtype.append(field.sqlname + ' ' + field['type'])
 
         # create a string of question marks for the queries

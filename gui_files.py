@@ -33,6 +33,7 @@ class GUI_Files(object):
             # will be None if data was already added or the data isn't readable
             elif newfilealias is not None:
                 newfile = self.files[newfilealias]
+                newfile.initfields()
                 sqlconverter = newfile.convertdata(newfilealias)
                 self.queuetask(('sqlite', (newfilealias, sqlconverter)))
                 # add to the file list
