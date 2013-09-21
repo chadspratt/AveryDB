@@ -53,6 +53,7 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
     """Main class, links GUI to the back end and also orchestrates a bit."""
 
     def __init__(self):
+        # main program components
         self.gui = gui.creategui(self)
         self.files = filemanager.FileManager()
         self.joins = joinmanager.JoinManager()
@@ -210,8 +211,10 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         stopbutton.set_sensitive(True)
         self.joinaborted = False
 
+        restrictjoins = self.gui['restrictjoincheckbox'].get_active()
+
         # sqlite setup
-        joinquery = self.joins.getquery()
+        joinquery = self.joins.getquery(restrictjoins=restrictjoins)
         print joinquery
         # open the database
         conn = sqlite3.connect('temp.db')
@@ -219,6 +222,13 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         cur = conn.cursor()
         # create the table
         cur.execute(joinquery)
+        # restrict one-to-many joins from creating extra records
+        # the ROWID of the target table with joins is checked against the
+        # ROWID of the target without joins, to detect extra records.
+        # rcur provides the ROWID of the unjoined target
+        if restrictjoins:
+            rcur = conn.cursor()
+            rcur.execute(self.joins.getrestrictionquery())
 
         # loop through target file
         i = 0
@@ -248,9 +258,22 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
                 return
 
             # process however many records before updating progress
-            for i in range(i, min(i + 1000, recordcount)):
+            for _counter in range(i, min(i + 1000, recordcount)):
                 # inputvalues[filealias_fieldname] = value
                 inputvalues = cur.fetchone()
+                # check id of the joined record against the control query
+                if restrictjoins:
+                    checkvalue = rcur.fetchone()
+                    # end of file reached, the current and remaining records in the
+                    # main query must be duplicates
+                    if checkvalue is None:
+                        break
+                    # if the values don't match, this is an extra record
+                    while inputvalues['restrictjoins'] != checkvalue['restrictjoins']:
+                        # keep fetching until it matches
+                        # XXX could optionally prompt user for choice
+                        inputvalues = cur.fetchone()
+                        i = i + 1
                 newrec = {}
                 outputvalues = self.calc.calculateoutput(inputvalues)
                 for fieldname, fieldvalue in outputvalues:

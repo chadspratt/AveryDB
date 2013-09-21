@@ -99,7 +99,7 @@ class JoinManager(object):
         return joinlist
 
     def getjoins(self):
-        """Return a list of all join objects, in hierarchical order."""
+        """Return a list of all join objects, in depth-first order."""
         alljoins = []
         joinorder = self._joinsdfs(self.targetalias)
         for filealias in joinorder:
@@ -107,14 +107,16 @@ class JoinManager(object):
                 alljoins.extend(self.joins[filealias])
         return alljoins
 
-    def getquery(self, sampling=None):
+    def getquery(self, sampling=None, restrictjoins=False):
         """Create an sql query string that will perform the join."""
         query = ['SELECT']
         selectfieldaliases = []
+        # add fields from the target table
         for fieldname in self.targetdata.fields:
             sqlname = (self.targetdata.sqlname + '.' +
                        self.targetdata.fields[fieldname].sqlname)
             selectfieldaliases.append(sqlname)
+        # add fields from all the joined tables
         for curjoin in self.getjoins():
             for fieldname in curjoin.jointable.fields:
                 sqlname = (curjoin.jointable.sqlname + '.' +
@@ -122,6 +124,10 @@ class JoinManager(object):
                 selectstr = (sqlname + ' AS ' +
                              curjoin.joinalias + '_' + fieldname)
                 selectfieldaliases.append(selectstr)
+        # add the target table rowid, used to check for extra records created
+        # by a one-to-many left join, which causes problems in some circumstances
+        if restrictjoins:
+            selectfieldaliases.append(self.targetdata.sqlname + '.ROWID AS restrictjoins')
         query.append(', '.join(selectfieldaliases))
         query.append('FROM table_' + self.targetalias)
         for curjoin in self.getjoins():
@@ -131,18 +137,29 @@ class JoinManager(object):
                          curjoin.joinfield.sqlname +
                          '=table_' + curjoin.targetalias + '.' +
                          curjoin.targetfield.sqlname)
-        if sampling:
+        if sampling is not None:
             query.append('WHERE table_' + self.targetalias + '.ROWID IN ('
                          + ', '.join([str(x) for x in sampling]) + ')')
 
         return ' '.join(query)
 
+    def getrestrictionquery(self):
+        """Get the ROWID from the target to check against the main result query."""
+        return 'SELECT ROWID AS restrictjoins FROM table_' + self.targetalias
+
     def getrecordcount(self):
         """Get a query that gives the count of rows in the table."""
-        query = 'SELECT COUNT(*) FROM table_' + self.targetalias
+        query = ['SELECT COUNT(*) FROM table_' + self.targetalias]
+        for curjoin in self.getjoins():
+            query.append('LEFT OUTER JOIN ' + curjoin.jointable.sqlname +
+                         ' AS table_' + curjoin.joinalias +
+                         ' ON table_' + curjoin.joinalias + '.' +
+                         curjoin.joinfield.sqlname +
+                         '=table_' + curjoin.targetalias + '.' +
+                         curjoin.targetfield.sqlname)
         conn = sqlite3.connect('temp.db')
         cur = conn.cursor()
-        cur.execute(query)
+        cur.execute(' '.join(query))
         return cur.fetchone()[0]
 
     def __getitem__(self, target):
