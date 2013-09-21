@@ -83,6 +83,8 @@ class GUI(object):
         handlers['funcaddlibrarybutton_clicked_cb'] = hfuncs.getlibraryname
         handlers['newlibcreate_clicked_cb'] = hfuncs.createlibrary
         handlers['newlibcancel_clicked_cb'] = hfuncs.cancelcreatelibrary
+        # keyboard shortcuts
+        handlers['outputview_key_press_event_cb'] = hfuncs.fieldskeypressed
         # table selection dialog
 #        handlers['tableok_clicked_cb'] = hfuncs.addtables
 

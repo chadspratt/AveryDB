@@ -1338,9 +1338,11 @@
                                 <property name="can_focus">True</property>
                                 <property name="headers_clickable">False</property>
                                 <property name="reorderable">True</property>
+                                <property name="enable_search">False</property>
                                 <property name="search_column">0</property>
                                 <property name="rubber_banding">True</property>
                                 <property name="enable_grid_lines">vertical</property>
+                                <signal name="key-press-event" handler="outputview_key_press_event_cb" swapped="no"/>
                               </object>
                             </child>
                           </object>
@@ -1831,6 +1833,12 @@
       </row>
     </data>
   </object>
+  <object class="GtkListStore" id="tablelist">
+    <columns>
+      <!-- column-name tablename -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkListStore" id="sampleoutputlist"/>
   <object class="GtkDialog" id="tabledialog">
@@ -1999,12 +2007,6 @@
       <action-widget response="1">tableok</action-widget>
       <action-widget response="0">tablecancel</action-widget>
     </action-widgets>
-  </object>
-  <object class="GtkListStore" id="tablelist">
-    <columns>
-      <!-- column-name tablename -->
-      <column type="gchararray"/>
-    </columns>
   </object>
   <object class="GtkListStore" id="targetaliaslist">
     <columns>

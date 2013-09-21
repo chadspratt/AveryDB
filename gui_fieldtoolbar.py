@@ -65,8 +65,7 @@ class GUI_FieldToolbar(object):
         # (model, [(path0,), (path1,), ...])
         (outputlist, selectedrows) = selection.get_selected_rows()
         if selectedrows:
-            lastselectedindex = selectedrows[-1][0]
-            insertindex = lastselectedindex
+            insertindex = selectedrows[0][0]
         else:
             insertindex = len(self.gui['outputlist'])
 

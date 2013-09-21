@@ -37,17 +37,18 @@ import outputmanager
 import calculator
 import table  # for NeedTableError
 
-#callback handlers
+# event handlers
 from gui_files import GUI_Files
 from gui_joinconfig import GUI_JoinConfig
 from gui_fieldtoolbar import GUI_FieldToolbar
 from gui_outputview import GUI_OutputView
 from gui_calc import GUI_Calc
 from gui_functioneditor import GUI_FunctionEditor
+from gui_keyboard import GUI_Keyboard
 
 
 class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
-              GUI_Calc, GUI_FunctionEditor):
+              GUI_Calc, GUI_FunctionEditor, GUI_Keyboard):
 
     """Main class, links GUI to the back end and also orchestrates a bit."""
 
