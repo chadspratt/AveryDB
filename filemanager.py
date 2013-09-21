@@ -50,7 +50,7 @@ class FileManager(object):
         reader = csv.DictReader(registryfile)
         for row in reader:
             # store a reference to each class by file extension
-            extension = row['extension']
+            extension = row['extension'].upper()
             modulename = row['module']
             classname = row['class']
 
@@ -100,7 +100,7 @@ class FileManager(object):
             if tablename is None:
                 # try opening the file as if it only contains one table of data
                 try:
-                    newfile = self.filehandlers[fileext](filename)
+                    newfile = self.filehandlers[fileext.upper()](filename)
                 # if it contains more than one table, return the list of tables
                 except NeedTableError as e:
                     if len(e.tablelist) == 0:
@@ -112,7 +112,7 @@ class FileManager(object):
                     return None
             else:
                 # if a table name was passed, then open that table
-                newfile = self.filehandlers[fileext](filename, tablename)
+                newfile = self.filehandlers[fileext.upper()](filename, tablename)
             self.filesbyfilename[fullfilename] = newfile
 
         self.filenamesbyalias[alias] = fullfilename
@@ -158,7 +158,7 @@ class FileManager(object):
         if re.search(r'\,', fileext):
             fileext = re.match(r'^[\,]+', fileext)
         # instantiate a filehandler
-        outputfile = self.filehandlers[fileext](filename + fileext,
+        outputfile = self.filehandlers[fileext.upper()](filename + fileext,
                                                 tablename, mode='w')
         return outputfile
 

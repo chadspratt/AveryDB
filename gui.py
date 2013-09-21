@@ -131,7 +131,8 @@ class GUI(object):
             for mimetype in filetypes[filetype]['mimes']:
                 filefilter.add_mime_type(mimetype)
             for pattern in filetypes[filetype]['patterns']:
-                filefilter.add_pattern(pattern)
+                filefilter.add_pattern(pattern.upper())
+                filefilter.add_pattern(pattern.lower())
             dialog.add_filter(filefilter)
 
         return dialog
