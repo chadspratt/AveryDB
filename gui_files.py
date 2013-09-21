@@ -19,48 +19,41 @@ import gtk
 
 
 class GUI_Files(object):
-    def addfile(self, _widget, _data=None):
+    def selectandaddfile(self, _widget, _data=None):
         """Open a new file for joining to the target."""
         addfiledialog = self.gui.filedialog(self.files.filetypes)
         response = addfiledialog.run()
         # check that a file was selected
         if response == gtk.RESPONSE_OK:
             newfilename = addfiledialog.get_filename()
-            newfilealias = self.files.addfile(newfilename)
-            if type(newfilealias) is list:
-                addfiledialog.destroy()
-                self.addtables(newfilename, newfilealias)
-            # will be None if data was already added or the data isn't readable
-            elif newfilealias is not None:
-                newfile = self.files[newfilealias]
-                newfile.initfields()
-                sqlconverter = newfile.convertdata(newfilealias)
-                self.queuetask(('sqlite', (newfilealias, sqlconverter)))
-                # add to the file list
-                aliaslist = self.gui['aliaslist']
-                newrow = aliaslist.append([newfilealias])
-
-                # set as target if no target is set
-                if self.joins.gettarget() == '':
-                    self.joins.settarget(newfilealias, newfile)
-                    self.gui['targetcombo'].set_active_iter(newrow)
-                    # set the default output filename to the target alias
-                    self.gui['outputfilenameentry'].set_text(newfilealias)
-        addfiledialog.destroy()
+            addfiledialog.destroy()
+            self.addfile(newfilename)
         # dbfutil.py, handles "background" processing
         self.processtasks()
 
-    def dropfiles(self, widget, context, x, y, selection, info, time, data):
-        if info == self.gui.TARGET_TYPE_URI_LIST:
-            uri = selection.data.strip('\r\n\x00')
-            print 'uri', uri
-            uri_splitted = uri.split()
-            for uri in uri_splitted:
-                path = self.get_file_path_from_dnd_dropped_uri(uri)
-                print 'path to open', path
+    def addfile(self, filename):
+        newfilealias = self.files.addfile(filename)
+        if type(newfilealias) is list:
+            self.addtables(filename, newfilealias)
+        # will be None if data was already added or the data isn't readable
+        elif newfilealias is not None:
+            newfile = self.files[newfilealias]
+            newfile.initfields()
+            sqlconverter = newfile.convertdata(newfilealias)
+            self.queuetask(('sqlite', (newfilealias, sqlconverter)))
+            # add to the file list
+            aliaslist = self.gui['aliaslist']
+            newrow = aliaslist.append([newfilealias])
+
+            # set as target if no target is set
+            if self.joins.gettarget() == '':
+                self.joins.settarget(newfilealias, newfile)
+                self.gui['targetcombo'].set_active_iter(newrow)
+                # set the default output filename to the target alias
+                self.gui['outputfilenameentry'].set_text(newfilealias)
 
     # taken from the pygtk faq 23.31
-    def get_file_path_from_dnd_dropped_uri(uri):
+    def get_file_path_from_dnd_dropped_uri(self, uri):
         # get the path to file
         path = ""
         if uri.startswith('file:\\\\\\'):  # windows
@@ -74,6 +67,19 @@ class GUI_Files(object):
         path = path.strip('\r\n\x00')  # remove \r\n and NULL
 
         return path
+
+    def dropfiles(self, widget, context, x, y, selection, target_type, time, data=None):
+        # 80 is the type for a URI list
+        if target_type == 80:
+            uri = selection.data.strip('\r\n\x00')
+            print 'uri', uri
+            uri_splitted = uri.split()
+            for uri in uri_splitted:
+                path = self.get_file_path_from_dnd_dropped_uri(uri)
+                print 'path to open', path
+                self.addfile(path)
+        # dbfutil.py, handles "background" processing
+        self.processtasks()
 
     # needed for formats which contain multiple tables
     def addtables(self, filename, tablelist):
