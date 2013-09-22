@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
+import subprocess
+import sys
 
 
 class GUI_Calc(object):
@@ -121,3 +123,12 @@ class GUI_Calc(object):
         self.outputs[fieldname]['value'] = fieldvalue
         self.gui['outputlist'][outputcombo.get_active_iter()][-1] = fieldvalue
         self.processtasks(('sample', None))
+
+    def showlibraries(self, _widget, _data=None):
+        librarypath = 'fieldcalcs'
+        if sys.platform == 'darwin':
+            subprocess.check_call(['open', '--', librarypath])
+        elif sys.platform == 'linux2':
+            subprocess.check_call(['gnome-open', librarypath])
+        elif sys.platform == 'windows':
+            subprocess.check_call(['explorer', librarypath])

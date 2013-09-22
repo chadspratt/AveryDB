@@ -62,6 +62,7 @@ class GUI(object):
         handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
         handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
         # calc window
+        handlers['calclibrarybutton_clicked_cb'] = hfuncs.showlibraries
         handlers['opencalcbutton_clicked_cb'] = hfuncs.showcalculator
         handlers['calcwindow_delete_event_cb'] = hfuncs.hidecalculator
         handlers['calcoutputfieldcombo_changed_cb'] = hfuncs.changecalcfield
