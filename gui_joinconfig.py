@@ -75,6 +75,7 @@ class GUI_JoinConfig(object):
             self.refreshjoinlists()
             self.queuetask(('index', newjoin))
             self.queuetask(('sample', None))
+            self.initjoinedfields(joinalias)
             self.processtasks()
 
     def removejoin(self, _widget, _data=None):

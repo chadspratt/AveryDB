@@ -63,6 +63,22 @@ class GUI_FieldToolbar(object):
         self.samplerecords = []
         self.processtasks(('sample', None))
 
+    def initjoinedfields(self, filealias):
+        outputlist = self.gui['outputlist']
+        inputlist = self.gui['inputlist']
+        outputfile = self.outputs.outputfile
+        for field in self.files[filealias].getfields():
+            field.value = ('!' + filealias + '.' +
+                           field.originalname + '!')
+            newfield = self.outputs.addfield(field,
+                                             fieldsource=filealias)
+            outputlist.append(newfield.getattributes())
+            inputlist.append([newfield['value']])
+            # initialize a blank value for this field in the calculator
+            blankvalue = outputfile.getblankvalue(newfield)
+            self.calc.setblankvalue(newfield, blankvalue)
+        self.queuetask(('sample', None))
+
     # 'add field' button
     def addoutput(self, _widget, _data=None):
         """Add a new field after the last selected. Append if none selected."""

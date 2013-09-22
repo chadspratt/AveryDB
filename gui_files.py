@@ -47,10 +47,12 @@ class GUI_Files(object):
 
             # set as target if no target is set
             if self.joins.gettarget() == '':
-                self.joins.settarget(newfilealias, newfile)
+                # self.joins.settarget(newfilealias, newfile)
+                # this will trigger self.changetarget() which will do the rest
                 self.gui['targetcombo'].set_active_iter(newrow)
                 # set the default output filename to the target alias
-                self.gui['outputfilenameentry'].set_text(newfilealias)
+                # self.gui['outputfilenameentry'].set_text(newfilealias)
+                # self.initoutput(None)
 
     # taken from the pygtk faq 23.31
     def get_file_path_from_dnd_dropped_uri(self, uri):
@@ -104,6 +106,7 @@ class GUI_Files(object):
                     self.gui['targetcombo'].set_active_iter(newrow)
                     # set the default output filename to the target alias
                     self.gui['outputfilenameentry'].set_text(newfilealias)
+                    self.initoutput(None)
         tabledialog.hide()
         self.processtasks()
 
@@ -139,4 +142,6 @@ class GUI_Files(object):
         """Set an open file as the main target for joining."""
         newtarget = self.gui['targetcombo'].get_active_text()
         self.joins.settarget(newtarget, self.files[newtarget])
+        self.gui['outputfilenameentry'].set_text(newtarget)
         self.refreshjoinlists()
+        self.initoutput(None)
