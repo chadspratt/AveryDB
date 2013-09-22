@@ -85,6 +85,14 @@ class GUI(object):
         handlers['newlibcancel_clicked_cb'] = hfuncs.cancelcreatelibrary
         # keyboard shortcuts
         handlers['outputview_key_press_event_cb'] = hfuncs.fieldskeypressed
+        # menu items
+        handlers['filemenupreferences_activate_cb'] = hfuncs.showoptions
+        # options window
+        handlers['optionswindow_delete_event_cb'] = hfuncs.closeoptions
+        handlers['optionsavebutton_clicked_cb'] = hfuncs.saveoptions
+        handlers['optionsaveclosebutton_clicked_cb'] = hfuncs.savecloseoptions
+        handlers['optioncancelbutton_clicked_cb'] = hfuncs.closeoptions
+        handlers['defaultoutputbrowsebutton_clicked_cb'] = hfuncs.browsedefaultoutput
         # table selection dialog
 #        handlers['tableok_clicked_cb'] = hfuncs.addtables
 
@@ -121,9 +129,12 @@ class GUI(object):
         self['outputtypecombo'].set_active(0)
 
     @classmethod
-    def filedialog(cls, filetypes, foroutput=False):
+    def filedialog(cls, filetypes, foroutput=False, folder=False):
         """Sets up and returns a file chooser dialog for the caller to run."""
-        if foroutput:
+        if folder:
+            title = 'Choose directory...'
+            action = gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER
+        elif foroutput:
             title = 'Save as...'
             action = gtk.FILE_CHOOSER_ACTION_SAVE
         else:

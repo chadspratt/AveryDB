@@ -29,11 +29,14 @@ import gtk
 import time
 import random
 import sqlite3
+import re
+import os
 
 import gui
 import filemanager
 import joinmanager
 import outputmanager
+import optionsmanager
 import calculator
 import table  # for NeedTableError
 
@@ -45,10 +48,11 @@ from gui_outputview import GUI_OutputView
 from gui_calc import GUI_Calc
 from gui_functioneditor import GUI_FunctionEditor
 from gui_keyboard import GUI_Keyboard
+from gui_options import GUI_Options
 
 
 class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
-              GUI_Calc, GUI_FunctionEditor, GUI_Keyboard):
+              GUI_Calc, GUI_FunctionEditor, GUI_Keyboard, GUI_Options):
 
     """Main class, links GUI to the back end and also orchestrates a bit."""
 
@@ -58,7 +62,11 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         self.files = filemanager.FileManager()
         self.joins = joinmanager.JoinManager()
         self.outputs = outputmanager.OutputManager()
+        self.options = optionsmanager.OptionsManager()
         self.calc = calculator.Calculator()
+
+        # load options
+        self.options.loadoptions()
 
         # fake threading helpers
         self.joinaborted = False
@@ -146,6 +154,10 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
     def setoutputfile(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
         outputfilename = self.gui['outputfilenameentry'].get_text()
+        # check if the location is specificed or just the filename
+        if not re.search(r'\\\/', outputfilename):
+            # if no forward/backward slash, append the default output path
+            outputfilename = os.path.join(self.options['default_output_dir'], outputfilename)
         if self.gui['outputtablenameentry'].get_sensitive():
             outputtablename = self.gui['outputtablenameentry'].get_text()
         else:
