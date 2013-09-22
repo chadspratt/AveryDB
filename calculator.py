@@ -22,6 +22,8 @@ This class serves two purposes:
 ##
 import re
 import os
+import sys
+import traceback
 from collections import OrderedDict
 
 # libraries to preload and list in the calculator dialog
@@ -174,6 +176,18 @@ class Calculator(object):
         libfile.close()
         return libtext
 
+    def codeisvalid(self, codeblock):
+        testenv = {}
+        try:
+            exec ''.join(codeblock) in testenv
+        except:
+            print "Exception in user code:"
+            print '-'*60
+            traceback.print_exc(file=sys.stdout)
+            print '-'*60
+            return False
+        return True
+
     def writefunctext(self, libname, text):
         """Save a function written in the gui to a file."""
         curtext = self._getlibtext(libname)
@@ -187,18 +201,19 @@ class Calculator(object):
         for funcname in funcnames:
             curfuncstart, curfuncend = self._getfuncbounds(curtext, funcname)
             newfuncstart, newfuncend = self._getfuncbounds(newtext, funcname)
-            # if the function is already in the file, replace it
-            if curfuncstart:
-                # Add portion of the library before the function being replaced
-                outputtext = curtext[:curfuncstart]
-                # Add the new function to lines
-                outputtext.extend(newtext[newfuncstart:newfuncend + 1])
-                # Add portion of the library after the function being replaced
-                outputtext.extend(curtext[curfuncend + 1:])
-                curtext = outputtext
-            else:
-                curtext.extend(['\n', '\n'])
-                curtext.extend(newtext[newfuncstart:newfuncend + 1])
+            if self.codeisvalid(newtext[newfuncstart:newfuncend + 1]):
+                # if the function is already in the file, replace it
+                if curfuncstart:
+                    # Add portion of the library before the function being replaced
+                    outputtext = curtext[:curfuncstart]
+                    # Add the new function to lines
+                    outputtext.extend(newtext[newfuncstart:newfuncend + 1])
+                    # Add portion of the library after the function being replaced
+                    outputtext.extend(curtext[curfuncend + 1:])
+                    curtext = outputtext
+                else:
+                    curtext.extend(['\n', '\n'])
+                    curtext.extend(newtext[newfuncstart:newfuncend + 1])
         # if there were any functions to write, do so and reload the library
         if len(funcnames) > 0:
             os.chdir('fieldcalcs')
@@ -304,7 +319,18 @@ class Calculator(object):
                 else:
                     # Missed join for this record, pass a blank default value
                     argvalues.append(self.inputblanks[arg])
-            outputvalue = outputfunc(self, argvalues)
+            try:
+                outputvalue = outputfunc(self, argvalues)
+            except:
+                # This will be shown in the sample output so it should be ample
+                # feedback on when something is not working and hopefully '!error!'
+                # won't get written to [m]any output files
+                print "Exception in user code:"
+                print '-'*60
+                traceback.print_exc(file=sys.stdout)
+                print '-'*60
+                outputvalue = '!error!'
+
             outputvalues.append((outputfieldname, outputvalue))
         return outputvalues
 
