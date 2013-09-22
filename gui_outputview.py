@@ -16,17 +16,27 @@
 
 
 class GUI_OutputView(object):
-    def updatefieldattribute(self, _cell, row, new_value, outputlist, column):
+    def updatefieldattribute(self, _cell, row, newvalue, outputlist, column):
         """Update data when an outputview cell is edited."""
         # Update output manager if the field name was changed
         if column == 0:
-            new_value = self.outputs.updatename(row, new_value)
+            newvalue = self.outputs.updatename(row, newvalue)
         # update the view
-        outputlist[row][column] = new_value
+        outputlist[row][column] = newvalue
         # update the field
-        self.outputs[row][column] = new_value
+        self.outputs[row][column] = newvalue
         # update the output sample
         self.processtasks(('sample', None))
+
+    def updatefieldtype(self, _combo, row, new_iter, typelist, outputlist):
+        newvalue = typelist[new_iter][0]
+        # update the view
+        outputlist[row][1] = newvalue
+        # update the field. 'type' is always the second column
+        self.outputs[row][1] = newvalue
+        # update the output sample
+        self.processtasks(('sample', None))
+        self.gui['outputview'].grab_focus()
 
     # XXX dragging dropping columns to reorder attributes, incomplete
     def reordercols(self, widget):

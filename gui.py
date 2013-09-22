@@ -161,11 +161,11 @@ class GUI(object):
     def replacecolumns(self, storename, viewname, newcolnames):
         """Replaces the columns in the output list/view with new columns."""
         # make a new liststore to use
-        typelist = []
+        celltypelist = []
         for i in range(len(newcolnames)):
-            typelist.append(gobject.TYPE_STRING)
+            celltypelist.append(gobject.TYPE_STRING)
         # __getitem__ checks newobjects so access will shift to the new store
-        self.newobjects[storename] = gtk.ListStore(*typelist)
+        self.newobjects[storename] = gtk.ListStore(*celltypelist)
 
         # update the listview
         view = self[viewname]
@@ -177,12 +177,24 @@ class GUI(object):
         for i in range(len(newcolnames)):
             # treeviews need double underscores to display single underscores
             colname = re.sub(r'_', '__', newcolnames[i])
-            newcell = gtk.CellRendererText()
-            newcell.set_property('editable', True)
-            newcell.connect('edited',
-                            self.handlerfunctions.updatefieldattribute,
-                            self[storename], i)
-            newcolumn = gtk.TreeViewColumn(colname, newcell, text=i)
+            if colname.lower() == 'type':
+                fieldtypelist = self['fieldtypelist']
+                newcell = gtk.CellRendererCombo()
+                newcell.set_property('editable', True)
+                newcell.set_property('has-entry', False)
+                newcell.set_property('model', fieldtypelist)
+                newcell.set_property('text-column', 0)
+                newcell.connect('changed',
+                                self.handlerfunctions.updatefieldtype,
+                                fieldtypelist, self[storename])
+                newcolumn = gtk.TreeViewColumn(colname, newcell, text=1)
+            else:
+                newcell = gtk.CellRendererText()
+                newcell.set_property('editable', True)
+                newcell.connect('edited',
+                                self.handlerfunctions.updatefieldattribute,
+                                self[storename], i)
+                newcolumn = gtk.TreeViewColumn(colname, newcell, text=i)
             view.append_column(newcolumn)
 
     def setprogress(self, progress=-1, text='', lockgui=True):

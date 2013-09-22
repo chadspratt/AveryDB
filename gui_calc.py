@@ -104,6 +104,10 @@ class GUI_Calc(object):
         valuebuffer.delete_selection(True, True)
         inserttext = functionname + '(' + selectedtext + ')'
         valuebuffer.insert_at_cursor(inserttext)
+        # place the cursor inside the closing paren
+        cursoriter = valuebuffer.get_iter_at_mark(valuebuffer.get_insert())
+        cursoriter.backward_char()
+        valuebuffer.place_cursor(cursoriter)
         self.gui['calcvalueview'].grab_focus()
 
     def savecalcvalue(self, _widget, _data=None):

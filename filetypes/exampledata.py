@@ -110,6 +110,10 @@ class ExampleData(table.Table):
                 fieldtype = 'TEXT'
         return fieldtype
 
+    def getfieldtypes(self):
+        """Return a list of field types to populate a combo box."""
+        return self.blankvalues.keys()
+
     def getblankvalue(self, outputfield):
         """Return a blank value that matches the type of the field."""
         return self.blankvalues[outputfield['type']]

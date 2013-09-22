@@ -97,6 +97,11 @@ class CSVData(table.Table):
         return csvfield
 
     @classmethod
+    def getfieldtypes(cls):
+        """Return a list of field types to populate a combo box."""
+        return ['text']
+
+    @classmethod
     def getblankvalue(cls, _outputfield):
         """Return an empty string as the blank value for any field."""
         return ''

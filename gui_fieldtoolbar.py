@@ -39,6 +39,12 @@ class GUI_FieldToolbar(object):
         inputlist = self.gui['inputlist']
         inputlist.clear()
 
+        fieldtypes = outputfile.getfieldtypes()
+        fieldtypelist = self.gui['fieldtypelist']
+        fieldtypelist.clear()
+        for fieldtype in fieldtypes:
+            fieldtypelist.append([fieldtype])
+
         self.outputs.clear()
         # check that a target file has been opened
         if self.joins.targetalias:
