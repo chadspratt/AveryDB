@@ -57,6 +57,7 @@ class GUI(object):
         handlers['addoutputbutton_clicked_cb'] = hfuncs.addoutput
         handlers['copyoutputbutton_clicked_cb'] = hfuncs.copyoutput
         handlers['removeoutputbutton_clicked_cb'] = hfuncs.removeoutput
+        handlers['browsetooutputbutton_clicked_cb'] = hfuncs.browsetooutput
         handlers['executejointoggle_toggled_cb'] = hfuncs.queueexecution
         handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
         handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
@@ -119,11 +120,16 @@ class GUI(object):
         self['outputtypecombo'].set_active(0)
 
     @classmethod
-    def filedialog(cls, filetypes):
+    def filedialog(cls, filetypes, foroutput=False):
         """Sets up and returns a file chooser dialog for the caller to run."""
-        dialog = gtk.FileChooserDialog("Open..",
-                                       None,
-                                       gtk.FILE_CHOOSER_ACTION_OPEN,
+        if foroutput:
+            title = 'Save as...'
+            action = gtk.FILE_CHOOSER_ACTION_SAVE
+        else:
+            title = 'Open...'
+            action = gtk.FILE_CHOOSER_ACTION_OPEN
+
+        dialog = gtk.FileChooserDialog(title, None, action,
                                        (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                         gtk.STOCK_OPEN, gtk.RESPONSE_OK))
         dialog.set_default_response(gtk.RESPONSE_OK)

@@ -26,8 +26,8 @@ class GUI_Files(object):
         # check that a file was selected
         if response == gtk.RESPONSE_OK:
             newfilename = addfiledialog.get_filename()
-            addfiledialog.destroy()
             self.addfile(newfilename)
+        addfiledialog.destroy()
         # dbfutil.py, handles "background" processing
         self.processtasks()
 
@@ -145,3 +145,13 @@ class GUI_Files(object):
         self.gui['outputfilenameentry'].set_text(newtarget)
         self.refreshjoinlists()
         self.initoutput(None)
+
+    def browsetooutput(self, _widget, _data=None):
+        setoutputdialog = self.gui.filedialog(self.files.filetypes, foroutput=True)
+        response = setoutputdialog.run()
+        # check that a file was selected
+        if response == gtk.RESPONSE_OK:
+            newfilename = setoutputdialog.get_filename()
+            self.gui['outputfilenameentry'].set_text(newfilename)
+        setoutputdialog.destroy()
+

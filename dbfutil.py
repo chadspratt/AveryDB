@@ -156,7 +156,7 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
                                                    outputfiletype,
                                                    outputtablename)
             # if NeedTableError isn't raised, disable the table entry
-            # it may already be disabled, but there's no harm in being sure.
+            # it may already be disabled, but easier to be sure than to check.
             self.gui['outputtablelabel'].set_sensitive(False)
             self.gui['outputtablenameentry'].set_sensitive(False)
         except table.NeedTableError:
