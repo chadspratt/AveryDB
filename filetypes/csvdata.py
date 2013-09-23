@@ -37,7 +37,24 @@ class CSVData(table.Table):
     def _getdialect(self):
         """Get the dialect of the csv file."""
         with open(self.filename, 'r') as inputfile:
-            return csv.Sniffer().sniff(inputfile.read(1024), '\b\t,')
+            try:
+                return csv.Sniffer().sniff(inputfile.read(1024))
+            except csv.Error as e:
+                # it failed for some reason, so try my own delimiter testing
+                candidates = ['\b', '\t', ',']
+                for delimiter in candidates:
+                    tempreader = csv.reader(inputfile, delimiter=delimiter)
+                    numfields = len(tempreader.next())
+                    if numfields == 1:
+                        continue
+                    # potential issue with short files running out of records?
+                    for _counter in range(50):
+                        if len(tempreader.next()) != numfields:
+                            break
+                    else:
+                        return tempreader.dialect
+                # reraise error if delimiter can't be determined
+                raise e
 
     def getfields(self):
         """Get the fields from the csv file as a list of Field objects"""
