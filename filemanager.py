@@ -88,7 +88,7 @@ class FileManager(object):
         # by path_tablename if the file contains multiple tables
         fullfilename = filename
         if tablename is not None:
-            fullfilename += '_' + tablename
+            fullfilename += '_table_' + tablename
         alias = self.createalias(filename, tablename)
         if fullfilename in self.filesbyfilename:
             # data has already been added

@@ -154,15 +154,32 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
     def setoutputfile(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
         outputfilename = self.gui['outputfilenameentry'].get_text()
-        # check if the location is specificed or just the filename
-        if not re.search(r'\\\/', outputfilename):
-            # if no forward/backward slash, append the default output path
-            outputfilename = os.path.join(self.options['default_output_dir'], outputfilename)
-        if self.gui['outputtablenameentry'].get_sensitive():
+        # if the target is being replaced, rename it as a backup
+        if self.gui['replacetargetcheckbox'].get_active():
+            backupcount = 1
+            backupname = outputfilename + '.old'
+            backupnamelen = len(backupname)
+            # don't overwrite existing backups, if any
+            while os.path.isfile(backupname):
+                backupname = backupname[:backupnamelen] + str(backupcount)
+                backupcount += 1
+            os.rename(outputfilename, backupname)
+            # use the extension from the filename, outputtypecombo is unused
+            outputfilename, outputfiletype  = outputfilename.split('.')
+            outputfiletype = '.' + outputfiletype
             outputtablename = self.gui['outputtablenameentry'].get_text()
+            if outputtablename == '':
+                outputtablename = None
         else:
-            outputtablename = None
-        outputfiletype = self.gui['outputtypecombo'].get_active_text()
+            # check if the location is specificed or just the filename
+            if not re.search(r'\\\/', outputfilename):
+                # if no forward/backward slash, append the default output path
+                outputfilename = os.path.join(self.options['default_output_dir'], outputfilename)
+            if self.gui['outputtablenameentry'].get_sensitive():
+                outputtablename = self.gui['outputtablenameentry'].get_text()
+            else:
+                outputtablename = None
+            outputfiletype = self.gui['outputtypecombo'].get_active_text()
         try:
             outputfile = self.files.openoutputfile(outputfilename,
                                                    outputfiletype,

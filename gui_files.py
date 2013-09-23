@@ -142,7 +142,8 @@ class GUI_Files(object):
         """Set an open file as the main target for joining."""
         newtarget = self.gui['targetcombo'].get_active_text()
         self.joins.settarget(newtarget, self.files[newtarget])
-        self.gui['outputfilenameentry'].set_text(newtarget)
+        # update the output file parts of the gui
+        self.replacetargettoggle(None)
         self.refreshjoinlists()
         self.initoutput(None)
 
@@ -155,3 +156,33 @@ class GUI_Files(object):
             self.gui['outputfilenameentry'].set_text(newfilename)
         setoutputdialog.destroy()
 
+    def replacetargettoggle(self, _widget, _data=None):
+        """Updates the file and table name entries, depending on the replace target checkbox."""
+        replacetargetcheckbox = self.gui['replacetargetcheckbox']
+        targetalias = self.joins.gettarget()
+        # check if a target is set
+        if targetalias == '':
+            targetpath = ''
+            tablename = ''
+        else:
+            targetpath = self.files.filenamesbyalias[targetalias]
+            splitpath = targetpath.split('_table_')
+            if len(splitpath) > 1:
+                targetpath = splitpath[0]
+                tablename = splitpath[1]
+            else:
+                tablename = ''
+        if replacetargetcheckbox.get_active():
+            self.gui['outputfilenameentry'].set_text(targetpath)
+            self.gui['outputtablenameentry'].set_text(tablename)
+            self.gui['outputfilenameentry'].set_sensitive(False)
+            self.gui['browsetooutputbutton'].set_sensitive(False)
+            self.gui['outputtablenameentry'].set_sensitive(False)
+            self.gui['outputtypecombo'].set_sensitive(False)
+        else:
+            self.gui['outputfilenameentry'].set_text(targetalias)
+            self.gui['outputtablenameentry'].set_text(tablename)
+            self.gui['outputfilenameentry'].set_sensitive(True)
+            self.gui['browsetooutputbutton'].set_sensitive(True)
+            self.gui['outputtablenameentry'].set_sensitive(True)
+            self.gui['outputtypecombo'].set_sensitive(True)

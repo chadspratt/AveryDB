@@ -57,6 +57,7 @@ class GUI(object):
         handlers['addoutputbutton_clicked_cb'] = hfuncs.addoutput
         handlers['copyoutputbutton_clicked_cb'] = hfuncs.copyoutput
         handlers['removeoutputbutton_clicked_cb'] = hfuncs.removeoutput
+        handlers['replacetargetcheckbox_toggled_cb'] = hfuncs.replacetargettoggle
         handlers['browsetooutputbutton_clicked_cb'] = hfuncs.browsetooutput
         handlers['executejointoggle_toggled_cb'] = hfuncs.queueexecution
         handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
