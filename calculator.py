@@ -59,8 +59,8 @@ class Calculator(object):
         for funcname in customfuncs:
             if funcname.endswith('.py'):
                 name = funcname.split('.')[0]
-                self._importlib(name)
-                self.custommodules.append(name)
+                if self._importlib(name):
+                    self.custommodules.append(name)
 
     def clear(self):
         """Clear the list of dynamically generated output functions."""
@@ -77,11 +77,19 @@ class Calculator(object):
                 self.moremodules[libname] = __import__(libname)
             except ImportError:
                 # assume it's a fieldcals module
-                self.moremodules[libname] = __import__('fieldcalcs.' +
-                                                       libname,
-                                                       globals(),
-                                                       locals(),
-                                                       [libname])
+                try:
+                    self.moremodules[libname] = __import__('fieldcalcs.' +
+                                                           libname,
+                                                           globals(),
+                                                           locals(),
+                                                           [libname])
+                except:
+                    print "Exception in user code:"
+                    print '-'*60
+                    traceback.print_exc(file=sys.stdout)
+                    print '-'*60
+                    return False
+        return True
 
     def createlib(self, libname):
         """Create a new library file in the fieldcalcs directory."""
@@ -90,8 +98,8 @@ class Calculator(object):
             newlib = open(libname + '.py', 'w')
             newlib.close()
             os.chdir('..')
-            self._importlib(libname)
-            self.custommodules.append(libname)
+            if self._importlib(libname):
+                self.custommodules.append(libname)
 
     def getlibs(self):
         """Get a list of all libraries currently imported for field calcs."""
