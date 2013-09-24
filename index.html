@@ -7,38 +7,37 @@
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/main.js"></script>
+    <script src="javascripts/respond.js"></script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
     <![endif]-->
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
   </head>
   <body>
-
-      <header>
-        <h1>Averydb</h1>
-        <p>Convert, Combine, Calculate</p>
-      </header>
-
-      <div id="banner">
-        <span id="logo"></span>
-
-        <a href="https://github.com/dogtato/AveryDB" class="button fork"><strong>View On GitHub</strong></a>
-        <div class="downloads">
-          <span>Downloads:</span>
-          <ul>
-            <li><a href="https://github.com/dogtato/AveryDB/zipball/master" class="button">ZIP</a></li>
-            <li><a href="https://github.com/dogtato/AveryDB/tarball/master" class="button">TAR</a></li>
-          </ul>
-        </div>
-      </div><!-- end banner -->
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/dogtato/AveryDB">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/dogtato/AveryDB/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/dogtato/AveryDB/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
 
     <div class="wrapper">
-      <nav>
-        <ul></ul>
-      </nav>
+
       <section>
+        <div id="title">
+          <h1>Averydb</h1>
+          <p>Convert, Combine, Calculate</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/dogtato">dogtato</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
         <h1>
 <a name="averydb" class="anchor" href="#averydb"><span class="octicon octicon-link"></span></a>AveryDB</h1>
 
@@ -62,7 +61,7 @@ one modification, wait for it to end, and start the next. You configure the enti
 the final version of the output.
 Since it's meant to work with multiple formats, you can ignore the joining functionality and just use it as a file 
 conversion tool (which gives you convenient fine tuning control over the conversion).
-<img src="/screenshots/main_window.png" alt="Alt text" title="Main Window"></p>
+<img src="/screenshots/main_window.png" alt="Main Window"></p>
 
 <h2>
 <a name="formats" class="anchor" href="#formats"><span class="octicon octicon-link"></span></a>Formats</h2>
@@ -98,7 +97,7 @@ library of functions that can be called within the program. To call my_calc() fr
 </code></pre>
 
 <p>Clicking the "calc" button on the right end of the central toolbar, you can open the calculator window, which
-will display all the available inputs and libraries/functions.<br><img src="/screenshots/calculator.png" alt="Alt text" title="Calculator"><br>
+will display all the available inputs and libraries/functions.<br><img src="/screenshots/calculator.png" alt="Calculator"><br>
 Double click a function to add it to the value, then double click an input field and it will be inserted in
 the function call.<br>
 Highlight text and double click a function to wrap the function call around the selected text.<br>
@@ -111,7 +110,7 @@ You can click "Library" to open the fieldcalcs directory, where the the library 
 file browser.</p>
 
 <p>From the calculator window you can click the plus button next to the library entry to launch a built-in function
-editor.<br><img src="/screenshots/function_editor.png" alt="Alt text" title="Function Editor"><br>
+editor.<br><img src="/screenshots/function_editor.png" alt="Field Calculations"><br>
 Pressing tab will insert tabs, but these are converted to spaces when saved. Existing code is displayed with spaces,
 but you can mix tabs in when editing it since they'll all be converted.
 If you use an external editor to edit a library file, click the Reload Function button in the function editor window to
@@ -150,10 +149,7 @@ used when the output filename is just a name and no slashes denoting a path.</li
 
 <p>All other code, unless otherwise noted, by Chad [Avery] Spratt.</p>
       </section>
-      <footer>
-        <p>Project maintained by <a href="https://github.com/dogtato">dogtato</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
-      </footer>
+
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
     
