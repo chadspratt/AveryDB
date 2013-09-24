@@ -28,7 +28,8 @@ Joining
 -------
 Currently only left joins are supported. Inner joins (where you only keep matching records) will be added soon.  
 Cross joins and everything else will be supported in an expert mode, where all the interface tools for setting
-up joins will be replaced by a box where you can just enter your own query. At least in the near term.
+up joins will be replaced by a box where you can just enter your own query. At least in the near term. To make
+everything fast, all data is loaded in to an SQLite database. 
 
 Field Calculations
 ------------------
