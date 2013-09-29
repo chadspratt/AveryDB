@@ -28,7 +28,8 @@ Joining
 -------
 Currently only left joins are supported. Inner joins (where you only keep matching records) will be added soon.  
 Cross joins and everything else will be supported in an expert mode, where all the interface tools for setting
-up joins will be replaced by a box where you can just enter your own query. At least in the near term.
+up joins will be replaced by a box where you can just enter your own query. At least in the near term. To make
+everything fast, all data is loaded in to an SQLite database. 
 
 Field Calculations
 ------------------
@@ -56,15 +57,17 @@ When you save a field value in the calculator window the results are immediately
 of the main window. If there is an error in your function, the field value will show as "!error!" and the error
 message will be printed to the console window.
 You can select libraries from the dropdown list, or type the name of any fieldcalcs or python builtin library,
-to load a list of its functions.  
+to load a list of its functions.
+You can click "Library" to open the fieldcalcs directory, where the the library files are stored, in your system's
+file browser.
+
 From the calculator window you can click the plus button next to the library entry to launch a built-in function
 editor.  
 ![Alt text](/screenshots/function_editor.png "Function Editor")  
-It's minimal, but it does syntax checking. Pressing tab will insert tabs, but these are converted to spaces when saved.  
+Pressing tab will insert tabs, but these are converted to spaces when saved. Existing code is displayed with spaces,
+but you can mix tabs in when editing it since they'll all be converted.
 If you use an external editor to edit a library file, click the Reload Function button in the function editor window to
-load the changes. If there are syntax errors, it will not load and you'll be informed in the console window.
-In the calculator window, you can click "Library" to open the directory where the files are stored in your system
-file browser.
+load the changes. If there are syntax errors, it will not load and the error will be printed in the console window.
 
 Keyboard Shortcuts
 ------------------
