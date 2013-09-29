@@ -623,7 +623,7 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="border_width">1</property>
-    <property name="title" translatable="yes">Database File Utility</property>
+    <property name="title" translatable="yes">AveryDB</property>
     <signal name="destroy" handler="mainwindow_destroy_cb" swapped="no"/>
     <child>
       <object class="GtkVBox" id="mainbox">

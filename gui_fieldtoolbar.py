@@ -21,14 +21,19 @@ class GUI_FieldToolbar(object):
         """Populate the list view of output fields and the OutputManager."""
         # create the output file
         outputfilename = self.gui['outputfilenameentry'].get_text()
-        outputfiletype = self.gui['outputtypecombo'].get_active_text()
+        if self.gui['replacetargetcheckbox'].get_active():
+            print 'target changed:', outputfilename
+            outputfilename, outputfiletype = outputfilename.split('.')
+            outputfiletype = '.' + outputfiletype
+        else:
+            outputfiletype = self.gui['outputtypecombo'].get_active_text()
         tableentry = self.gui['outputtablenameentry']
         if tableentry.get_sensitive():
             tablename = tableentry.get_text()
         else:
             tablename = None
         outputfile = self.files.openoutputfile(outputfilename, outputfiletype,
-                                               tablename)
+                                               tablename, dummy=True)
         self.outputs.setoutputfile(outputfile)
 
         fieldattributes = outputfile.getattributenames()

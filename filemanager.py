@@ -150,15 +150,19 @@ class FileManager(object):
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
 
-    def openoutputfile(self, filename, fileext, tablename=None):
-        """Returns a file, with the given filename opened for writing."""
+    def openoutputfile(self, filename, fileext, tablename=None, dummy=False):
+        """Returns a file for writing."""
         if fileext is None:
             return None
         # if the filext string contains a list of extensions, use the first
         if re.search(r'\,', fileext):
             fileext = re.match(r'^[\,]+', fileext)
         # instantiate a filehandler
-        outputfile = self.filehandlers[fileext.upper()](filename + fileext,
+        if dummy:
+            outputfile = self.filehandlers[fileext.upper()](filename + fileext,
+                                                            tablename, mode='d')
+        else:
+            outputfile = self.filehandlers[fileext.upper()](filename + fileext,
                                                 tablename, mode='w')
         return outputfile
 

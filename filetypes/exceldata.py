@@ -24,11 +24,15 @@ import field
 
 # GenericFile is just an interface
 class ExcelData(table.Table):
-    """Wraps the dbfpy library with a set of standard functions."""
+    """Wraps the x library with a set of standard functions."""
     def __init__(self, filename, tablename=None, mode='r'):
         super(ExcelData, self).__init__(filename, tablename=None)
         self.namelenlimit = 255  # not sure about this
-
+        if mode == 'r':
+            self.book = xlrd.open_workbook(filename, on_demand=True)
+        else:
+            # TODO check this educated guess
+            self.book = xlwt.open_workbook(filename)
         # XXX very incomplete
 #        if mode == 'r':
 #            self.filehandler = dbf.Dbf(filename, readOnly=True)
@@ -43,6 +47,11 @@ class ExcelData(table.Table):
 #                      'TIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
 #                      'DATE': 'D', 'INTEGER': 'I', 'CURRENCY': 'C'}
 
+# notes
+# Book = open_workbook(on_demand=True)
+# firstsheet = Book.sheet_by_name(Book.sheet_names()[0])
+# lastsheet = Book.sheet_by_index(Book.nsheets()-1)
+# allsheets = Book.sheets()
     def getfields(self):
         """Returns the fields of the file as a list of Field objects"""
         fieldlist = []

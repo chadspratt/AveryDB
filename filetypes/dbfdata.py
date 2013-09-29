@@ -30,8 +30,13 @@ class DBFData(table.Table):
                 self.filehandler = dbf.Dbf(filename, readOnly=True)
             except dbf.header.struct.error:
                 raise table.InvalidDataError
-        else:
+        elif mode == 'w':
             self.filehandler = dbf.Dbf(filename, new=True)
+        else:
+            # dummy file, made just to access the format specs
+            self.filehandler = None
+
+        # fieldattrorder, types, and blankvalues make up the format spec
         self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
         # used to convert between dbf library and sqlite types
         self.types = {'C': 'TEXT', 'N': 'NUMERIC', 'F': 'REAL',
@@ -76,7 +81,9 @@ class DBFData(table.Table):
 
     def close(self):
         """Close the dbf file handler."""
-        self.filehandler.close()
+        # will be None if this was a dummy file
+        if self.filehandler:
+            self.filehandler.close()
 
     @classmethod
     def convertfield(cls, unknownfield):

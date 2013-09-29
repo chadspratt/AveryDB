@@ -70,7 +70,7 @@ class CSVData(table.Table):
             fieldtype = {}
             for fieldname in fieldnames:
                 fieldtype[fieldname] = None
-            # check 20 records
+            # check 20 records to determine the type of the field
             for _counter in range(20):
                 record = reader.next()
                 for fieldname in fieldnames:

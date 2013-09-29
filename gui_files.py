@@ -47,12 +47,8 @@ class GUI_Files(object):
 
             # set as target if no target is set
             if self.joins.gettarget() == '':
-                # self.joins.settarget(newfilealias, newfile)
                 # this will trigger self.changetarget() which will do the rest
                 self.gui['targetcombo'].set_active_iter(newrow)
-                # set the default output filename to the target alias
-                # self.gui['outputfilenameentry'].set_text(newfilealias)
-                # self.initoutput(None)
 
     # taken from the pygtk faq 23.31
     def get_file_path_from_dnd_dropped_uri(self, uri):
@@ -85,6 +81,7 @@ class GUI_Files(object):
 
     # needed for formats which contain multiple tables
     def addtables(self, filename, tablelist):
+        """Prompt user for tables to import from selected file."""
         tabledialog = self.gui.tabledialog(tablelist)
         response = tabledialog.run()
         if response == 1:
@@ -94,6 +91,7 @@ class GUI_Files(object):
                 tablename = tablelist.get_value(tablelist.get_iter(row), 0)
                 newfilealias = self.files.addfile(filename, tablename)
                 newfile = self.files[newfilealias]
+                newfile.initfields()
                 sqlconverter = newfile.convertdata(newfilealias)
                 self.queuetask(('sqlite', (newfilealias, sqlconverter)))
                 # add to the file list
@@ -160,8 +158,10 @@ class GUI_Files(object):
         """Updates the file and table name entries, depending on the replace target checkbox."""
         replacetargetcheckbox = self.gui['replacetargetcheckbox']
         targetalias = self.joins.gettarget()
+
         # check if a target is set
-        if targetalias == '':
+        if targetalias is None:
+            targetalias = ''
             targetpath = ''
             tablename = ''
         else:
@@ -184,5 +184,7 @@ class GUI_Files(object):
             self.gui['outputtablenameentry'].set_text(tablename)
             self.gui['outputfilenameentry'].set_sensitive(True)
             self.gui['browsetooutputbutton'].set_sensitive(True)
-            self.gui['outputtablenameentry'].set_sensitive(True)
             self.gui['outputtypecombo'].set_sensitive(True)
+        # call this to reopen an output file and sort out whether
+        # the table entry box should be sensitive
+        self.setoutputfile(None)

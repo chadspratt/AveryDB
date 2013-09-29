@@ -28,7 +28,9 @@ class Table(object):
     # this is done separately so that joins can be set up and the fields can
     # be edited without waiting on the sqlite conversion
     def initfields(self):
+        print 'init fields==========='
         for field in self.getfields():
+            print 'field:', field.originalname
             # cast originalname to str in case it's a unicode str
             self.fields[str(field.originalname)] = field
 
@@ -56,6 +58,8 @@ class Table(object):
         with sqlite3.connect('temp.db') as conn:
             cur = conn.cursor()
             # create the table
+            print ('query: CREATE TABLE ' + self.sqlname + ' (' +
+                        ', '.join(fieldnameswithtype) + ')')
             cur.execute('CREATE TABLE ' + self.sqlname + ' (' +
                         ', '.join(fieldnameswithtype) + ')')
             recordcount = self.getrecordcount()
@@ -97,5 +101,9 @@ class NeedTableError(Exception):
 
 
 class InvalidDataError(Exception):
+    def __init__(self):
+        pass
+
+class TableExistsError(Exception):
     def __init__(self):
         pass

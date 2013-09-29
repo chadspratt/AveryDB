@@ -184,10 +184,11 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
             outputfile = self.files.openoutputfile(outputfilename,
                                                    outputfiletype,
                                                    outputtablename)
-            # if NeedTableError isn't raised, disable the table entry
+            # if a table wasn't needed, disable the table entry
             # it may already be disabled, but easier to be sure than to check.
-            self.gui['outputtablelabel'].set_sensitive(False)
-            self.gui['outputtablenameentry'].set_sensitive(False)
+            if outputtablename is None:
+                self.gui['outputtablelabel'].set_sensitive(False)
+                self.gui['outputtablenameentry'].set_sensitive(False)
         except table.NeedTableError:
             self.gui['outputtablelabel'].set_sensitive(True)
             self.gui['outputtablenameentry'].set_sensitive(True)
@@ -230,7 +231,11 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
 
         # create fields
         outputfields = [self.outputs[fn] for fn in self.outputs.outputorder]
-        outputfile.setfields(outputfields)
+        try:
+            outputfile.setfields(outputfields)
+        except table.TableExistsError:
+            self.gui.messagedialog("Table name in use, choose another.")
+            return
 
         self.calc.clear()
         for field in self.outputs:

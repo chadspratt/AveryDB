@@ -93,8 +93,11 @@ class SQLiteData(table.Table):
             # XXX what if the table exists
 #            print 'tablename:', self.tablename
 #            print 'fieldstr:', fieldstr
-            cur.execute('CREATE TABLE ' + self.tablename +
-                        '(' + fieldstr + ')')
+            try:
+                cur.execute('CREATE TABLE ' + self.tablename +
+                            '(' + fieldstr + ')')
+            except sqlite3.OperationalError:
+                raise table.TableExistsError
         # init the string of ?'s used for insertion queries
         qmarklist = []
         for _counter in range(len(newfields)):
