@@ -70,11 +70,11 @@ class GUI_Files(object):
         # 80 is the type for a URI list
         if target_type == 80:
             uri = selection.data.strip('\r\n\x00')
-            print 'uri', uri
+            # print 'uri', uri
             uri_splitted = uri.split()
             for uri in uri_splitted:
                 path = self.get_file_path_from_dnd_dropped_uri(uri)
-                print 'path to open', path
+                # print 'path to open', path
                 self.addfile(path)
         # dbfutil.py, handles "background" processing
         self.processtasks()

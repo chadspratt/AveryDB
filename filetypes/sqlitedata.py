@@ -24,11 +24,12 @@ import field
 class SQLiteData(table.Table):
     """Handle all input and output for "example" files (not a real format)."""
     def __init__(self, filename, tablename=None, mode='r'):
-        super(SQLiteData, self).__init__(filename, tablename=None)
+        super(SQLiteData, self).__init__(filename, tablename)
+
         # If no table name was passed
-        if tablename is None:
+        if self.tablename is None:
             # connect to the database
-            with sqlite3.connect(filename) as conn:
+            with sqlite3.connect(self.filename) as conn:
                 cur = conn.cursor()
                 # get a list of the tables
                 cur.execute("SELECT name FROM sqlite_master " +
@@ -36,10 +37,12 @@ class SQLiteData(table.Table):
                 tablenames = [result[0] for result in cur.fetchall()]
                 # and return the list in an exception
                 raise table.NeedTableError(tablenames)
-        self.tablename = tablename
+
         self.fieldattrorder = ['Name', 'Affinity', 'Value']
         self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0,
                             'INTEGER': 0}
+
+        # format specific output stuff
         # used for ordering the values of output records
         self.fieldnames = []
         # list of ?'s used for insert queries, initialized when fields are set
@@ -121,15 +124,16 @@ class SQLiteData(table.Table):
             self.conn.commit()
             self.conn.close()
 
-    def convertfield(self, unknownfield):
-        """Take a field of unknown type, return a field of the format type."""
-        sqlitefield = unknownfield.copy()
+    @classmethod
+    def convertfield(cls, sourcefield):
+        """Convert a field to sqlite format."""
+        sqlitefield = sourcefield.copy()
         if sqlitefield.hasformat('sqlite'):
             sqlitefield.setformat('sqlite')
         else:
             sqlattributes = OrderedDict()
             if sqlitefield.hasattribute('type'):
-                sqlattributes['type'] = unknownfield['type']
+                sqlattributes['type'] = sourcefield['type']
             else:
                 sqlattributes['type'] = 'TEXT'
             sqlitefield.setformat('sqlite', sqlattributes)

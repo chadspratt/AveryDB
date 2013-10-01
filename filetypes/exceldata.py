@@ -13,8 +13,6 @@
 #   limitations under the License.
 ##
 # wrapper for xlrd and xlwt libraries
-from collections import OrderedDict
-
 from filetypes.libraries import xlrd
 from filetypes.libraries import xlwt
 
@@ -26,116 +24,115 @@ import field
 class ExcelData(table.Table):
     """Wraps the x library with a set of standard functions."""
     def __init__(self, filename, tablename=None, mode='r'):
-        super(ExcelData, self).__init__(filename, tablename=None)
-        self.namelenlimit = 255  # not sure about this
-        if mode == 'r':
-            self.book = xlrd.open_workbook(filename, on_demand=True)
-        else:
-            # TODO check this educated guess
-            self.book = xlwt.open_workbook(filename)
-        # XXX very incomplete
-#        if mode == 'r':
-#            self.filehandler = dbf.Dbf(filename, readOnly=True)
-#        else:
-#            self.filehandler = dbf.Dbf(filename, new=True)
-#        self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
-#        # used to convert between dbf library and sqlite types
-#        self.types = {'C': 'TEXT', 'N': 'NUMERIC', 'F': 'REAL',
-#                      'T': 'TIME', 'L': 'LOGICAL', 'M': 'MEMOTEXT',
-#                      'D': 'DATE', 'I': 'INTEGER', 'Y': 'CURRENCY',
-#                      'TEXT': 'C', 'NUMERIC': 'N', 'REAL': 'F',
-#                      'TIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
-#                      'DATE': 'D', 'INTEGER': 'I', 'CURRENCY': 'C'}
+        super(ExcelData, self).__init__(filename, tablename)
 
-# notes
-# Book = open_workbook(on_demand=True)
-# firstsheet = Book.sheet_by_name(Book.sheet_names()[0])
-# lastsheet = Book.sheet_by_index(Book.nsheets()-1)
-# allsheets = Book.sheets()
+        # If no table name was passed
+        if tablename is None:
+            # open the workbook
+            if mode is 'r':
+                with xlrd.open_workbook(filename) as book:
+                    tablenames = book.sheet_names()
+                    # and return the list of sheet names in an exception
+                    raise table.NeedTableError(tablenames)
+            else:
+                raise table.NeedTableError([])
+
+        self.fieldattrorder = ['Name', 'Value']
+        self.types = {0: 'EMPTY', 1: 'TEXT', 2: 'NUMERIC', 3: 'DATE',
+                      4: 'LOGICAL', 5: 'ERROR', 6: 'BLANK',
+                      'EMPTY': 0, 'TEXT': 1, 'NUMERIC': 2, 'DATE': 3,
+                      'LOGICAL': 4, 'ERROR': 5, 'BLANK': 6}
+        self.blankvalues = {'NUMERIC': 0, 'TEXT': '',
+                            'LOGICAL': -1, 'DATE': (0, 0, 0)}
+        self.namelenlimit = 255  # not sure about this
+
+        self.book = None
+
     def getfields(self):
-        """Returns the fields of the file as a list of Field objects"""
-        fieldlist = []
-        for fielddef in self.filehandler.fieldDefs:
-            # use ordereddict to enable accessing attributes by index
-            fieldattrs = OrderedDict([('type', self.types[fielddef.typeCode]),
-                                      ('length', fielddef.length),
-                                      ('decimals', fielddef.decimalCount)])
-            newfield = field.Field(fielddef.name, fieldattributes=fieldattrs,
-                                   dataformat='dbf', namelen=None)
-            fieldlist.append(newfield)
-        return fieldlist
+        """Get the fields from the csv file as a list of Field objects"""
+        with xlrd.open_workbook(self.filename, on_demand=True) as book:
+            print 'self.tablename:', self.tablename
+            sheet = book.sheet_by_name(self.tablename)
+            # get column names from first row, hope they're unique
+            fieldnames = sheet.row_values(0)
+
+            fieldcandidates = {}
+            fieldlist = []
+            for fieldindex in xrange(len(fieldnames)):
+                # check 50 records to determine the type of the field
+                coltypes = sheet.col_types(fieldindex, 1, 50)
+                # Use the type that occurs most frequently
+                for coltype in coltypes:
+                    if coltype in fieldcandidates:
+                        fieldcandidates[coltype] += 1
+                    else:
+                        fieldcandidates[coltype] = 1
+                majoritytype = self.types['TEXT']
+                majoritycount = -1
+                for fieldtype in fieldcandidates:
+                    if fieldcandidates[fieldtype] > majoritycount:
+                        if fieldtype not in [0, 5, 6]:
+                            majoritytype = fieldtype
+
+                fieldname = fieldnames[fieldindex]
+                print 'fieldname:', fieldname
+                attributes = {'type': self.types[majoritytype]}
+                newfield = field.Field(fieldname, attributes, namelen=self.namelenlimit)
+                fieldlist.append(newfield)
+            return fieldlist
 
     def setfields(self, fields):
         """Set the field definitions. Used before any records are added."""
-        for genericfield in fields:
-            dbffield = self.convertfield(genericfield)
-            self.filehandler.addField((dbffield['name'],
-                                       self.types[dbffield['type']],
-                                       dbffield['length'],
-                                       dbffield['decimals']))
+        self.book = xlwt.Workbook()
+        self.sheet = self.book.add_sheet(self.tablename)
+        for i in xrange(len(fields)):
+            fieldname = fields[i]['name']
+            self.sheet.row(0).write(i, fieldname)
+        self.currow = 1
 
     def addrecord(self, newrecord):
         """Append a new record to an output dbf file."""
-        rec = self.filehandler.newRecord()
-        for fieldname in newrecord:
-            rec[fieldname] = newrecord[fieldname]
-        rec.store()
+        curcol = 0
+        for fieldname in self.fields:
+            self.sheet.write(self.currow, curcol, newrecord[fieldname])
+            curcol += 1
+        self.currow += 1
 
     def close(self):
-        self.filehandler.close()
+        """Close output file, if this was an output file"""
+        if self.book is not None:
+            self.book.save(self.filename)
 
-    @classmethod
-    def convertfield(cls, sourcefield):
+    def convertfield(self, sourcefield):
+        """Convert a field to excel format."""
         excelfield = sourcefield.copy()
-        if 'xls' in excelfield.attributesbyformat:
-            excelfield.attributes = excelfield.attributesbyformat['xls'].copy()
-        else:
-            excelfield.attributes = OrderedDict()
-            if 'type' in sourcefield.attributes:
-                excelfield['type'] = sourcefield['type']
-            else:
-                excelfield['type'] = 'TEXT'
-            if 'length' in sourcefield.attributes:
-                excelfield['length'] = sourcefield['length']
-            else:
-                excelfield['length'] = 254
-            if 'decimals' in sourcefield.attributes:
-                excelfield['decimals'] = sourcefield['decimals']
-            else:
-                excelfield['decimals'] = 0
-        excelfield.namelenlimit = None
+        # strip the attributes
+        excelfield.attributes = {}
+        excelfield.namelenlimit = self.namelenlimit
         excelfield.resetname()
         return excelfield
 
+    def getfieldtypes(self):
+        """Return a list of field types to populate a combo box."""
+        return self.blankvalues.keys()
+
     @classmethod
     def getblankvalue(cls, outputfield):
-        fieldtype = outputfield['type']
-        if fieldtype == 'TEXT':
-            return ''
-        elif fieldtype == 'NUMERIC':
-            return 0
-        elif fieldtype == 'REAL':
-            return 0.0
-        # i don't know for this one what a good nonvalue would be
-        elif fieldtype == 'DATE':
-            return (0, 0, 0)
-        elif fieldtype == 'INTEGER':
-            return 0
-        elif fieldtype == 'CURRENCY':
-            return 0.0
-        elif fieldtype == 'LOGICAL':
-            return -1
-        elif fieldtype == 'MEMOTEXT':
-            return " " * 10
-        elif fieldtype == 'TIME':
-            return None
+        """Get a blank value that matches the type of a field."""
+        return ''
 
     def getrecordcount(self):
-        return self.filehandler.recordCount
+        with xlrd.open_workbook(self.filename, on_demand=True) as book:
+            sheet = book.sheet_by_name(self.tablename)
+            return sheet.nrows
 
     def __iter__(self):
-        recordcount = self.filehandler.recordCount
-        i = 0
-        while i < recordcount:
-            yield self.filehandler[i]
-            i += 1
+        with xlrd.open_workbook(self.filename, on_demand=True) as book:
+            sheet = book.sheet_by_name(self.tablename)
+            # get column names from first row, hope they're unique
+            colnames = sheet.row_values(0)
+            # get values for a "record"
+            for i in xrange(1, sheet.nrows):
+                rowvalues = sheet.row_values(i)
+                # create a dictionary of the column names and values
+                yield dict(zip(colnames, rowvalues))

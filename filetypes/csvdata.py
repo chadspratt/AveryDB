@@ -122,7 +122,7 @@ class CSVData(table.Table):
     @classmethod
     def getfieldtypes(cls):
         """Return a list of field types to populate a combo box."""
-        return ['text']
+        return ['TEXT']
 
     @classmethod
     def getblankvalue(cls, _outputfield):

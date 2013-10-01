@@ -80,6 +80,7 @@ class Field(object):
         fieldcopy = Field(self.name, self.attributes, self.value)
         for dataformat in self.attributesbyformat:
             fieldcopy.attributesbyformat[dataformat] = self.attributesbyformat[dataformat].copy()
+        fieldcopy.originalname = self.originalname
         fieldcopy.originalvalue = self.originalvalue
         fieldcopy.source = self.source
         return fieldcopy

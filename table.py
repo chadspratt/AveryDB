@@ -28,7 +28,6 @@ class Table(object):
     # this is done separately so that joins can be set up and the fields can
     # be edited without waiting on the sqlite conversion
     def initfields(self):
-        print 'init fields==========='
         for field in self.getfields():
             print 'field:', field.originalname
             # cast originalname to str in case it's a unicode str

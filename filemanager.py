@@ -156,7 +156,7 @@ class FileManager(object):
             return None
         # if the filext string contains a list of extensions, use the first
         if re.search(r'\,', fileext):
-            fileext = re.match(r'^[\,]+', fileext)
+            fileext = re.match(r'[^,]+', fileext).group(0)
         # instantiate a filehandler
         if dummy:
             outputfile = self.filehandlers[fileext.upper()](filename + fileext,
