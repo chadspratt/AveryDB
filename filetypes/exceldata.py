@@ -87,6 +87,8 @@ class ExcelData(table.Table):
         self.sheet = self.book.add_sheet(self.tablename)
         for i in xrange(len(fields)):
             fieldname = fields[i]['name']
+            # store field name for use in addrecord()
+            self.fields[fieldname] = None
             self.sheet.row(0).write(i, fieldname)
         self.currow = 1
 
