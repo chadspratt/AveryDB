@@ -298,17 +298,19 @@ class Calculator(object):
                     newfuncbody = re.sub(module, newmodule, newfuncbody)
 
         # define the new function to wrap the expression
-        newfuncstr = 'def ' + newfuncname + '(self, args):\n'
+        # prepend func_ to avoid name conflicts
+        newfuncstr = 'def func_' + newfuncname + '(self, args):\n'
         newfuncstr = newfuncstr + '    return ' + newfuncbody
 
         # create the function and return it with the list of args it needs
-        exec(newfuncstr) in globals(), locals()
+        tempcontext = {}
+        exec(newfuncstr) in tempcontext
         for i in range(len(args)):
             # trim the leading and trailing '!'s and replace '.' with '_'
             # cast to str in case it's unicode. sqlite3.Row uses ascii keys
             # and the dictionary of input values is an sqlite3.Row
             args[i] = str(re.sub(r'\.', '_', args[i][1:-1]))
-        self.outputfuncs[newfuncname] = (locals()[newfuncname], args)
+        self.outputfuncs[newfuncname] = (tempcontext['func_' + newfuncname], args)
 
     # needs to be speedy
     def calculateoutput(self, inputvalues):
