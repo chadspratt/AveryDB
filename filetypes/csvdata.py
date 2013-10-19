@@ -24,7 +24,7 @@ import field
 class CSVData(table.Table):
     """Wraps the csv library with a set of standard functions."""
     def __init__(self, filename, tablename=None, mode='r'):
-        super(CSVData, self).__init__(filename, tablename=None)
+        super(CSVData, self).__init__(filename, tablename)
         self.outputfile = None
         self.writer = None
         if mode == 'r':

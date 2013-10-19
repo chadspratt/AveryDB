@@ -24,7 +24,7 @@ import field
 class DBFData(table.Table):
     """Wraps the dbfpy library with a set of standard functions."""
     def __init__(self, filename, tablename=None, mode='r'):
-        super(DBFData, self).__init__(filename, tablename=None)
+        super(DBFData, self).__init__(filename, tablename)
         if mode == 'r':
             try:
                 self.filehandler = dbf.Dbf(filename, readOnly=True)

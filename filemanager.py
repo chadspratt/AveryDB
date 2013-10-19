@@ -121,7 +121,7 @@ class FileManager(object):
 
     def createalias(self, inputname, tablename=None):
         """Creates a unique alias for a file."""
-        filenamesplit = re.findall('[a-zA-Z0-9]+', inputname)
+        filenamesplit = re.findall('[a-zA-Z][a-zA-Z0-9]*', inputname)
         alias = filenamesplit[-2]
         if tablename is not None:
             alias += tablename

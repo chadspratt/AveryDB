@@ -23,6 +23,11 @@ The only required attributes is
 #   limitations under the License.
 ##
 
+# explanation that setfields gets called once and then addrecord gets called multiple times, always in that order, so setfields can be used to set up the output file and other necessary variables.
+# input can open and close the file in a single function (getfields, getrecordcount, getitem)
+# output opens the file in setfields(), writes to it with addrecord(), and closes it with close()
+# close() gets called for both, it just doesn't need to do anything with input files.
+
 # if a format has extra attributes for fields (beyond a field name), they
 # need to be stored in an OrderedDict, so that the order will be consistent
 from collections import OrderedDict
@@ -37,7 +42,7 @@ class ExampleData(table.Table):
     """Handle all input and output for "example" files (not a real format)."""
     def __init__(self, filename, tablename=None, mode='r'):
         # must call this, which handles the filename/alias and sql table
-        super(ExampleData, self).__init__(filename, tablename=None)
+        super(ExampleData, self).__init__(filename, tablename)
         ##
         # This attribute is required. It is only used to give the column names
         # for the output field list in the gui, so the names don't need to
