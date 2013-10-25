@@ -88,6 +88,8 @@ class GUI(object):
         handlers['outputview_key_press_event_cb'] = hfuncs.fieldskeypressed
         # menu items
         handlers['filemenupreferences_activate_cb'] = hfuncs.showoptions
+        handlers['optionsbutton_clicked_cb'] = hfuncs.showoptions
+        handlers['fieldlengthbutton_clicked_cb'] = hfuncs.autoadjustfieldlengths
         # options window
         handlers['optionswindow_delete_event_cb'] = hfuncs.closeoptions
         handlers['optionsavebutton_clicked_cb'] = hfuncs.saveoptions

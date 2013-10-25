@@ -711,6 +711,45 @@
           </packing>
         </child>
         <child>
+          <object class="GtkToolbar" id="maintoolbar">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkToolButton" id="optionsbutton">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Options</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="optionsbutton_clicked_cb" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="fieldlengthbutton">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Auto-set field lengths</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="fieldlengthbutton_clicked_cb" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkVPaned" id="vpaned1">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -1633,7 +1672,7 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
@@ -1687,7 +1726,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>
@@ -1942,8 +1981,8 @@
       </row>
     </data>
   </object>
-  <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkListStore" id="sampleoutputlist"/>
+  <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkDialog" id="tabledialog">
     <property name="height_request">300</property>
     <property name="can_focus">False</property>

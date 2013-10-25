@@ -89,6 +89,15 @@ class Field(object):
         """Check if the field has an attribute by the given name."""
         return attributename in self.attributes
 
+    def getattribute(self, attributename):
+        """Get an attribute value by name (case-insensitive)."""
+        for key in self.attributes:
+            if attributename.lower() == key.lower():
+                return self.attributes[key]
+        # If the field doesn't have the attribute, return None. 
+        # possible ambiguity if an attribute had the value of None
+        return None
+
     def getattributes(self):
         """Returns all attributes (eg: name, type) of a field as a list."""
         attrlist = [self.name]
