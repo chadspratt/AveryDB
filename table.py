@@ -89,7 +89,7 @@ class Table(object):
             print query
             cur.execute(query)
 
-    # XXX call getattributeorder() instead?
+    # XXX call it getattributeorder() instead?
     def getattributenames(self):
         return self.fieldattrorder
 

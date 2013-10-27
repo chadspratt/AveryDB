@@ -26,8 +26,10 @@ class GUI_Files(object):
         # check that a file was selected
         if response == gtk.RESPONSE_OK:
             newfilename = addfiledialog.get_filename()
+            addfiledialog.destroy()
             self.addfile(newfilename)
-        addfiledialog.destroy()
+        else:
+            addfiledialog.destroy()
         # dbfutil.py, handles "background" processing
         self.processtasks()
 

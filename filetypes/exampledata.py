@@ -117,6 +117,8 @@ class ExampleData(table.Table):
 
     def getfieldtypes(self):
         """Return a list of field types to populate a combo box."""
+        # the order they're returned in is the order they're listed in the type
+        # combobox in the GUI
         return self.blankvalues.keys()
 
     def getblankvalue(self, outputfield):

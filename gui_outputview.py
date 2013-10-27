@@ -41,6 +41,12 @@ class GUI_OutputView(object):
         self.gui['outputview'].grab_focus()
 
     def autoadjustfieldlengths(self, _widget, _data=None):
+        lengthadjuster = self.fieldlengthadjuster()
+        self.processtasks(('lengthadjust', lengthadjuster))
+
+    # longish-running,  yields periodically so the GUI can function
+    def fieldlengthadjuster(self):
+        """Detects needed length for fields and yields to GUI periodically."""
         textfieldindices = {}
         newlengths = {}
         i = 0
@@ -54,7 +60,7 @@ class GUI_OutputView(object):
                 if outputfield.getattribute('type') == 'TEXT':
                         textfieldindices[outputfield.name] = i
                         newlengths[outputfield.name] = -1
-            i += 1
+                i += 1
         # stop if there is no length attribute
         else:
             return
@@ -65,17 +71,24 @@ class GUI_OutputView(object):
             conn = sqlite3.connect('temp.db')
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
-            # create the table
+            recordcount = self.joins.getrecordcount()
+            i = 0
+            # calculate all the outputs to find the max lengths
             for inputvalues in cur.execute(joinquery):
                 outputvalues = self.calc.calculateoutput(inputvalues)
                 # compare outputvalues to find the longest for each
-                for fieldname in newlengths:
-                    newlengths[fieldname] = max(newlengths[fieldname],
-                                                len(outputvalues[fieldname]))
+                for fieldname, fieldvalue in outputvalues:
+                    if fieldname in newlengths:
+                        newlengths[fieldname] = max(newlengths[fieldname],
+                                                    len(fieldvalue))
+                i += 1
+                if i % 1000 == 0:
+                    yield float(i) / recordcount
             outputlist = self.gui['outputlist']
+            extralength = self.options['extra_field_length']
             for fieldname in newlengths:
                 fieldindex = textfieldindices[fieldname]
-                fieldlength = newlengths[fieldname]
+                fieldlength = newlengths[fieldname] + extralength
                 self.updatefieldattribute(None, fieldindex, fieldlength, outputlist, attrposition)
 
     # XXX dragging dropping columns to reorder attributes, mostly incomplete

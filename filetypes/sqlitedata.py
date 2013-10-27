@@ -39,8 +39,8 @@ class SQLiteData(table.Table):
                 raise table.NeedTableError(tablenames)
 
         self.fieldattrorder = ['Name', 'Affinity', 'Value']
-        self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0,
-                            'INTEGER': 0}
+        self.blankvalues = OrderedDict([('TEXT', ''), ('INTEGER', 0), 
+                                        ('NUMERIC', 0), ('REAL', 0.0)])
 
         # format specific output stuff
         # used for ordering the values of output records
@@ -142,7 +142,7 @@ class SQLiteData(table.Table):
         return sqlitefield
 
     def getfieldtypes(self):
-        """Return a list of field types to populate a combo box."""
+        """return a list of field types to populate a combo box."""
         return self.blankvalues.keys()
 
     def getblankvalue(self, outputfield):

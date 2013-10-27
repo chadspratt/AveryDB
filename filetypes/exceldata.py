@@ -13,6 +13,8 @@
 #   limitations under the License.
 ##
 # wrapper for xlrd and xlwt libraries
+from collections import OrderedDict
+
 from filetypes.libraries import xlrd
 from filetypes.libraries import xlwt
 
@@ -42,8 +44,8 @@ class ExcelData(table.Table):
                       4: 'LOGICAL', 5: 'ERROR', 6: 'BLANK',
                       'EMPTY': 0, 'TEXT': 1, 'NUMERIC': 2, 'DATE': 3,
                       'LOGICAL': 4, 'ERROR': 5, 'BLANK': 6}
-        self.blankvalues = {'NUMERIC': 0, 'TEXT': '',
-                            'LOGICAL': -1, 'DATE': (0, 0, 0)}
+        self.blankvalues = OrderedDict([('TEXT', ''), ('NUMERIC', 0),
+                                        ('DATE', (0, 0, 0)), ('LOGICAL', -1)])
         self.namelenlimit = 255  # not sure about this
 
         self.book = None

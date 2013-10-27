@@ -96,6 +96,7 @@ class GUI(object):
         handlers['optionsaveclosebutton_clicked_cb'] = hfuncs.savecloseoptions
         handlers['optioncancelbutton_clicked_cb'] = hfuncs.closeoptions
         handlers['defaultoutputbrowsebutton_clicked_cb'] = hfuncs.browsedefaultoutput
+
         # table selection dialog
 #        handlers['tableok_clicked_cb'] = hfuncs.addtables
 

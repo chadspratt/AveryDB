@@ -45,9 +45,10 @@ class DBFData(table.Table):
                       'TEXT': 'C', 'NUMERIC': 'N', 'REAL': 'F',
                       'TIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
                       'DATE': 'D', 'INTEGER': 'I', 'CURRENCY': 'C'}
-        self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0,
-                            'TIME': None, 'LOGICAL': -1, 'MEMOTEXT': '     ',
-                            'DATE': (0, 0, 0), 'INTEGER': 0, 'CURRENCY': 0.0}
+        # These are abitrary values to use for fields in unmatched rows
+        self.blankvalues = OrderedDict([('TEXT', ''), ('DATE', (0, 0, 0)), ('TIME', None),
+                                        ('INTEGER', 0), ('NUMERIC', 0), ('REAL', 0.0),
+                                        ('LOGICAL', -1), ('MEMOTEXT', ' '*5), ('CURRENCY', 0.0)])
         self.namelenlimit = 10
 
     def getfields(self):

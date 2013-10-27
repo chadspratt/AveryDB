@@ -24,11 +24,18 @@ class GUI_Options(object):
     def showoptions(self, _widget, _data=None):
         """Load all the settings from the config file into the gui."""
         self.gui['defaultoutputentry'].set_text(self.options['default_output_dir'])
-
+        self.gui['extrafieldlengthspin'].set_value(self.options['extra_field_length'])
         self.gui['optionswindow'].show_all()
 
     def saveoptions(self, _widget, _data=None):
+        # Default output location
         self.options['default_output_dir'] = self.gui['defaultoutputentry'].get_text()
+        # Extra padding to add to autodetected field lengths
+        extrafieldlengthspin = self.gui['extrafieldlengthspin']
+        # update to be sure to get the value in case it was typed in
+        extrafieldlengthspin.update()
+        self.options['extra_field_length'] = extrafieldlengthspin.get_value_as_int()
+        print 'extra_field_length:', self.options['extra_field_length']
         self.options.saveoptions()
 
     def savecloseoptions(self, _widget, _data=None):

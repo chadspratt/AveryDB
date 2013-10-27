@@ -120,8 +120,9 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
                 elif tasktype == 'sqlite':
                     filealias, dataconverter = taskdata
                     self.converttosql(filealias, dataconverter)
-        # This has to go after indexing too. The execute toggle button can be
-        # used to cancel the output while the indices are still building.
+                elif tasktype == 'lengthadjust':
+                    self.adjustfieldlengths(taskdata)
+            # This has to go after conversion is done.
             if self.executejoinqueued:
                 self.gui['executejointoggle'].set_active(False)
                 self.executejoin(None)
@@ -149,6 +150,16 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
                 self.gui.setprogress(progress, progresstext, lockgui=False)
         except ValueError:
             print 'File removed, aborting conversion.'
+        self.gui.setprogress(0, '')
+
+    def adjustfieldlengths(self, lengthdetectgen):
+        """Run the generator that finds and sets min field lengths."""
+        progresstext = 'Adjusting field lengths'
+        self.gui.setprogress(0, progresstext)
+        # Run the generator until it's finished. It yields % progress.
+        for progress in lengthdetectgen:
+            # this progress update lets the GUI function
+            self.gui.setprogress(progress, progresstext, lockgui=False)
         self.gui.setprogress(0, '')
 
     def setoutputfile(self, _widget, _data=None):
