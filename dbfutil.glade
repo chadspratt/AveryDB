@@ -633,6 +633,7 @@
     <property name="title" translatable="yes">AveryDB</property>
     <property name="icon">averydb-icon.svg</property>
     <signal name="destroy" handler="mainwindow_destroy_cb" swapped="no"/>
+    <signal name="drag-data-received" handler="mainwindow_drag_data_received_cb" swapped="no"/>
     <child>
       <object class="GtkVBox" id="mainbox">
         <property name="visible">True</property>
@@ -901,7 +902,6 @@
                             <property name="headers_visible">False</property>
                             <property name="headers_clickable">False</property>
                             <property name="search_column">0</property>
-                            <signal name="drag-data-received" handler="dataview_drag_data_received_cb" swapped="no"/>
                             <child>
                               <object class="GtkTreeViewColumn" id="dataaliascol">
                                 <property name="sizing">autosize</property>
