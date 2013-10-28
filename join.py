@@ -18,10 +18,12 @@
 class Join(object):
     """A struct for storing a join definition."""
     def __init__(self, joinalias, jointable, joinfield,
-                 targetalias, targettable, targetfield):
+                 targetalias, targettable, targetfield,
+                 inner=False):
         self.joinalias = joinalias
         self.jointable = jointable
         self.joinfield = joinfield
         self.targetalias = targetalias
         self.targettable = targettable
         self.targetfield = targetfield
+        self.inner = inner

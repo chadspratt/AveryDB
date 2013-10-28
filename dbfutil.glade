@@ -1108,27 +1108,53 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkToolbar" id="addjointoolbar">
-                                <property name="width_request">30</property>
+                              <object class="GtkVBox" id="vbox1">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="toolbar_style">icons</property>
-                                <property name="show_arrow">False</property>
-                                <property name="icon_size">1</property>
-                                <property name="icon_size_set">True</property>
                                 <child>
-                                  <object class="GtkToolButton" id="addjoinbutton">
+                                  <object class="GtkToolbar" id="addjointoolbar">
+                                    <property name="width_request">30</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="use_action_appearance">False</property>
-                                    <property name="label" translatable="yes">gtk-yes</property>
-                                    <property name="use_underline">True</property>
-                                    <property name="stock_id">gtk-yes</property>
-                                    <signal name="clicked" handler="addjoinbutton_clicked_cb" swapped="no"/>
+                                    <property name="toolbar_style">icons</property>
+                                    <property name="show_arrow">False</property>
+                                    <property name="icon_size">1</property>
+                                    <property name="icon_size_set">True</property>
+                                    <child>
+                                      <object class="GtkToolButton" id="addjoinbutton">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="use_action_appearance">False</property>
+                                        <property name="label" translatable="yes">gtk-yes</property>
+                                        <property name="use_underline">True</property>
+                                        <property name="stock_id">gtk-yes</property>
+                                        <signal name="clicked" handler="addjoinbutton_clicked_cb" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
-                                    <property name="homogeneous">True</property>
+                                    <property name="fill">False</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="innerjoincheckbox">
+                                    <property name="label" translatable="yes">Inner</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
                                   </packing>
                                 </child>
                               </object>
@@ -1460,6 +1486,9 @@
                             <property name="fill">True</property>
                             <property name="position">2</property>
                           </packing>
+                        </child>
+                        <child>
+                          <placeholder/>
                         </child>
                       </object>
                       <packing>

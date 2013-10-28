@@ -59,6 +59,7 @@ class GUI_JoinConfig(object):
         joinfieldname = self.gui['joinfieldcombo'].get_active_text()
         targetalias = self.gui['targetaliascombo'].get_active_text()
         targetfieldname = self.gui['targetfieldcombo'].get_active_text()
+        inner = self.gui['innerjoincheckbox'].get_active()
 
         if joinfieldname is not None and targetfieldname is not None:
             # check if joinalias is in use, and if it is, create a new alias
@@ -71,20 +72,27 @@ class GUI_JoinConfig(object):
             targetfield = targettable.fields[targetfieldname]
             # save to joins
             newjoin = self.joins.addjoin(joinalias, jointable, joinfield,
-                                         targetalias, targettable, targetfield)
+                                         targetalias, targettable, targetfield,
+                                         inner)
             self.refreshjoinlists()
+            # clear this so it will be repopulated with the joined data
+            self.samplerecords = []
             self.queuetask(('index', newjoin))
             self.queuetask(('sample', None))
-            self.initjoinedfields(joinalias)
+            # add the new fields to the GUI field view
+            self.addjoinedfields(joinalias)
             self.processtasks()
 
     def removejoin(self, _widget, _data=None):
         """Removes the selected joins and any child joins dependent on it."""
         selection = self.gui['joinview'].get_selection()
         (outputlist, selectedrow) = selection.get_selected()
-        joinalias = outputlist[selectedrow][0]
-        self.joins.removealias(joinalias)
-        self.refreshjoinlists()
+        if outputlist.get_string_from_iter(selectedrow) != '0':
+            joinalias = outputlist[selectedrow][0]
+            self.joins.removealias(joinalias)
+            self.refreshjoinlists()
+            # remove the fields from this join from the GUI field view
+            self.removejoinedfields(joinalias)
 
     def refreshjoinlists(self):
         """Update when a join is added/removed or main target is changed."""

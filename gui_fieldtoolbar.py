@@ -68,7 +68,7 @@ class GUI_FieldToolbar(object):
         self.samplerecords = []
         self.processtasks(('sample', None))
 
-    def initjoinedfields(self, filealias):
+    def addjoinedfields(self, filealias):
         outputlist = self.gui['outputlist']
         inputlist = self.gui['inputlist']
         outputfile = self.outputs.outputfile
@@ -83,6 +83,22 @@ class GUI_FieldToolbar(object):
             blankvalue = outputfile.getblankvalue(newfield)
             self.calc.setblankvalue(newfield, blankvalue)
         self.queuetask(('sample', None))
+
+    def removejoinedfields(self, filealias):
+        """Remove fields that belong to a join that was removed."""
+        removalindices = []
+        outputlist = self.gui['outputlist']
+        i = 0
+        for field in self.outputs:
+            if field.source == filealias:
+                removalindices.append(i)
+            i += 1
+        # remove from the end so the indices won't shift
+        removalindices.reverse()
+        for index in removalindices:
+            self.outputs.removefield(index)
+            outputlist.remove(outputlist.get_iter(index))
+        self.processtasks(('sample', None))
 
     # 'add field' button
     def addoutput(self, _widget, _data=None):

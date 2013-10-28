@@ -71,10 +71,12 @@ class JoinManager(object):
             self.joinedaliases.remove(alias)
 
     def addjoin(self, joinalias, jointable, joinfield,
-                targetalias, targettable, targetfield):
+                targetalias, targettable, targetfield,
+                inner):
         """Create a Join and add it to the dictionary of all Joins."""
         newjoin = join.Join(joinalias, jointable, joinfield,
-                            targetalias, targettable, targetfield)
+                            targetalias, targettable, targetfield,
+                            inner)
         if targetalias in self.joins:
             self.joins[targetalias].append(newjoin)
         else:
@@ -131,7 +133,11 @@ class JoinManager(object):
         query.append(', '.join(selectfieldaliases))
         query.append('FROM table_' + self.targetalias)
         for curjoin in self.getjoins():
-            query.append('LEFT OUTER JOIN ' + curjoin.jointable.sqlname +
+            if curjoin.inner:
+                query.append('INNER JOIN ')
+            else:
+                query.append('LEFT OUTER JOIN ')
+            query.append(curjoin.jointable.sqlname +
                          ' AS table_' + curjoin.joinalias +
                          ' ON table_' + curjoin.joinalias + '.' +
                          curjoin.joinfield.sqlname +
