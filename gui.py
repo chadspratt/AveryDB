@@ -1,4 +1,4 @@
-"""All things dealing strictly with the GUI."""
+# """All things dealing strictly with the GUI."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,36 +32,41 @@ class GUI(object):
     responsive during background processing
     """
     def __init__(self, hfuncs):
-        self.gladefile = 'dbfutil.glade'
+        self.gladefile = 'averydb.glade'
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.gladefile)
         self.newobjects = {}
         self.handlerfunctions = hfuncs
 
         handlers = {}
-        handlers['mainwindow_destroy_cb'] = hfuncs.quitprogram
+        # GUI_Files
         handlers['adddatabutton_clicked_cb'] = hfuncs.selectandaddfile
         handlers['mainwindow_drag_data_received_cb'] = hfuncs.dropfiles
         handlers['removedatabutton_clicked_cb'] = hfuncs.removefile
         handlers['targetcombo_changed_cb'] = hfuncs.changetarget
+        handlers['browsetooutputbutton_clicked_cb'] = hfuncs.browsetooutput
+        handlers['replacetargetcheckbox_toggled_cb'] = hfuncs.replacetargettoggle
+        # GUI_JoinConfig
         handlers['joinaliascombo_changed_cb'] = hfuncs.loadjoinfields
         handlers['targetaliascombo_changed_cb'] = hfuncs.loadtargetfields
         handlers['joinfieldcombo_changed_cb'] = hfuncs.matchtargetfield
         handlers['addjoinbutton_clicked_cb'] = hfuncs.addjoin
-        handlers['outputtypecombo_changed_cb'] = hfuncs.setoutputfile
+        handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
+        handlers['innercolumntoggle_toggled_cb'] = hfuncs.toggleinner
+        # GUI_FieldToolbar
+        handlers['reloadfieldsbutton_clicked_cb'] = hfuncs.reloadfields
+        handlers['addfieldbutton_clicked_cb'] = hfuncs.addfield
+        handlers['copyfieldbutton_clicked_cb'] = hfuncs.copyfield
+        handlers['removefieldbutton_clicked_cb'] = hfuncs.removefield
         handlers['movetopbutton_clicked_cb'] = hfuncs.movetop
         handlers['moveupbutton_clicked_cb'] = hfuncs.moveup
         handlers['movedownbutton_clicked_cb'] = hfuncs.movedown
         handlers['movebottombutton_clicked_cb'] = hfuncs.movebottom
-        handlers['initoutputbutton_clicked_cb'] = hfuncs.initoutput
-        handlers['addoutputbutton_clicked_cb'] = hfuncs.addoutput
-        handlers['copyoutputbutton_clicked_cb'] = hfuncs.copyoutput
-        handlers['removeoutputbutton_clicked_cb'] = hfuncs.removeoutput
-        handlers['replacetargetcheckbox_toggled_cb'] = hfuncs.replacetargettoggle
-        handlers['browsetooutputbutton_clicked_cb'] = hfuncs.browsetooutput
+        # AveryDB
+        handlers['mainwindow_destroy_cb'] = hfuncs.quitprogram
+        handlers['outputtypecombo_changed_cb'] = hfuncs.setoutputfile
         handlers['executejointoggle_toggled_cb'] = hfuncs.queueexecution
-        handlers['removejoinbutton_clicked_cb'] = hfuncs.removejoin
-        handlers['stopjoinbutton_clicked_cb'] = hfuncs.abortjoin
+        handlers['stopoutputbutton_clicked_cb'] = hfuncs.abortoutput
         # calc window
         handlers['calclibrarybutton_clicked_cb'] = hfuncs.showlibraries
         handlers['opencalcbutton_clicked_cb'] = hfuncs.showcalculator
@@ -85,7 +90,7 @@ class GUI(object):
         handlers['newlibcreate_clicked_cb'] = hfuncs.createlibrary
         handlers['newlibcancel_clicked_cb'] = hfuncs.cancelcreatelibrary
         # keyboard shortcuts
-        handlers['outputview_key_press_event_cb'] = hfuncs.fieldskeypressed
+        handlers['fieldview_key_press_event_cb'] = hfuncs.fieldskeypressed
         # menu items
         handlers['filemenupreferences_activate_cb'] = hfuncs.showoptions
         handlers['optionsbutton_clicked_cb'] = hfuncs.showoptions
@@ -106,7 +111,7 @@ class GUI(object):
         self.builder.connect_signals(handlers)
 
         # other setup
-        outputselection = self.builder.get_object('outputview').get_selection()
+        outputselection = self.builder.get_object('fieldview').get_selection()
         outputselection.set_mode(gtk.SELECTION_MULTIPLE)
         # drag and drop file support
         mainwindow = self.builder.get_object('mainwindow')
@@ -225,11 +230,11 @@ class GUI(object):
         lockgui: call setprogress during a long function with lockgui=False
         to enable gui input while the background function runs."""
         progressbar = self['progressbar']
-        stopjoinbutton = self['stopjoinbutton']
+        stopoutputbutton = self['stopoutputbutton']
         if lockgui:
             progressbar.grab_add()
             # Also check the abort button
-            stopjoinbutton.grab_add()
+            stopoutputbutton.grab_add()
         if progress == 'pulse':
             progressbar.pulse()
         elif progress >= 0:
@@ -239,7 +244,7 @@ class GUI(object):
             gtk.main_iteration(False)
         if lockgui:
             progressbar.grab_remove()
-            stopjoinbutton.grab_remove()
+            stopoutputbutton.grab_remove()
 
     def __getitem__(self, objname):
         if objname in self.newobjects:

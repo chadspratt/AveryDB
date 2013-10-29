@@ -44,15 +44,17 @@ import table  # for NeedTableError
 from gui_files import GUI_Files
 from gui_joinconfig import GUI_JoinConfig
 from gui_fieldtoolbar import GUI_FieldToolbar
-from gui_outputview import GUI_OutputView
+from gui_fieldview import GUI_FieldView
 from gui_calc import GUI_Calc
 from gui_functioneditor import GUI_FunctionEditor
 from gui_keyboard import GUI_Keyboard
 from gui_options import GUI_Options
+from backgroundtasks import BackgroundTasks
 
 
-class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
-              GUI_Calc, GUI_FunctionEditor, GUI_Keyboard, GUI_Options):
+class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
+              GUI_Calc, GUI_FunctionEditor, GUI_Keyboard, GUI_Options,
+              BackgroundTasks):
 
     """Main class, links GUI to the back end and also orchestrates a bit."""
 
@@ -94,73 +96,10 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
             datafile.close()
         gtk.main_quit()
 
-    def queuetask(self, task=None):
-        """Add a task to the process queue but don't start processing."""
-        if task:
-            self.tasks_to_process.append(task)
-
-    def processtasks(self, task=None):
-        """Process all the queued "background" tasks, like converting files."""
-        if task:
-            self.tasks_to_process.append(task)
-        if not self.taskinprogress:
-            self.taskinprogress = True
-            while self.tasks_to_process:
-                tasktype, taskdata = self.tasks_to_process.pop(0)
-                if tasktype == 'index':
-                    self.buildindex(taskdata)
-                    self.updatesample()
-                elif tasktype == 'sample':
-                    # a needed sql table might not be created yet
-                    try:
-                        self.updatesample()
-                    # if it fails, add it back to the end of the task list
-                    except sqlite3.OperationalError:
-                        self.tasks_to_process.append((tasktype, taskdata))
-                elif tasktype == 'sqlite':
-                    filealias, dataconverter = taskdata
-                    self.converttosql(filealias, dataconverter)
-                elif tasktype == 'lengthadjust':
-                    self.adjustfieldlengths(taskdata)
-            # This has to go after conversion is done.
-            if self.executejoinqueued:
-                self.gui['executejointoggle'].set_active(False)
-                self.executejoin(None)
-            self.taskinprogress = False
-
     def queueexecution(self, widget, _data=None):
         """Signal the program to start once background processing is done."""
         self.executejoinqueued = widget.get_active()
         self.processtasks()
-
-    def buildindex(self, join):
-        """Build index in the background"""
-        indexalias = join.joinalias
-        indexfield = join.joinfield
-        self.files[indexalias].buildindex(indexfield)
-
-    def converttosql(self, filealias, dataconverter):
-        """Convert a file to an SQLite table."""
-        progresstext = 'Converting to sqlite: ' + filealias
-        self.gui.setprogress(0, progresstext)
-        # Run the generator until it's finished. It yields % progress.
-        try:
-            for progress in dataconverter:
-                # this progress update lets the GUI function
-                self.gui.setprogress(progress, progresstext, lockgui=False)
-        except ValueError:
-            print 'File removed, aborting conversion.'
-        self.gui.setprogress(0, '')
-
-    def adjustfieldlengths(self, lengthdetectgen):
-        """Run the generator that finds and sets min field lengths."""
-        progresstext = 'Adjusting field lengths'
-        self.gui.setprogress(0, progresstext)
-        # Run the generator until it's finished. It yields % progress.
-        for progress in lengthdetectgen:
-            # this progress update lets the GUI function
-            self.gui.setprogress(progress, progresstext, lockgui=False)
-        self.gui.setprogress(0, '')
 
     def setoutputfile(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
@@ -215,18 +154,18 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         self.outputs.setoutputfile(outputfile)
 
         fieldattributes = outputfile.getattributenames()
-        self.gui.replacecolumns('outputlist', 'outputview', fieldattributes)
-        outputlist = self.gui['outputlist']
+        self.gui.replacecolumns('fieldlist', 'fieldview', fieldattributes)
+        fieldlist = self.gui['fieldlist']
         # Field calculator window setup
-        self.gui['calcoutputfieldcombo'].set_model(outputlist)
+        self.gui['calcoutputfieldcombo'].set_model(fieldlist)
 
         for outputfield in self.outputs:
-            outputlist.append(outputfield.getattributes())
+            fieldlist.append(outputfield.getattributes())
             # initialize a blank value for this field in the calculator
             blankvalue = outputfile.getblankvalue(outputfield)
             self.calc.setblankvalue(outputfield, blankvalue)
 
-    def abortjoin(self, _widget, _data=None):
+    def abortoutput(self, _widget, _data=None):
         """Set a signal for the output to abort."""
         self.joinaborted = True
 
@@ -252,7 +191,7 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         for field in self.outputs:
             self.calc.createoutputfunc(field)
 
-        stopbutton = self.gui['stopjoinbutton']
+        stopbutton = self.gui['stopoutputbutton']
         stopbutton.set_sensitive(True)
         self.joinaborted = False
 
@@ -260,7 +199,7 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
 
         # sqlite setup
         joinquery = self.joins.getquery(restrictjoins=restrictjoins)
-        print joinquery
+        # print joinquery
         # open the database
         conn = sqlite3.connect('temp.db')
         conn.row_factory = sqlite3.Row
@@ -332,10 +271,13 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         print 'processing complete'
         self.gui.setprogress(1, 'Output complete')
 
-    def updatesample(self, samplesize=10):
+    def updatesample(self, refreshrecords=None, samplesize=10):
         """Update the sample of output records"""
         if len(self.outputs) == 0:
             return
+
+        if refreshrecords is not None:
+            self.samplerecords = []
 
         sampleoutputfields = self.outputs.outputorder
         self.gui.replacecolumns('sampleoutputlist', 'sampleoutputview',
@@ -358,7 +300,6 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
 
             # sqlite setup
             joinquery = self.joins.getquery(sampleindices)
-            print joinquery
 
             # open the database
             with sqlite3.connect('temp.db') as conn:
@@ -396,4 +337,5 @@ class DBFUtil(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_OutputView,
         outputstr += str(seconds) + 's'
         return outputstr
 
-DBFUTIL = DBFUtil()
+# start the program
+AVERYDB = AveryDB()

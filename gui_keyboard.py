@@ -22,9 +22,9 @@ class GUI_Keyboard(object):
     def fieldskeypressed(self, _widget, event):
         keyname = gtk.gdk.keyval_name(event.keyval)
         if keyname == 'Delete':
-            self.removeoutput(None)
+            self.removefield(None)
         elif keyname == 'n' and (event.state & gtk.gdk.CONTROL_MASK):
-            self.addoutput(None)
+            self.addfield(None)
         elif keyname == 'Up' and (event.state & gtk.gdk.MOD1_MASK):
             self.moveup(None)
         elif keyname == 'Up' and (event.state & gtk.gdk.MOD1_MASK & gtk.gdk.CONTROL_MASK):

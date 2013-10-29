@@ -75,10 +75,8 @@ class GUI_JoinConfig(object):
                                          targetalias, targettable, targetfield,
                                          inner)
             self.refreshjoinlists()
-            # clear this so it will be repopulated with the joined data
-            self.samplerecords = []
             self.queuetask(('index', newjoin))
-            self.queuetask(('sample', None))
+            self.queuetask(('sample', 'refresh sample'))
             # add the new fields to the GUI field view
             self.addjoinedfields(joinalias)
             self.processtasks()
@@ -86,13 +84,26 @@ class GUI_JoinConfig(object):
     def removejoin(self, _widget, _data=None):
         """Removes the selected joins and any child joins dependent on it."""
         selection = self.gui['joinview'].get_selection()
-        (outputlist, selectedrow) = selection.get_selected()
-        if outputlist.get_string_from_iter(selectedrow) != '0':
-            joinalias = outputlist[selectedrow][0]
+        (fieldlist, selectedrow) = selection.get_selected()
+        if fieldlist.get_string_from_iter(selectedrow) != '0':
+            joinalias = fieldlist[selectedrow][0]
             self.joins.removealias(joinalias)
             self.refreshjoinlists()
             # remove the fields from this join from the GUI field view
             self.removejoinedfields(joinalias)
+
+    def toggleinner(self, cell, path, data=None):
+        jointree = self.gui['jointree']
+        rowiter = jointree.get_iter(path)
+        # toggle the checkbox
+        togglestatus = not jointree[path][3]
+        jointree[path][3] = togglestatus
+        # update the join
+        targetiter = jointree.iter_parent(rowiter)
+        targetalias = jointree.get_value(targetiter, 0)
+        joinalias = jointree[path][0]
+        self.joins.setinner(targetalias, joinalias, togglestatus)
+        self.processtasks(('sample', 'refresh sample'))
 
     def refreshjoinlists(self):
         """Update when a join is added/removed or main target is changed."""
@@ -110,12 +121,13 @@ class GUI_JoinConfig(object):
             if activealias in row:
                 targetcombo.set_active_iter(row.iter)
 
+        jointree = self.gui['jointree']
         # refresh the list of joins
-        self.gui['jointree'].clear()
+        jointree.clear()
         # add the main target
         targetalias = self.joins.gettarget()
-        targetiter = self.gui['jointree'].append(None, [targetalias,
-                                                        '', ''])
+        # two falses are for inner toggle state, and activatable
+        targetiter = jointree.append(None, [targetalias, '', '', False, False])
         # add all the joins
         for childjoin in self.joins[targetalias]:
             self.rebuildjointree(targetiter, childjoin)
@@ -124,7 +136,8 @@ class GUI_JoinConfig(object):
     # recursive function to fill jointree from
     def rebuildjointree(self, parentiter, join):
         """Update the join tree store by reading from the JoinManager."""
-        newrow = [join.joinalias, join.joinfield.name, join.targetfield.name]
+        newrow = [join.joinalias, join.joinfield.name, join.targetfield.name,
+                  join.inner, True]
         newparent = self.gui['jointree'].append(parentiter, newrow)
         for childjoin in self.joins[join.joinalias]:
             self.rebuildjointree(newparent, childjoin)

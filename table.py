@@ -29,7 +29,7 @@ class Table(object):
     # be edited without waiting on the sqlite conversion
     def initfields(self):
         for field in self.getfields():
-            print 'field:', field.originalname
+            # print 'field:', field.originalname
             # cast originalname to str in case it's a unicode str
             self.fields[str(field.originalname)] = field
 
@@ -57,8 +57,8 @@ class Table(object):
         with sqlite3.connect('temp.db') as conn:
             cur = conn.cursor()
             # create the table
-            print ('query: CREATE TABLE ' + self.sqlname + ' (' +
-                        ', '.join(fieldnameswithtype) + ')')
+            # print ('query: CREATE TABLE ' + self.sqlname + ' (' +
+            #             ', '.join(fieldnameswithtype) + ')')
             cur.execute('CREATE TABLE ' + self.sqlname + ' (' +
                         ', '.join(fieldnameswithtype) + ')')
             recordcount = self.getrecordcount()
@@ -86,7 +86,7 @@ class Table(object):
             query = ('CREATE INDEX IF NOT EXISTS ' + indexfield.sqlname +
                      '_index ON ' + self.sqlname + '(' + indexfield.sqlname +
                      ')')
-            print query
+            # print query
             cur.execute(query)
 
     # XXX call it getattributeorder() instead?

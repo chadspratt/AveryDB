@@ -84,6 +84,13 @@ class JoinManager(object):
         self.joinedaliases.append(joinalias)
         return newjoin
 
+    def setinner(self, targetalias, joinalias, inner):
+        for join in self.joins[targetalias]:
+            if join.joinalias == joinalias:
+                join.inner = inner
+                return
+        print 'ERROR'
+
     # used to check for duplicates, so the calling function can get a new
     # alias from filemanager
     def getjoinedaliases(self, start='target'):

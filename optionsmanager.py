@@ -19,7 +19,7 @@ import json
 class OptionsManager(object):
     """docstring for Options"""
     def __init__(self):
-        self.optionspath = 'dbfutil.config'
+        self.optionspath = 'averydb.config'
         self.optionsdata = {}
 
     def loadoptions(self):

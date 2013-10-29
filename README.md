@@ -7,7 +7,7 @@ Use the PyGTK all-in-one installer from http://ftp.gnome.org/pub/GNOME/binaries/
 
 A portable version (doesn't require python and pygtk to be installed) is planned.
 
-Run the file dbfutil.py
+Run the file averydb.py
 
 About
 -----

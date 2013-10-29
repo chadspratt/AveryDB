@@ -30,7 +30,7 @@ class GUI_Files(object):
             self.addfile(newfilename)
         else:
             addfiledialog.destroy()
-        # dbfutil.py, handles "background" processing
+        # task is queued by addfile
         self.processtasks()
 
     def addfile(self, filename):
@@ -78,7 +78,7 @@ class GUI_Files(object):
                 path = self.get_file_path_from_dnd_dropped_uri(uri)
                 # print 'path to open', path
                 self.addfile(path)
-        # dbfutil.py, handles "background" processing
+        # task is queued by addfile
         self.processtasks()
 
     # needed for formats which contain multiple tables
@@ -106,7 +106,7 @@ class GUI_Files(object):
                     self.gui['targetcombo'].set_active_iter(newrow)
                     # set the default output filename to the target alias
                     self.gui['outputfilenameentry'].set_text(newfilealias)
-                    self.initoutput(None)
+                    self.reloadfields(None)
         tabledialog.hide()
         self.processtasks()
 
@@ -145,7 +145,7 @@ class GUI_Files(object):
         # update the output file parts of the gui
         self.replacetargettoggle(None)
         self.refreshjoinlists()
-        self.initoutput(None)
+        self.reloadfields(None)
 
     def browsetooutput(self, _widget, _data=None):
         setoutputdialog = self.gui.filedialog(self.files.filetypes, foroutput=True)

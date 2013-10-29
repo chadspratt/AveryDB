@@ -21,20 +21,20 @@ class GUI_Calc(object):
     def showcalculator(self, _widget, _data=None):
         """Show the calculator window when the Calc button is clicked."""
         # get the selected row from the output list
-        selection = self.gui['outputview'].get_selection()
+        selection = self.gui['fieldview'].get_selection()
         # (model, [(path0,), (path1,), ...])
-        (outputlist, selectedrows) = selection.get_selected_rows()
+        (fieldlist, selectedrows) = selection.get_selected_rows()
         if selectedrows:
             lastindex = selectedrows[-1]
-            lastfield = outputlist.get_value(outputlist.get_iter(lastindex), 0)
+            lastfield = fieldlist.get_value(fieldlist.get_iter(lastindex), 0)
             # select the field in the calc window
-#            outputlist = self.gui['outputlist']
-            for row in outputlist:
+#            fieldlist = self.gui['fieldlist']
+            for row in fieldlist:
                 if lastfield in row:
                     # this will trigger changecalcfield
                     self.gui['calcoutputfieldcombo'].set_active_iter(row.iter)
                     break
-#        elif outputlist.get_iter_first():
+#        elif fieldlist.get_iter_first():
 #            self.gui['calcoutputfieldcombo'].set_active(-1)
 
         # init the list of available libraries in the combobox
@@ -121,7 +121,7 @@ class GUI_Calc(object):
                                           valuebuffer.get_end_iter())
         # update the value in the output manager and the output table
         self.outputs[fieldname]['value'] = fieldvalue
-        self.gui['outputlist'][outputcombo.get_active_iter()][-1] = fieldvalue
+        self.gui['fieldlist'][outputcombo.get_active_iter()][-1] = fieldvalue
         self.processtasks(('sample', None))
 
     def showlibraries(self, _widget, _data=None):

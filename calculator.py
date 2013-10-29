@@ -189,6 +189,7 @@ class Calculator(object):
         try:
             exec ''.join(codeblock) in testenv
         except:
+            # XXX pop up an alert instead?
             print "Exception in user code:"
             print '-'*60
             traceback.print_exc(file=sys.stdout)
@@ -250,7 +251,7 @@ class Calculator(object):
         * functions from a different module in fieldcalcs: streets.fullname()
         (fullname function is defined in streets.py)
 
-        The only extra syntax is for input field values.
+        The only novel syntax is for input field values.
         The function assumes the user has written everything correctly.
         """
         newfuncname = field['name']

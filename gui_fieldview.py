@@ -17,28 +17,28 @@ import re
 import sqlite3
 
 
-class GUI_OutputView(object):
-    def updatefieldattribute(self, _cell, row, newvalue, outputlist, column):
-        """Update data when an outputview cell is edited."""
+class GUI_FieldView(object):
+    def updatefieldattribute(self, _cell, row, newvalue, fieldlist, column):
+        """Update data when a fieldview cell is edited."""
         # Update output manager if the field name was changed
         if column == 0:
             newvalue = self.outputs.updatename(row, newvalue)
         # update the view
-        outputlist[row][column] = newvalue
+        fieldlist[row][column] = newvalue
         # update the field
         self.outputs[row][column] = newvalue
         # update the output sample
         self.processtasks(('sample', None))
 
-    def updatefieldtype(self, _combo, row, new_iter, typelist, outputlist):
+    def updatefieldtype(self, _combo, row, new_iter, typelist, fieldlist):
         newvalue = typelist[new_iter][0]
-        # update the view
-        outputlist[row][1] = newvalue
-        # update the field. 'type' is always the second column
+        # update the view. 'type' is always the second column, if present
+        fieldlist[row][1] = newvalue
+        # update the field
         self.outputs[row][1] = newvalue
         # update the output sample
         self.processtasks(('sample', None))
-        self.gui['outputview'].grab_focus()
+        self.gui['fieldview'].grab_focus()
 
     def autoadjustfieldlengths(self, _widget, _data=None):
         lengthadjuster = self.fieldlengthadjuster()
@@ -84,12 +84,45 @@ class GUI_OutputView(object):
                 i += 1
                 if i % 1000 == 0:
                     yield float(i) / recordcount
-            outputlist = self.gui['outputlist']
+            fieldlist = self.gui['fieldlist']
             extralength = self.options['extra_field_length']
             for fieldname in newlengths:
                 fieldindex = textfieldindices[fieldname]
                 fieldlength = newlengths[fieldname] + extralength
-                self.updatefieldattribute(None, fieldindex, fieldlength, outputlist, attrposition)
+                self.updatefieldattribute(None, fieldindex, fieldlength, fieldlist, attrposition)
+
+    def addjoinedfields(self, filealias):
+        fieldlist = self.gui['fieldlist']
+        inputlist = self.gui['inputlist']
+        outputfile = self.outputs.outputfile
+        for field in self.files[filealias].getfields():
+            field.value = ('!' + filealias + '.' +
+                           field.originalname + '!')
+            newfield = self.outputs.addfield(field,
+                                             fieldsource=filealias)
+            fieldlist.append(newfield.getattributes())
+            inputlist.append([newfield['value']])
+            # initialize a blank value for this field in the calculator
+            blankvalue = outputfile.getblankvalue(newfield)
+            self.calc.setblankvalue(newfield, blankvalue)
+        self.processtasks(('sample', 'refresh sample'))
+
+    # XXX what about fields with changed value
+    def removejoinedfields(self, filealias):
+        """Remove fields that belong to a join that was removed."""
+        removalindices = []
+        fieldlist = self.gui['fieldlist']
+        i = 0
+        for field in self.outputs:
+            if field.source == filealias:
+                removalindices.append(i)
+            i += 1
+        # remove from the end so the indices won't shift
+        removalindices.reverse()
+        for index in removalindices:
+            self.outputs.removefield(index)
+            fieldlist.remove(fieldlist.get_iter(index))
+        self.processtasks(('sample', None))
 
     # XXX dragging dropping columns to reorder attributes, mostly incomplete
     def reordercols(self, widget):
@@ -97,6 +130,6 @@ class GUI_OutputView(object):
         return
         columns = widget.get_columns()
         columnnames = [col.get_title() for col in columns]
-        outputlist = self.gui['outputlist']
+        fieldlist = self.gui['fieldlist']
         for i in range(len(columnnames)):
             pass
