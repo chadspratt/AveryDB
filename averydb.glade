@@ -1080,7 +1080,7 @@
                                         <signal name="toggled" handler="innercolumntoggle_toggled_cb" swapped="no"/>
                                       </object>
                                       <attributes>
-                                        <attribute name="activatable">4</attribute>
+                                        <attribute name="visible">4</attribute>
                                         <attribute name="active">3</attribute>
                                       </attributes>
                                     </child>

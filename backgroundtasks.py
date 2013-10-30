@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
-
+import table
 
 class BackgroundTasks(object):
     def queuetask(self, task=None):
@@ -65,7 +65,7 @@ class BackgroundTasks(object):
             for progress in dataconverter:
                 # this progress update lets the GUI function
                 self.gui.setprogress(progress, progresstext, lockgui=False)
-        except ValueError:
+        except table.FileClosedError:
             print 'File removed, aborting conversion.'
         self.gui.setprogress(0, '')
 

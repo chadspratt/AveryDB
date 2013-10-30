@@ -59,23 +59,33 @@ class Table(object):
             # create the table
             # print ('query: CREATE TABLE ' + self.sqlname + ' (' +
             #             ', '.join(fieldnameswithtype) + ')')
-            cur.execute('CREATE TABLE ' + self.sqlname + ' (' +
-                        ', '.join(fieldnameswithtype) + ')')
+            try:
+                cur.execute('CREATE TABLE ' + self.sqlname + ' (' +
+                            ', '.join(fieldnameswithtype) + ')')
+            except sqlite3.OperationalError:
+                # table already exists
+                return
             recordcount = self.getrecordcount()
             i = 0
             insertquery = ('INSERT INTO ' + self.sqlname +
                            ' VALUES (' + qmarks + ');')
             # insert each record from the input file
-            for record in self:
-                values = [record[fn] for fn in self.fields]
-                cur.execute(insertquery, values)
-                i += 1
-                # Take a break so the gui can be used
-                if i % 250 == 0:
-                    if recordcount is None:
-                        yield 'pulse'
-                    else:
-                        yield float(i) / recordcount
+            try:
+                for record in self:
+                    values = [record[fn] for fn in self.fields]
+                    cur.execute(insertquery, values)
+                    i += 1
+                    # Take a break so the gui can be used
+                    if i % 250 == 0:
+                        if recordcount is None:
+                            yield 'pulse'
+                        else:
+                            yield float(i) / recordcount
+            # raised if the file is closed during conversion
+            except ValueError:
+                cur.execute('DROP TABLE ' + self.sqlname)
+                conn.commit()
+                raise FileClosedError
             conn.commit()
 
     def buildindex(self, indexfield):
@@ -98,11 +108,14 @@ class NeedTableError(Exception):
     def __init__(self, tablelist):
         self.tablelist = tablelist
 
-
 class InvalidDataError(Exception):
     def __init__(self):
         pass
 
 class TableExistsError(Exception):
+    def __init__(self):
+        pass
+
+class FileClosedError(Exception):
     def __init__(self):
         pass

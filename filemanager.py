@@ -34,6 +34,7 @@ class FileManager(object):
         self.filesbyfilename = {}
         # filenamesbyalias[alias] = filename or filename_tablename
         self.filenamesbyalias = {}
+        self.removedfiles = {}
         # usable filetypes (and initial directory)
         # XXX generate this from the registry file
         self.filetypes = OrderedDict()
@@ -89,31 +90,36 @@ class FileManager(object):
         fullfilename = filename
         if tablename is not None:
             fullfilename += '_table_' + tablename
-        alias = self.createalias(filename, tablename)
-        if fullfilename in self.filesbyfilename:
+
+        if fullfilename in self.removedfiles:
+            alias = self.removedfiles[fullfilename]
+            del self.removedfiles[fullfilename]
+            return alias
+        elif fullfilename in self.filesbyfilename:
             # data has already been added
             return None
-        else:
-            # create new file
-            fileext = '.' + filename.split('.')[-1]
-            # If a table name was not passed
-            if tablename is None:
-                # try opening the file as if it only contains one table of data
-                try:
-                    newfile = self.filehandlers[fileext.upper()](filename)
-                # if it contains more than one table, return the list of tables
-                except NeedTableError as e:
-                    if len(e.tablelist) == 0:
-                        print 'No data in file.'
-                        return None
-                    return e.tablelist
-                except InvalidDataError as e:
-                    print 'Data not readable'
+
+        alias = self.createalias(filename, tablename)
+        # create new file
+        fileext = '.' + filename.split('.')[-1]
+        # If a table name was not passed
+        if tablename is None:
+            # try opening the file as if it only contains one table of data
+            try:
+                newfile = self.filehandlers[fileext.upper()](filename)
+            # if it contains more than one table, return the list of tables
+            except NeedTableError as e:
+                if len(e.tablelist) == 0:
+                    print 'No data in file.'
                     return None
-            else:
-                # if a table name was passed, then open that table
-                newfile = self.filehandlers[fileext.upper()](filename, tablename)
-            self.filesbyfilename[fullfilename] = newfile
+                return e.tablelist
+            except InvalidDataError as e:
+                print 'Data not readable'
+                return None
+        else:
+            # if a table name was passed, then open that table
+            newfile = self.filehandlers[fileext.upper()](filename, tablename)
+        self.filesbyfilename[fullfilename] = newfile
 
         self.filenamesbyalias[alias] = fullfilename
 
@@ -121,8 +127,12 @@ class FileManager(object):
 
     def createalias(self, inputname, tablename=None):
         """Creates a unique alias for a file."""
-        filenamesplit = re.findall('[a-zA-Z][a-zA-Z0-9]*', inputname)
+        filenamesplit = re.findall('[a-zA-Z0-9]+', inputname)
+        # assumes the filename ends with 'name.extension'
         alias = filenamesplit[-2]
+        # don't start an alias with a number, sqlite dislikes it
+        if alias[0].isdigit():
+            alias = '_' + alias
         if tablename is not None:
             alias += tablename
         # append a number for successive alias requests
@@ -144,6 +154,9 @@ class FileManager(object):
     def removealias(self, alias):
         """Remove an alias and remove the file if it has no other aliases."""
         filename = self.filenamesbyalias[alias]
+        # doing nothing is preferable
+        self.removedfiles[filename] = alias
+        return
         del self.filenamesbyalias[alias]
         # if the file has no other alias pointing to it, close and remove it
         if filename not in self.filenamesbyalias.values():
