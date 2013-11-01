@@ -53,7 +53,11 @@ class ExampleData(table.Table):
         self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
 
         # filehandler would be opened using a library for that format
-        self.filehandler = open(filename, mode)
+        # Don't create output files in __init__
+        if mode == 'r':
+            self.filehandler = open(self.filename, mode='r')
+        else:
+            self.filehandler = None
         # suggested method for defining blank values for field types
         self.blankvalues = {'TEXT': '', 'NUMERIC': 0, 'REAL': 0.0, 'INT': 0}
         self.namelenlimit = 10 # or None if no limit
@@ -62,24 +66,29 @@ class ExampleData(table.Table):
     def getfields(self):
         """Get the field definitions from an input file."""
         fieldlist = []
-        fieldattributes = OrderedDict
-        fieldlist.append(field.Field('newfield', fieldattributes,
-                                     dataformat='example'))
+        for fielddef in self.fields:
+            fieldattributes = OrderedDict(fielddef.attributes)
+            fieldlist.append(field.Field(fielddef.name, fieldattributes,
+                                         dataformat='example'))
         return fieldlist
 
     # takes universal-type fields and converts to format specific fields
+    # called once, before addrecord
     def setfields(self, newfields):
         """Set the field definitions of an output file."""
+        # open output files here. this is called as the first step of output
+        self.filehandler = open(self.filename, mode='w')
         for unknownfield in newfields:
             # "addfield" is a hypothetical function of the format library
             # save the field however you need to
             self.filehandler.addfield(self.convertfield(unknownfield))
 
+    # called repeatedly after setfields
     def addrecord(self, newrecord):
         """Write a record (stored as a dictionary) to the output file."""
-        for fieldname in newrecord:
-            fieldvalue = newrecord[fieldname]
-            # store fieldvalue somehow
+        recordvalues = [newrecord[fieldname] for fieldname in newrecord]
+        # store fieldvalue somehow
+        self.filehandler.addrecord(recordvalues)
 
     def close(self):
         """Close the open file, if any."""

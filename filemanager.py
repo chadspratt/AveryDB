@@ -163,7 +163,7 @@ class FileManager(object):
             self.filesbyfilename[filename].close()
             del self.filesbyfilename[filename]
 
-    def openoutputfile(self, filename, fileext, tablename=None, dummy=False):
+    def openoutputfile(self, filename, fileext, tablename=None):
         """Returns a file for writing."""
         if fileext is None:
             return None
@@ -171,12 +171,8 @@ class FileManager(object):
         if re.search(r'\,', fileext):
             fileext = re.match(r'[^,]+', fileext).group(0)
         # instantiate a filehandler
-        if dummy:
-            outputfile = self.filehandlers[fileext.upper()](filename + fileext,
-                                                            tablename, mode='d')
-        else:
-            outputfile = self.filehandlers[fileext.upper()](filename + fileext,
-                                                tablename, mode='w')
+        outputfile = self.filehandlers[fileext.upper()](filename + fileext,
+                                                        tablename, mode='w')
         return outputfile
 
     def __getitem__(self, key):

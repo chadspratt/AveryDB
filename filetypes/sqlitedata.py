@@ -27,7 +27,7 @@ class SQLiteData(table.Table):
         super(SQLiteData, self).__init__(filename, tablename)
 
         # If no table name was passed
-        if self.tablename is None:
+        if mode == 'r' and self.tablename is None:
             # connect to the database
             with sqlite3.connect(self.filename) as conn:
                 cur = conn.cursor()

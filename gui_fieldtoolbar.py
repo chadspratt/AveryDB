@@ -33,7 +33,7 @@ class GUI_FieldToolbar(object):
         else:
             tablename = None
         outputfile = self.files.openoutputfile(outputfilename, outputfiletype,
-                                               tablename, dummy=True)
+                                               tablename)
         self.outputs.setoutputfile(outputfile)
 
         fieldattributes = outputfile.getattributenames()

@@ -25,15 +25,14 @@ class DBFData(table.Table):
     """Wraps the dbfpy library with a set of standard functions."""
     def __init__(self, filename, tablename=None, mode='r'):
         super(DBFData, self).__init__(filename, tablename)
+
         if mode == 'r':
+            # open the file
             try:
-                self.filehandler = dbf.Dbf(filename, readOnly=True)
+                self.filehandler = dbf.Dbf(self.filename, readOnly=True)
             except dbf.header.struct.error:
                 raise table.InvalidDataError
-        elif mode == 'w':
-            self.filehandler = dbf.Dbf(filename, new=True)
         else:
-            # dummy file, made just to access the format specs
             self.filehandler = None
 
         # fieldattrorder, types, and blankvalues make up the format spec
@@ -66,6 +65,8 @@ class DBFData(table.Table):
 
     def setfields(self, fields):
         """Set the field definitions. Used before any records are added."""
+        # open the file
+        self.filehandler = dbf.Dbf(self.filename, new=True)
         for genericfield in fields:
             dbffield = self.convertfield(genericfield)
             self.filehandler.addField((dbffield['name'],
@@ -83,7 +84,7 @@ class DBFData(table.Table):
     def close(self):
         """Close the dbf file handler."""
         # will be None if this was a dummy file
-        if self.filehandler:
+        if self.filehandler is not None:
             self.filehandler.close()
 
     @classmethod
