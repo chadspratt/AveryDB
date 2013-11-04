@@ -1,3 +1,4 @@
+"""ExcelData is used to provide a standardized interface to excel files."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");

@@ -167,10 +167,23 @@ class GUI(object):
     def tabledialog(self, tablenames):
         """Give a list of tables within a file to choose which to load."""
         dialog = self['tabledialog']
-        tablelist = self['tablelist']
-        tablelist.clear()
-        for tablename in tablenames:
-            tablelist.append([tablename])
+        tabletree = self['tabletree']
+        tabletree.clear()
+        if type(tablenames) == list:
+            for tablename in tablenames:
+                tabletree.append(None, [tablename, None])
+        elif type(tablenames) == dict:
+            datasets = tablenames.keys()
+            datasets.sort()
+            for dataset in datasets:
+                features = tablenames[dataset]
+                features.sort()
+                if dataset is None:
+                    parentiter = None
+                else:
+                    parentiter = tabletree.append(None, [dataset, 'Dataset'])
+                for feature in features:
+                    tabletree.append(parentiter, [feature, 'Feature'])
         return dialog
 
     @classmethod

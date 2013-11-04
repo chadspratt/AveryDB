@@ -1,4 +1,4 @@
-"""CSVFile is used to provide standard interfaces to the csv library."""
+"""CSVData is used to provide standard interfaces to the csv library."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");

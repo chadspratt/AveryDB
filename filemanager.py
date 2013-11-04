@@ -36,29 +36,17 @@ class FileManager(object):
         self.filenamesbyalias = {}
         self.removedfiles = {}
         # usable filetypes (and initial directory)
-        # XXX generate this from the registry file
         self.filetypes = OrderedDict()
         # filehandlers['.fileextension'] = format handler object from filetypes
         self.filehandlers = {}
         # XXX do this separate from init?
-        self.inithandlers()
         self.initfiletypes()
 
-    def inithandlers(self):
-        """Parses filetypes/registry and loads all the defined modules."""
-        os.chdir('filetypes')
-        registryfile = open('registry', 'r')
-        reader = csv.DictReader(registryfile)
-        for row in reader:
-            # store a reference to each class by file extension
-            extension = row['extension'].upper()
-            modulename = row['module']
-            classname = row['class']
-
-            module = __import__('filetypes.' + modulename, fromlist=[None])
-            self.filehandlers[extension] = module.__dict__[classname]
-        registryfile.close()
-        os.chdir('..')
+    def inithandler(self, extension, modulename, classname):
+        """Loads a module for handling a filetype."""
+        extension = extension.upper()
+        module = __import__('filetypes.' + modulename, fromlist=[None])
+        self.filehandlers[extension] = module.__dict__[classname]
 
     def initfiletypes(self):
         """Create a dictionary for use by a file dialog to filter files."""
@@ -71,6 +59,13 @@ class FileManager(object):
         for row in reader:
             descrip = row['description']
             extension = row['extension']
+            modulename = row['module']
+            classname = row['class']
+            try:
+                self.inithandler(extension, modulename, classname)
+            # don't include the format if the module couldn't be loaded
+            except ImportError:
+                continue
             # store/group extensions by description
             if descrip in self.filetypes:
                 self.filetypes[descrip]['patterns'].append('*' + extension)

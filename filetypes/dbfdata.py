@@ -1,4 +1,4 @@
-"""DBFFile is used to provide standard interfaces to the dbfpy library."""
+"""DBFData is used to provide standard interfaces to the dbfpy library."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -125,7 +125,7 @@ class DBFData(table.Table):
         """Return the number of records in the file."""
         return self.filehandler.recordCount
 
-    def backupdata(self):
+    def backup(self):
         backupcount = 1
         backupname = self.filename + '.old'
         backupnamelen = len(backupname)

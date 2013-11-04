@@ -1,4 +1,4 @@
-"""SQLiteData is used to provide a standardized interface to sqlite3."""
+"""GDBData is used to provide a standardized interface to file geodatabases."""
 ##
 #   Copyright 2013 Chad Spratt
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,27 +18,30 @@ import re
 import sqlite3
 import os
 
+import arcpy
+
 import table
 import field
 
 
-class SQLiteData(table.Table):
-    """Handle all input and output for SQLite databases."""
+class GDBData(table.Table):
+    """Handle all input and output for file geodatabases."""
     def __init__(self, filename, tablename=None, mode='r'):
-        super(SQLiteData, self).__init__(filename, tablename)
-
+        super(GDBData, self).__init__(filename, tablename)
+        print 'filename:', filename
         # If no table name was passed
         if self.tablename is None:
             if mode == 'r':
-                # connect to the database
-                with sqlite3.connect(self.filename) as conn:
-                    cur = conn.cursor()
-                    # get a list of the tables
-                    cur.execute("SELECT name FROM sqlite_master " +
-                                "WHERE type='table' ORDER BY name")
-                    tablenames = [result[0] for result in cur.fetchall()]
-                    # and return the list in an exception
-                    raise table.NeedTableError(tablenames)
+                tablenames = {}
+                # open the geodatabase
+                arcpy.env.workspace = filename
+                # get features in root of gdb
+                tablenames[None] = arcpy.ListFeatureClasses('*')
+                datasets = arcpy.ListDatasets('*', 'Feature')
+                for dataset in datasets:
+                    tablenames[dataset] = arcpy.ListFeatureClasses('*', '', dataset)
+                # and return the list in an exception
+                raise table.NeedTableError(tablenames)
             elif mode == 'w':
                 raise table.NeedTableError(None)
 

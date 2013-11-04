@@ -35,7 +35,7 @@ class GUI_Files(object):
 
     def addfile(self, filename):
         newfilealias = self.files.addfile(filename)
-        if type(newfilealias) is list:
+        if type(newfilealias) in (list, dict):
             self.addtables(filename, newfilealias)
         # will be None if data was already added or the data isn't readable
         elif newfilealias is not None:
@@ -85,7 +85,10 @@ class GUI_Files(object):
     def addtables(self, filename, tablelist):
         """Prompt user for tables to import from selected file."""
         tabledialog = self.gui.tabledialog(tablelist)
-        response = tabledialog.run()
+        # -1: other buttons, 0: cancel, 1: ok
+        response = -1
+        while response < 0:
+            response = tabledialog.run()
         if response == 1:
             selection = self.gui['tableview'].get_selection()
             (tablelist, selectedrows) = selection.get_selected_rows()

@@ -4,3 +4,4 @@ extension,module,class,description
 .xls,exceldata,ExcelData,Excel spreadsheets
 .xlsx,exceldata,ExcelData,Excel spreadsheets
 .db,sqlitedata,SQLiteData,SQLite databases
+.gdb,gdbdata,GDBData,File geodatabase

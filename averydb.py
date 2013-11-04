@@ -104,26 +104,30 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
     def setoutputfile(self, _widget, _data=None):
         """Converts any configured output to the new output format."""
         outputfilename = self.gui['outputfilenameentry'].get_text()
-        # if the target is being replaced, rename it as a backup
+        # if the target is being replaced, parse the outputfilename to get type
         if self.gui['replacetargetcheckbox'].get_active():
-            if self.gui['backupcheckbox'].get_active():
-                self.joins.targetdata.backup()
             # use the extension from the filename, outputtypecombo is unused
             outputfilename, outputfiletype  = outputfilename.split('.')
             outputfiletype = '.' + outputfiletype
-            outputtablename = self.gui['outputtablenameentry'].get_text()
-            if outputtablename == '':
-                outputtablename = None
         else:
             # check if the location is specificed or just the filename
             if not re.search(r'\\\/', outputfilename):
-                # if no forward/backward slash, append the default output path
-                outputfilename = os.path.join(self.options['default_output_dir'], outputfilename)
-            if self.gui['outputtablenameentry'].get_sensitive():
-                outputtablename = self.gui['outputtablenameentry'].get_text()
-            else:
-                outputtablename = None
+                if self.gui['targetlocationcheckbox'].get_active():
+                    # TODO: get target location
+                    pass
+                    outputfilename = os.path.join(self.options['default_output_dir'],
+                                                  outputfilename)
+                else:
+                # if no forward or backward slashes, append the default output path
+                    outputfilename = os.path.join(self.options['default_output_dir'],
+                                                  outputfilename)
             outputfiletype = self.gui['outputtypecombo'].get_active_text()
+
+        if self.gui['outputtablenameentry'].get_sensitive():
+            outputtablename = self.gui['outputtablenameentry'].get_text()
+        else:
+            outputtablename = None
+
         try:
             outputfile = self.files.openoutputfile(outputfilename,
                                                    outputfiletype)
@@ -168,6 +172,11 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
         """Execute the join and output the result"""
         if len(self.outputs) == 0:
             return
+
+        # if the target is being replaced, rename it as a backup
+        if self.gui['replacetargetcheckbox'].get_active():
+            if self.gui['backupcheckbox'].get_active():
+                self.joins.targetdata.backup()
 
         # call this to set the filename for the output
         self.setoutputfile(None)
