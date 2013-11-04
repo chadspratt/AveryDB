@@ -16,6 +16,7 @@
 from collections import OrderedDict
 import re
 import sqlite3
+import os
 
 import table
 import field
@@ -27,16 +28,19 @@ class SQLiteData(table.Table):
         super(SQLiteData, self).__init__(filename, tablename)
 
         # If no table name was passed
-        if mode == 'r' and self.tablename is None:
-            # connect to the database
-            with sqlite3.connect(self.filename) as conn:
-                cur = conn.cursor()
-                # get a list of the tables
-                cur.execute("SELECT name FROM sqlite_master " +
-                            "WHERE type='table' ORDER BY name")
-                tablenames = [result[0] for result in cur.fetchall()]
-                # and return the list in an exception
-                raise table.NeedTableError(tablenames)
+        if self.tablename is None:
+            if mode == 'r':
+                # connect to the database
+                with sqlite3.connect(self.filename) as conn:
+                    cur = conn.cursor()
+                    # get a list of the tables
+                    cur.execute("SELECT name FROM sqlite_master " +
+                                "WHERE type='table' ORDER BY name")
+                    tablenames = [result[0] for result in cur.fetchall()]
+                    # and return the list in an exception
+                    raise table.NeedTableError(tablenames)
+            elif mode == 'w':
+                raise table.NeedTableError(None)
 
         self.fieldattrorder = ['Name', 'Affinity', 'Value']
         self.blankvalues = OrderedDict([('TEXT', ''), ('INTEGER', 0), 
@@ -157,6 +161,26 @@ class SQLiteData(table.Table):
             # get the row count
             cur.execute("SELECT count(*) FROM " + self.tablename)
             return cur.fetchone()[0]
+
+    def backup(self):
+        """Rename the table to tablename_old within the db"""
+        backupcount = 1
+        backupname = self.tablename + '_old'
+        backupnamelen = len(backupname)
+        with sqlite3.connect(self.filename) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            # get a list of the tables
+            cur.execute("SELECT name FROM sqlite_master " +
+                        "WHERE type='table' ORDER BY name")
+            tablenames = [result[0] for result in cur.fetchall()]
+            # don't overwrite existing backups, if any
+            while backupname in tablenames:
+                backupname = backupname[:backupnamelen] + str(backupcount)
+                backupcount += 1
+            cur.execute("ALTER TABLE " + self.tablename +
+                        " RENAME TO " + backupname)
+            conn.commit()
 
     def __iter__(self):
         """Get the records from an input file in sequence."""

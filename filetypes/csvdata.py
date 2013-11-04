@@ -15,6 +15,7 @@
 ##
 import csv
 import re
+import os
 
 import table
 import field
@@ -133,6 +134,17 @@ class CSVData(table.Table):
     def getrecordcount(cls):
         """Getting the record count for csv files isn't worthwhile."""
         return None
+
+    def backup(self):
+        """Rename the csv file to filename.csv.old"""
+        backupcount = 1
+        backupname = self.filename + '.old'
+        backupnamelen = len(backupname)
+        # don't overwrite existing backups, if any
+        while os.path.isfile(backupname):
+            backupname = backupname[:backupnamelen] + str(backupcount)
+            backupcount += 1
+        os.rename(self.filename, backupname)
 
     # iterate through all the records
     def __iter__(self):

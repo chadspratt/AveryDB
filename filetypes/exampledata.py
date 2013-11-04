@@ -139,6 +139,17 @@ class ExampleData(table.Table):
         # hypothetical
         return self.filehandler.getrecordcount()
 
+    def backup(self):
+        """Rename the data to dataname.old"""
+        backupcount = 1
+        backupname = self.filename + '.old'
+        backupnamelen = len(backupname)
+        # don't overwrite existing backups, if any
+        while os.path.isfile(backupname):
+            backupname = backupname[:backupnamelen] + str(backupcount)
+            backupcount += 1
+        os.rename(self.filename, backupname)
+
     def __iter__(self):
         """Get the records from an input file in sequence."""
         # hypothetical

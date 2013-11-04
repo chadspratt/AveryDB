@@ -106,14 +106,8 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
         outputfilename = self.gui['outputfilenameentry'].get_text()
         # if the target is being replaced, rename it as a backup
         if self.gui['replacetargetcheckbox'].get_active():
-            backupcount = 1
-            backupname = outputfilename + '.old'
-            backupnamelen = len(backupname)
-            # don't overwrite existing backups, if any
-            while os.path.isfile(backupname):
-                backupname = backupname[:backupnamelen] + str(backupcount)
-                backupcount += 1
-            os.rename(outputfilename, backupname)
+            if self.gui['backupcheckbox'].get_active():
+                self.joins.targetdata.backup()
             # use the extension from the filename, outputtypecombo is unused
             outputfilename, outputfiletype  = outputfilename.split('.')
             outputfiletype = '.' + outputfiletype
@@ -132,17 +126,17 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
             outputfiletype = self.gui['outputtypecombo'].get_active_text()
         try:
             outputfile = self.files.openoutputfile(outputfilename,
-                                                   outputfiletype,
-                                                   outputtablename)
-            # if a table wasn't needed, disable the table entry
+                                                   outputfiletype)
+            # if a table wasn't needed (no error), disable the table entry
             # it may already be disabled, but easier to be sure than to check.
-            if outputtablename is None:
-                self.gui['outputtablelabel'].set_sensitive(False)
-                self.gui['outputtablenameentry'].set_sensitive(False)
+            # if outputtablename is None:
+            self.gui['outputtablelabel'].set_sensitive(False)
+            self.gui['outputtablenameentry'].set_sensitive(False)
+            self.gui['outputtablenameentry'].set_text('')
         except table.NeedTableError:
             self.gui['outputtablelabel'].set_sensitive(True)
             self.gui['outputtablenameentry'].set_sensitive(True)
-            # set a default table name
+            # default the table name to the target alias
             outputtablename = self.joins.gettarget()
             self.gui['outputtablenameentry'].set_text(outputtablename)
             outputfile = self.files.openoutputfile(outputfilename,

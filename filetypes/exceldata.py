@@ -130,6 +130,17 @@ class ExcelData(table.Table):
             sheet = book.sheet_by_name(self.tablename)
             return sheet.nrows
 
+    def backup(self):
+        """Rename the Excel file to filename.xls.old (or xlsx)"""
+        backupcount = 1
+        backupname = self.filename + '.old'
+        backupnamelen = len(backupname)
+        # don't overwrite existing backups, if any
+        while os.path.isfile(backupname):
+            backupname = backupname[:backupnamelen] + str(backupcount)
+            backupcount += 1
+        os.rename(self.filename, backupname)
+
     def __iter__(self):
         with xlrd.open_workbook(self.filename, on_demand=True) as book:
             sheet = book.sheet_by_name(self.tablename)

@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
+import os
 from collections import OrderedDict
 
 from filetypes.libraries.dbfpy import dbf
@@ -123,6 +124,16 @@ class DBFData(table.Table):
     def getrecordcount(self):
         """Return the number of records in the file."""
         return self.filehandler.recordCount
+
+    def backupdata(self):
+        backupcount = 1
+        backupname = self.filename + '.old'
+        backupnamelen = len(backupname)
+        # don't overwrite existing backups, if any
+        while os.path.isfile(backupname):
+            backupname = backupname[:backupnamelen] + str(backupcount)
+            backupcount += 1
+        os.rename(self.filename, backupname)
 
     def __iter__(self):
         """Iterate through all the records in the file."""

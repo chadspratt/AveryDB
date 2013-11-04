@@ -160,14 +160,15 @@ class GUI_Files(object):
         """Updates the file and table name entries, depending on the replace target checkbox."""
         replacetargetcheckbox = self.gui['replacetargetcheckbox']
         targetalias = self.joins.gettarget()
+        print 'targetalias:', targetalias
 
         # check if a target is set
-        if targetalias is None:
-            targetalias = ''
+        if targetalias == '':
             targetpath = ''
             tablename = ''
         else:
             targetpath = self.files.filenamesbyalias[targetalias]
+            # XXX using _table_ as a separator is breakable
             splitpath = targetpath.split('_table_')
             if len(splitpath) > 1:
                 targetpath = splitpath[0]
@@ -175,18 +176,22 @@ class GUI_Files(object):
             else:
                 tablename = ''
         if replacetargetcheckbox.get_active():
+            self.gui['backupcheckbox'].set_sensitive(True)
             self.gui['outputfilenameentry'].set_text(targetpath)
             self.gui['outputtablenameentry'].set_text(tablename)
-            self.gui['outputfilenameentry'].set_sensitive(False)
+            self.gui['outputfilenameentry'].set_editable(False)
             self.gui['browsetooutputbutton'].set_sensitive(False)
-            self.gui['outputtablenameentry'].set_sensitive(False)
+            self.gui['outputtablenameentry'].set_editable(False)
             self.gui['outputtypecombo'].set_sensitive(False)
         else:
+            self.gui['backupcheckbox'].set_sensitive(False)
             self.gui['outputfilenameentry'].set_text(targetalias)
             self.gui['outputtablenameentry'].set_text(tablename)
-            self.gui['outputfilenameentry'].set_sensitive(True)
+            self.gui['outputfilenameentry'].set_editable(True)
             self.gui['browsetooutputbutton'].set_sensitive(True)
+            self.gui['outputtablenameentry'].set_editable(True)
             self.gui['outputtypecombo'].set_sensitive(True)
         # call this to reopen an output file and sort out whether
         # the table entry box should be sensitive
-        self.setoutputfile(None)
+        if targetalias != '':
+            self.setoutputfile(None)
