@@ -126,6 +126,7 @@ class DBFData(table.Table):
         return self.filehandler.recordCount
 
     def backup(self):
+        """Rename the file so the data isn't overwritten."""
         backupcount = 1
         backupname = self.filename + '.old'
         backupnamelen = len(backupname)

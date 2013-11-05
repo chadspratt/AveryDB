@@ -15,6 +15,7 @@
 ##
 # wrapper for xlrd and xlwt libraries
 from collections import OrderedDict
+import os
 
 from filetypes.libraries import xlrd
 from filetypes.libraries import xlwt

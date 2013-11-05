@@ -83,10 +83,11 @@ class SQLiteData(table.Table):
             return fieldlist
 
     # takes universal-type fields and converts to format specific fields
-    def setfields(self, newfields):
+    def setfields(self, newfields, overwrite=False):
         """Set the field definitions of an output file."""
         # make a list of all the fieldnames with their types
         fieldlist = []
+        self.fieldnames = []
         for unknownfield in newfields:
             fieldlist.append(unknownfield.name + ' ' + unknownfield['type'])
             self.fieldnames.append(unknownfield.name)
@@ -97,14 +98,18 @@ class SQLiteData(table.Table):
         with sqlite3.connect(self.filename) as conn:
             cur = conn.cursor()
             # create the table
-            # XXX what if the table exists
-#            print 'tablename:', self.tablename
-#            print 'fieldstr:', fieldstr
             try:
                 cur.execute('CREATE TABLE ' + self.tablename +
                             '(' + fieldstr + ')')
+            # table exists. improbable for a different error to occur
             except sqlite3.OperationalError:
-                raise table.TableExistsError
+                if overwrite:
+                    cur.execute('DROP TABLE ' + self.tablename)
+                    conn.commit()
+                    cur.execute('CREATE TABLE ' + self.tablename +
+                                '(' + fieldstr + ')')
+                else:
+                    raise table.TableExistsError
         # init the string of ?'s used for insertion queries
         qmarklist = []
         for _counter in range(len(newfields)):
@@ -118,15 +123,16 @@ class SQLiteData(table.Table):
         if self.cur is None:
             self.conn = sqlite3.connect(self.filename)
             self.cur = self.conn.cursor()
-        else:
-            values = [newrecord[fn] for fn in self.fieldnames]
-            self.cur.execute(self.insertquery, values)
+        values = [newrecord[fn] for fn in self.fieldnames]
+        self.cur.execute(self.insertquery, values)
 
     def close(self):
         """Close the open file, if any."""
         if self.conn is not None:
             self.conn.commit()
             self.conn.close()
+            self.cur = None
+            self.conn = None
 
     @classmethod
     def convertfield(cls, sourcefield):

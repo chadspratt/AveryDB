@@ -133,16 +133,16 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
                                                    outputfiletype)
             # if a table wasn't needed (no error), disable the table entry
             # it may already be disabled, but easier to be sure than to check.
-            # if outputtablename is None:
             self.gui['outputtablelabel'].set_sensitive(False)
             self.gui['outputtablenameentry'].set_sensitive(False)
             self.gui['outputtablenameentry'].set_text('')
         except table.NeedTableError:
             self.gui['outputtablelabel'].set_sensitive(True)
             self.gui['outputtablenameentry'].set_sensitive(True)
-            # default the table name to the target alias
-            outputtablename = self.joins.gettarget()
-            self.gui['outputtablenameentry'].set_text(outputtablename)
+            if outputtablename is None:
+                # default the table name to the target alias
+                outputtablename = self.joins.gettarget()
+                self.gui['outputtablenameentry'].set_text(outputtablename)
             outputfile = self.files.openoutputfile(outputfilename,
                                                    outputfiletype,
                                                    outputtablename)
@@ -187,8 +187,12 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
         try:
             outputfile.setfields(outputfields)
         except table.TableExistsError:
-            self.gui.messagedialog("Table name in use, choose another.")
-            return
+            response = self.gui.messagedialog("Table name in use, overwrite?",
+                                              style='yesno')
+            if response == gtk.RESPONSE_YES:
+                outputfile.setfields(outputfields, overwrite=True)
+            else:
+                return
 
         self.calc.clear()
         for field in self.outputs:

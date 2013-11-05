@@ -188,13 +188,18 @@ class GUI(object):
         return dialog
 
     @classmethod
-    def messagedialog(cls, message):
+    def messagedialog(cls, message, style='msg'):
         """Creates a simple dialog to display the provided message."""
-        dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_OK,)
+        if style == 'yesno':
+            dialog = gtk.MessageDialog(type=gtk.MESSAGE_QUESTION,
+                                       buttons=gtk.BUTTONS_YES_NO)
+        else:
+            dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_OK)
         dialog.set_markup(message)
         dialog.set_default_response(gtk.RESPONSE_OK)
-        dialog.run()
+        response = dialog.run()
         dialog.destroy()
+        return response
 
     # This is used for the output field config and sample views.
     def replacecolumns(self, storename, viewname, newcolnames):
