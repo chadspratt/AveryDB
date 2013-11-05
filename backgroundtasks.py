@@ -14,6 +14,7 @@
 #   limitations under the License.
 ##
 import table
+import sqlite3
 
 class BackgroundTasks(object):
     def queuetask(self, task=None):

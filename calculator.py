@@ -314,6 +314,7 @@ class Calculator(object):
         self.outputfuncs[newfuncname] = (tempcontext['func_' + newfuncname], args)
 
     # needs to be speedy
+    # inputvalues is an sqlite3.Row, which is like a dict but doesn't support 'in'
     def calculateoutput(self, inputvalues):
         """Takes all the input records and computes the output record.
 
@@ -323,24 +324,33 @@ class Calculator(object):
         for outputfieldname in self.outputfuncs:
             outputfunc, args = self.outputfuncs[outputfieldname]
             argvalues = []
+            outputvalue = None
             for arg in args:
-                argvalue = inputvalues[arg]
+                # arg might not be a valid name of an input field
+                try:
+                    argvalue = inputvalues[arg]
+                # this should only be thrown when calculating sample output
+                # and the error should be spotted and fixed before full output
+                except IndexError:
+                    outputvalue = '##BAD ARG: ' + arg + '##'
+                    break
                 if argvalue is not None:
                     argvalues.append(argvalue)
                 else:
                     # Missed join for this record, pass a blank default value
                     argvalues.append(self.inputblanks[arg])
-            try:
-                outputvalue = outputfunc(self, argvalues)
-            except:
-                # This will be shown in the sample output so it should be ample
-                # feedback on when something is not working and hopefully '!error!'
-                # won't get written to [m]any output files
-                print "Exception in user code:"
-                print '-'*60
-                traceback.print_exc(file=sys.stdout)
-                print '-'*60
-                outputvalue = '!error!'
+            if outputvalue is None:
+                try:
+                    outputvalue = outputfunc(self, argvalues)
+                except:
+                    # This will be shown in the sample output so it should be ample
+                    # feedback on when something is not working and hopefully '!error!'
+                    # won't get written to [m]any output files
+                    print "Exception in user code:"
+                    print '-'*60
+                    traceback.print_exc(file=sys.stdout)
+                    print '-'*60
+                    outputvalue = '##ERROR##'
 
             outputvalues.append((outputfieldname, outputvalue))
         return outputvalues
