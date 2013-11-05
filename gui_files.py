@@ -163,7 +163,7 @@ class GUI_Files(object):
         """Updates the file and table name entries, depending on the replace target checkbox."""
         replacetargetcheckbox = self.gui['replacetargetcheckbox']
         targetalias = self.joins.gettarget()
-        print 'targetalias:', targetalias
+        # print 'targetalias:', targetalias
 
         # check if a target is set
         if targetalias == '':

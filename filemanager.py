@@ -100,7 +100,7 @@ class FileManager(object):
         alias = self.createalias(filename, tablename)
         # create new file
         fileext = '.' + filename.split('.')[-1]
-        # If a table name was not passed
+        # a table name was not passed
         if tablename is None:
             # try opening the file as if it only contains one table of data
             try:
@@ -117,9 +117,8 @@ class FileManager(object):
                 return None
             # any other errors that might occur
             except Exception:
-                # try each file handler
+                # try all the other file handlers
                 for fileext in self.filehandlers:
-                    # print 'fileext:', fileext
                     try:
                         newfile = self.filehandlers[fileext](filename)
                     # found the right format, but missing a table name
@@ -132,18 +131,20 @@ class FileManager(object):
                     except Exception:
                         continue
                     # if it opened successfully, stop
+                    print filename + ' is actually of type ' + fileext
                     break
                 # if none of them worked, give up
                 else:
                     print 'Unsupported data format'
                     return None
+        # a table name was passed
         else:
             # if a table name was passed, then open that table
             try:
                 newfile = self.filehandlers[fileext.upper()](filename, tablename)
             except Exception:
+                # try all the other file handlers
                 for fileext in self.filehandlers:
-                    # print 'fileext2:', fileext
                     try:
                         newfile = self.filehandlers[fileext](filename, tablename)
                     # if it doesn't work, move to the next

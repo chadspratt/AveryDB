@@ -70,10 +70,20 @@ class Table(object):
             insertquery = ('INSERT INTO ' + self.sqlname +
                            ' VALUES (' + qmarks + ');')
             # insert each record from the input file
+            useunicode = False
             try:
                 for record in self:
-                    values = [record[fn] for fn in self.fields]
-                    cur.execute(insertquery, values)
+                    if useunicode:
+                        values = [unicode(record[fn]) for fn in self.fields]
+                    else:
+                        values = [record[fn] for fn in self.fields]
+                    try:
+                        cur.execute(insertquery, values)
+                    # on Windows it doesn't like ascii byte strings
+                    except sqlite3.ProgrammingError:
+                        values = [unicode(record[fn]) for fn in self.fields]
+                        cur.execute(insertquery, values)
+                        useunicode = True
                     i += 1
                     # Take a break so the gui can be used
                     if i % 250 == 0:
