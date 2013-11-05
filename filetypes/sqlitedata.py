@@ -42,6 +42,10 @@ class SQLiteData(table.Table):
             elif mode == 'w':
                 raise table.NeedTableError(None)
 
+        # check that the data opens
+        if mode == 'r':
+            sqlite3.connect(self.filename)
+            
         self.fieldattrorder = ['Name', 'Affinity', 'Value']
         self.blankvalues = OrderedDict([('TEXT', ''), ('INTEGER', 0), 
                                         ('NUMERIC', 0), ('REAL', 0.0)])

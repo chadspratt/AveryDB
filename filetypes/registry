@@ -1,7 +1,7 @@
 extension,module,class,description
 .dbf,dbfdata,DBFData,DBF files
-.csv,csvdata,CSVData,CSV files
 .xls,exceldata,ExcelData,Excel spreadsheets
 .xlsx,exceldata,ExcelData,Excel spreadsheets
 .db,sqlitedata,SQLiteData,SQLite databases
 .gdb,gdbdata,GDBData,File geodatabase
+.csv,csvdata,CSVData,CSV files

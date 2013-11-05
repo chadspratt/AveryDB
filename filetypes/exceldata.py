@@ -33,13 +33,17 @@ class ExcelData(table.Table):
         # If no table name was passed
         if tablename is None:
             # open the workbook
-            if mode is 'r':
+            if mode == 'r':
                 with xlrd.open_workbook(filename) as book:
                     tablenames = book.sheet_names()
                     # and return the list of sheet names in an exception
                     raise table.NeedTableError(tablenames)
             else:
                 raise table.NeedTableError([])
+
+        # check that the data opens
+        if mode == 'r':
+            xlrd.open_workbook(filename)
 
         self.fieldattrorder = ['Name', 'Value']
         self.types = {0: 'EMPTY', 1: 'TEXT', 2: 'NUMERIC', 3: 'DATE',

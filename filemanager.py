@@ -38,7 +38,10 @@ class FileManager(object):
         # usable filetypes (and initial directory)
         self.filetypes = OrderedDict()
         # filehandlers['.fileextension'] = format handler object from filetypes
-        self.filehandlers = {}
+        # the order of the handlers is the order that they're tried, in case
+        # the file just has the wrong extension. csv is last in the registry
+        # becauase it is likely to get a false-positive.
+        self.filehandlers = OrderedDict()
         # XXX do this separate from init?
         self.initfiletypes()
 
@@ -108,14 +111,52 @@ class FileManager(object):
                     print 'No data in file.'
                     return None
                 return e.tablelist
+            # invalid dbf data
             except InvalidDataError as e:
                 print 'Data not readable'
                 return None
+            # any other errors that might occur
+            except Exception:
+                # try each file handler
+                for fileext in self.filehandlers:
+                    # print 'fileext:', fileext
+                    try:
+                        newfile = self.filehandlers[fileext](filename)
+                    # found the right format, but missing a table name
+                    except NeedTableError as e:
+                        if len(e.tablelist) == 0:
+                            print 'No data in file.'
+                            return None
+                        return e.tablelist
+                    # haven't found the right format, move to the next
+                    except Exception:
+                        continue
+                    # if it opened successfully, stop
+                    break
+                # if none of them worked, give up
+                else:
+                    print 'Unsupported data format'
+                    return None
         else:
             # if a table name was passed, then open that table
-            newfile = self.filehandlers[fileext.upper()](filename, tablename)
-        self.filesbyfilename[fullfilename] = newfile
+            try:
+                newfile = self.filehandlers[fileext.upper()](filename, tablename)
+            except Exception:
+                for fileext in self.filehandlers:
+                    # print 'fileext2:', fileext
+                    try:
+                        newfile = self.filehandlers[fileext](filename, tablename)
+                    # if it doesn't work, move to the next
+                    except Exception:
+                        continue
+                    # if it does work, stop
+                    break
+                # if none of them worked, give up
+                else:
+                    print 'Unsupported data format'
+                    return None
 
+        self.filesbyfilename[fullfilename] = newfile
         self.filenamesbyalias[alias] = fullfilename
 
         return alias
