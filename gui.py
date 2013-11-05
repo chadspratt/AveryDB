@@ -46,6 +46,7 @@ class GUI(object):
         handlers['targetcombo_changed_cb'] = hfuncs.changetarget
         handlers['browsetooutputbutton_clicked_cb'] = hfuncs.browsetooutput
         handlers['replacetargetcheckbox_toggled_cb'] = hfuncs.replacetargettoggle
+        handlers['targetlocationcheckbox_toggled_cb'] = hfuncs.targetlocationtoggle
         # GUI_JoinConfig
         handlers['joinaliascombo_changed_cb'] = hfuncs.loadjoinfields
         handlers['targetaliascombo_changed_cb'] = hfuncs.loadtargetfields

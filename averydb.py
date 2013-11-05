@@ -113,10 +113,10 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
             # check if the location is specificed or just the filename
             if not re.search(r'\\\/', outputfilename):
                 if self.gui['targetlocationcheckbox'].get_active():
-                    # TODO: get target location
-                    pass
-                    outputfilename = os.path.join(self.options['default_output_dir'],
-                                                  outputfilename)
+                    targetalias = self.joins.gettarget()
+                    targetpath = self.files.filenamesbyalias[targetalias]
+                    targetdir = os.path.dirname(targetpath)
+                    outputfilename = os.path.join(targetdir, outputfilename)
                 else:
                 # if no forward or backward slashes, append the default output path
                     outputfilename = os.path.join(self.options['default_output_dir'],

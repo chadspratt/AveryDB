@@ -180,6 +180,8 @@ class GUI_Files(object):
                 tablename = ''
         if replacetargetcheckbox.get_active():
             self.gui['backupcheckbox'].set_sensitive(True)
+            # 'Replace target' and 'Use target location' are mutually exclusive
+            self.gui['targetlocationcheckbox'].set_sensitive(False)
             self.gui['outputfilenameentry'].set_text(targetpath)
             self.gui['outputtablenameentry'].set_text(tablename)
             self.gui['outputfilenameentry'].set_editable(False)
@@ -188,6 +190,7 @@ class GUI_Files(object):
             self.gui['outputtypecombo'].set_sensitive(False)
         else:
             self.gui['backupcheckbox'].set_sensitive(False)
+            self.gui['targetlocationcheckbox'].set_sensitive(True)
             self.gui['outputfilenameentry'].set_text(targetalias)
             self.gui['outputtablenameentry'].set_text(tablename)
             self.gui['outputfilenameentry'].set_editable(True)
@@ -198,3 +201,9 @@ class GUI_Files(object):
         # the table entry box should be sensitive
         if targetalias != '':
             self.setoutputfile(None)
+
+    def targetlocationtoggle(self, _widget, _data=None):
+        if self.gui['targetlocationcheckbox'].get_active():
+            self.gui['replacetargetcheckbox'].set_sensitive(False)
+        else:
+            self.gui['replacetargetcheckbox'].set_sensitive(True)
