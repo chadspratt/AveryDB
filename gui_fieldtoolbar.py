@@ -36,6 +36,13 @@ class GUI_FieldToolbar(object):
                                                tablename)
         self.outputs.setoutputfile(outputfile)
 
+        # needs to go before replacecolumns so that the types will be right
+        fieldtypes = outputfile.getfieldtypes()
+        fieldtypelist = self.gui['fieldtypelist']
+        fieldtypelist.clear()
+        for fieldtype in fieldtypes:
+            fieldtypelist.append([fieldtype])
+
         fieldattributes = outputfile.getattributenames()
         self.gui.replacecolumns('fieldlist', 'fieldview', fieldattributes)
         fieldlist = self.gui['fieldlist']
@@ -43,12 +50,6 @@ class GUI_FieldToolbar(object):
         self.gui['calcoutputfieldcombo'].set_model(fieldlist)
         inputlist = self.gui['inputlist']
         inputlist.clear()
-
-        fieldtypes = outputfile.getfieldtypes()
-        fieldtypelist = self.gui['fieldtypelist']
-        fieldtypelist.clear()
-        for fieldtype in fieldtypes:
-            fieldtypelist.append([fieldtype])
 
         self.outputs.clear()
         # check that a target file has been opened

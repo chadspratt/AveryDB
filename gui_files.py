@@ -85,10 +85,9 @@ class GUI_Files(object):
     def addtables(self, filename, tablelist):
         """Prompt user for tables to import from selected file."""
         tabledialog = self.gui.tabledialog(tablelist)
-        # -1: other buttons, 0: cancel, 1: ok
-        response = -1
-        while response < 0:
-            response = tabledialog.run()
+        # 0: cancel, 1: ok
+        response = tabledialog.run()
+        tabledialog.hide()
         if response == 1:
             selection = self.gui['tableview'].get_selection()
             (tablelist, selectedrows) = selection.get_selected_rows()
@@ -110,8 +109,10 @@ class GUI_Files(object):
                     # set the default output filename to the target alias
                     self.gui['outputfilenameentry'].set_text(newfilealias)
                     self.reloadfields(None)
-        tabledialog.hide()
         self.processtasks()
+
+    def closetabledialog(self, widget, _data=None):
+        widget.response(0)
 
     def removefile(self, _widget, _data=None):
         """Close a file and remove all joins that depend on it."""

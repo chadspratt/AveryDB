@@ -151,6 +151,13 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
             return
         self.outputs.setoutputfile(outputfile)
 
+        # needs to go before replacecolumns so that the types will be right
+        fieldtypes = outputfile.getfieldtypes()
+        fieldtypelist = self.gui['fieldtypelist']
+        fieldtypelist.clear()
+        for fieldtype in fieldtypes:
+            fieldtypelist.append([fieldtype])
+
         fieldattributes = outputfile.getattributenames()
         self.gui.replacecolumns('fieldlist', 'fieldview', fieldattributes)
         fieldlist = self.gui['fieldlist']

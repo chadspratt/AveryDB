@@ -97,6 +97,8 @@ class DBFData(table.Table):
         else:
             dbfattributes = OrderedDict()
             if unknownfield.hasattribute('type'):
+                if unknownfield['type'] == 'OID':
+                    dbfattributes['type'] = 'INTEGER'
                 dbfattributes['type'] = unknownfield['type']
             else:
                 dbfattributes['type'] = 'TEXT'

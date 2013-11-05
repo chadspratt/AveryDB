@@ -16,7 +16,7 @@
 from collections import OrderedDict
 import re
 import sqlite3
-import os
+import os.path
 
 import arcpy
 
@@ -36,24 +36,36 @@ class GDBData(table.Table):
                 # open the geodatabase
                 arcpy.env.workspace = filename
                 # get features in root of gdb
-                tablenames[None] = arcpy.ListFeatureClasses('*')
+                rootfeatures = arcpy.ListFeatureClasses('*')
+                if len(rootfeatures) > 0:
+                    tablenames['features'] = rootfeatures
+                roottables = arcpy.ListTables('*')
+                if len(roottables) > 0:
+                    tablenames['tables'] = roottables
                 datasets = arcpy.ListDatasets('*', 'Feature')
-                for dataset in datasets:
-                    tablenames[dataset] = arcpy.ListFeatureClasses('*', '', dataset)
+                if len(datasets) > 0:
+                    tablenames['datasets'] = {}
+                    for dataset in datasets:
+                        datasetfeatures = arcpy.ListFeatureClasses('*', '', dataset)
+                        if len(datasetfeatures) > 0:
+                            tablenames['datasets'][dataset] = datasetfeatures
                 # and return the list in an exception
                 raise table.NeedTableError(tablenames)
             elif mode == 'w':
                 raise table.NeedTableError(None)
 
-        self.fieldattrorder = ['Name', 'Affinity', 'Value']
-        self.blankvalues = OrderedDict([('TEXT', ''), ('INTEGER', 0), 
+        self.fieldattrorder = ['Name', 'Type', 'Alias', 'Domain', 'Editable',
+                               'Nullable', 'Required', 'Length', 'Scale',
+                               'Precision', 'Value']
+        self.blankvalues = OrderedDict([('SMALLINT', 0), ('INTEGER', 0),
+                                        ('SINGLE', 0.0), ('DOUBLE', 0),
+                                        ('TEXT', ''), ('DATE', 0), 
                                         ('NUMERIC', 0), ('REAL', 0.0)])
 
         # format specific output stuff
         # used for ordering the values of output records
         self.fieldnames = []
-        # list of ?'s used for insert queries, initialized when fields are set
-        self.qmarks = ''
+        self.fulltablepath = os.path.join(self.filename, self.tablename)
         # connection/cursor used for insert queries, closed by self.close()
         self.conn = None
         self.cur = None
@@ -62,28 +74,23 @@ class GDBData(table.Table):
     # converts fields to universal types
     def getfields(self):
         """Get the field definitions from an input file."""
-        # connect to the database
-        with sqlite3.connect(self.filename) as conn:
-            cur = conn.cursor()
-            # get the string that creates the table
-            # ex: 'CREATE TABLE newtable (itemID INTEGER, itemName TEXT)'
-            cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='" +
-                        self.tablename + "' AND type='table'")
-            tablestr = cur.fetchone()[0]
-            # extract the field names and types (affinities)
-            fields = re.findall('(\w+) (NULL|INTEGER|REAL|TEXT|BLOB)',
-                                tablestr)
-            # construct the list of fields
-            fieldlist = []
-            for curfield in fields:
-                # store affinity in a dictionary, by the general name 'type'
-                fieldattributes = OrderedDict()
-                fieldattributes['type'] = str(curfield[1])
-                # create the field and add it to the list
-                newfield = field.Field(str(curfield[0]), fieldattributes,
-                                       namelen=None, dataformat='sqlite')
-                fieldlist.append(newfield)
-            return fieldlist
+        fields = arcpy.ListFields(self.fulltablepath)
+        fieldlist = []
+        for curfield in fields:
+            fieldattributes = OrderedDict()
+            fieldattributes['type'] = curfield.type
+            fieldattributes['alias'] = curfield.aliasName
+            fieldattributes['domain'] = curfield.domain
+            fieldattributes['editable'] = curfield.editable
+            fieldattributes['nullable'] = curfield.isNullable
+            fieldattributes['required'] = curfield.required
+            fieldattributes['length'] = curfield.length
+            fieldattributes['scale'] = curfield.scale
+            fieldattributes['precision'] = curfield.precision
+            newfield = field.Field(curfield.name, fieldattributes,
+                                   namelen=64, dataformat='gdb')
+            fieldlist.append(newfield)
+        return fieldlist
 
     # takes universal-type fields and converts to format specific fields
     def setfields(self, newfields):

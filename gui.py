@@ -42,6 +42,7 @@ class GUI(object):
         # GUI_Files
         handlers['adddatabutton_clicked_cb'] = hfuncs.selectandaddfile
         handlers['mainwindow_drag_data_received_cb'] = hfuncs.dropfiles
+        handlers['tabledialog_delete_event_cb'] = hfuncs.closetabledialog
         handlers['removedatabutton_clicked_cb'] = hfuncs.removefile
         handlers['targetcombo_changed_cb'] = hfuncs.changetarget
         handlers['browsetooutputbutton_clicked_cb'] = hfuncs.browsetooutput
@@ -114,6 +115,8 @@ class GUI(object):
         # other setup
         outputselection = self.builder.get_object('fieldview').get_selection()
         outputselection.set_mode(gtk.SELECTION_MULTIPLE)
+        tableselection = self.builder.get_object('tableview').get_selection()
+        tableselection.set_mode(gtk.SELECTION_MULTIPLE)
         # drag and drop file support
         mainwindow = self.builder.get_object('mainwindow')
         mainwindow.drag_dest_set(gtk.DEST_DEFAULT_MOTION | gtk.DEST_DEFAULT_HIGHLIGHT |
@@ -173,18 +176,31 @@ class GUI(object):
         if type(tablenames) == list:
             for tablename in tablenames:
                 tabletree.append(None, [tablename, None])
+        # used for gdb only, currently
         elif type(tablenames) == dict:
-            datasets = tablenames.keys()
-            datasets.sort()
-            for dataset in datasets:
-                features = tablenames[dataset]
-                features.sort()
-                if dataset is None:
-                    parentiter = None
-                else:
-                    parentiter = tabletree.append(None, [dataset, 'Dataset'])
-                for feature in features:
-                    tabletree.append(parentiter, [feature, 'Feature'])
+            # add features in datasets
+            if 'datasets' in tablenames:
+                datasets = tablenames['datasets'].keys()
+                datasets.sort()
+                for dataset in datasets:
+                    parentiter = tabletree.append(None, [dataset, 'DataSet'])
+                    features = tablenames['datasets'][dataset]
+                    features.sort()
+                    for feature in features:
+                        tabletree.append(parentiter, [feature, 'Feature'])
+            # add features in root
+            if 'features' in tablenames:
+                rootfeatures = tablenames['features']
+                rootfeatures.sort()
+                for feature in rootfeatures:
+                    tabletree.append(None, [feature, 'Feature'])
+            # add tables in root
+            if 'tables' in tablenames:
+                roottables = tablenames['tables']
+                roottables.sort()
+                for table in roottables:
+                    tabletree.append(None, [table, 'Table'])
+
         return dialog
 
     @classmethod
@@ -221,7 +237,7 @@ class GUI(object):
         for i in range(len(newcolnames)):
             # treeviews need double underscores to display single underscores
             colname = re.sub(r'_', '__', newcolnames[i])
-            if colname.lower() == 'type':
+            if colname.lower() in ('type', 'affinity'):
                 fieldtypelist = self['fieldtypelist']
                 newcell = gtk.CellRendererCombo()
                 newcell.set_property('editable', True)

@@ -148,7 +148,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="relief">none</property>
                             <property name="use_underline">True</property>
                             <signal name="clicked" handler="calclibrarybutton_clicked_cb" swapped="no"/>
@@ -187,7 +186,6 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="tooltip_text" translatable="yes">Open function editor</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton1</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-add</property>
@@ -289,7 +287,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="use_action_appearance">False</property>
                         <signal name="clicked" handler="calcsavevaluebutton_clicked_cb" swapped="no"/>
                       </object>
                       <packing>
@@ -435,7 +432,6 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="tooltip_text" translatable="yes">Add library</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="label" translatable="yes">toolbutton2</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-add</property>
@@ -535,7 +531,6 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="tooltip_text" translatable="yes">Discard changes and reload</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="funcreloadbutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
@@ -550,7 +545,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="funcsavebutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
@@ -565,7 +559,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="funcsaveclosebutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
@@ -580,7 +573,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="funccancelbutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
@@ -653,7 +645,6 @@
               <object class="GtkMenuItem" id="mainmenufile">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">_File</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
@@ -665,7 +656,6 @@
                         <property name="label">gtk-preferences</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <signal name="activate" handler="filemenupreferences_activate_cb" swapped="no"/>
@@ -682,7 +672,6 @@
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -695,7 +684,6 @@
               <object class="GtkMenuItem" id="mainhelpmenu">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">_Help</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
@@ -707,7 +695,6 @@
                         <property name="label">gtk-about</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -731,7 +718,6 @@
               <object class="GtkToolButton" id="optionsbutton">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="is_important">True</property>
                 <property name="label" translatable="yes">Options</property>
                 <property name="use_underline">True</property>
@@ -747,7 +733,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Analyze the output and set text fields to the minimum length needed to store all the data</property>
-                <property name="use_action_appearance">False</property>
                 <property name="is_important">True</property>
                 <property name="label" translatable="yes">Detect field lengths</property>
                 <property name="use_underline">True</property>
@@ -824,7 +809,6 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="tooltip_text" translatable="yes">Add data</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="is_important">True</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-add</property>
@@ -840,7 +824,6 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="tooltip_text" translatable="yes">Remove selected data</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="is_important">True</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-remove</property>
@@ -997,7 +980,6 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="tooltip_text" translatable="yes">Remove selected join</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="is_important">True</property>
                                     <property name="use_underline">True</property>
                                     <property name="stock_id">gtk-remove</property>
@@ -1013,6 +995,20 @@
                                 <property name="expand">True</property>
                                 <property name="fill">False</property>
                                 <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="button1">
+                                <property name="label">gtk-remove</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="use_stock">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">2</property>
                               </packing>
                             </child>
                           </object>
@@ -1104,7 +1100,6 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="tooltip_text" translatable="yes">Don't create extra records when a join matches multiple records</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -1311,7 +1306,6 @@
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
                                 <property name="tooltip_text" translatable="yes">Keep only matching records</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="draw_indicator">True</property>
                               </object>
                               <packing>
@@ -1334,7 +1328,6 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="tooltip_text" translatable="yes">Add join</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="label" translatable="yes">Add</property>
                                     <property name="use_underline">True</property>
                                     <property name="stock_id">gtk-yes</property>
@@ -1389,7 +1382,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Reload output fields</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Init</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-refresh</property>
@@ -1405,7 +1397,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Add field</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Add</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-add</property>
@@ -1421,7 +1412,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Copy selected fields</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Copy</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-copy</property>
@@ -1437,7 +1427,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Remove selected fields</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Remove</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-remove</property>
@@ -1453,7 +1442,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Move selected fields to top</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Top</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-goto-top</property>
@@ -1469,7 +1457,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Move selected fields up</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Up</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-go-up</property>
@@ -1485,7 +1472,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Move selected fields down</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Down</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-go-down</property>
@@ -1501,7 +1487,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Move selected fields to bottom</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Bottom</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-goto-bottom</property>
@@ -1517,7 +1502,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Open field calculation window</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">Calc</property>
                             <property name="use_underline">True</property>
                             <signal name="clicked" handler="opencalcbutton_clicked_cb" swapped="no"/>
@@ -1606,7 +1590,6 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="draw_indicator">True</property>
                                 <signal name="toggled" handler="replacetargetcheckbox_toggled_cb" swapped="no"/>
                               </object>
@@ -1624,7 +1607,6 @@
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="draw_indicator">True</property>
                               </object>
                               <packing>
@@ -1648,7 +1630,6 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="tooltip_text" translatable="yes">Output to the same location as the target</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="targetlocationcheckbox_toggled_cb" swapped="no"/>
                           </object>
@@ -1777,7 +1758,6 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="browsetooutputbutton_clicked_cb" swapped="no"/>
                               </object>
                               <packing>
@@ -1833,7 +1813,6 @@
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Begin output</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="focus_on_click">False</property>
                         <signal name="toggled" handler="executejointoggle_toggled_cb" swapped="no"/>
                       </object>
@@ -1928,7 +1907,6 @@
                     <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <property name="tooltip_markup">Cancel output</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="label" translatable="yes">toolbutton1</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-stop</property>
@@ -1980,7 +1958,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="newlibcreate_clicked_cb" swapped="no"/>
               </object>
               <packing>
@@ -1995,7 +1972,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="newlibcancel_clicked_cb" swapped="no"/>
               </object>
               <packing>
@@ -2101,7 +2077,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="defaultoutputbrowsebutton_clicked_cb" swapped="no"/>
               </object>
               <packing>
@@ -2126,7 +2101,6 @@
               <object class="GtkToolButton" id="optionfillerbutton">
                 <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="use_underline">True</property>
               </object>
               <packing>
@@ -2138,7 +2112,6 @@
               <object class="GtkToolButton" id="optionsavebutton">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">Save</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-apply</property>
@@ -2153,7 +2126,6 @@
               <object class="GtkToolButton" id="optionsaveclosebutton">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">Save &amp; Close</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-ok</property>
@@ -2168,7 +2140,6 @@
               <object class="GtkToolButton" id="optioncancelbutton">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">Cancel</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-cancel</property>
@@ -2255,14 +2226,16 @@
   <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkListStore" id="sampleoutputlist"/>
   <object class="GtkDialog" id="tabledialog">
+    <property name="width_request">350</property>
     <property name="height_request">300</property>
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
-    <property name="modal">True</property>
+    <property name="title" translatable="yes">Select tables</property>
     <property name="destroy_with_parent">True</property>
     <property name="icon">averydb-icon.svg</property>
     <property name="type_hint">dialog</property>
     <property name="skip_taskbar_hint">True</property>
+    <signal name="delete-event" handler="tabledialog_delete_event_cb" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkVBox" id="tabledialog-vbox">
         <property name="visible">True</property>
@@ -2274,12 +2247,12 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="tableall">
-                <property name="label" translatable="yes">Sel All</property>
+              <object class="GtkButton" id="tablecancel">
+                <property name="label">gtk-cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
+                <property name="use_stock">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -2288,49 +2261,17 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="tablenone">
-                <property name="label" translatable="yes">Sel None</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="tablecancel">
-                <property name="label">gtk-cancel</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_stock">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="pack_type">end</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkButton" id="tableok">
                 <property name="label">gtk-ok</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="pack_type">end</property>
-                <property name="position">3</property>
+                <property name="position">1</property>
               </packing>
             </child>
           </object>
@@ -2395,6 +2336,7 @@
                 <property name="headers_visible">False</property>
                 <property name="headers_clickable">False</property>
                 <property name="search_column">0</property>
+                <property name="enable_tree_lines">True</property>
                 <child>
                   <object class="GtkTreeViewColumn" id="tablenamecolumn">
                     <property name="title" translatable="yes">namecolumn</property>
@@ -2429,10 +2371,8 @@
       </object>
     </child>
     <action-widgets>
-      <action-widget response="-1">tableall</action-widget>
-      <action-widget response="-1">tablenone</action-widget>
-      <action-widget response="1">tableok</action-widget>
       <action-widget response="0">tablecancel</action-widget>
+      <action-widget response="1">tableok</action-widget>
     </action-widgets>
   </object>
   <object class="GtkListStore" id="tablelist">
