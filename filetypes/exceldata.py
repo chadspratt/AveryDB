@@ -55,6 +55,7 @@ class ExcelData(table.Table):
         self.namelenlimit = 255  # not sure about this
 
         self.book = None
+        self.datefields = []
 
     def getfields(self):
         """Get the fields from the csv file as a list of Field objects"""
@@ -87,6 +88,8 @@ class ExcelData(table.Table):
                 attributes = {'type': self.types[majoritytype]}
                 newfield = field.Field(fieldname, attributes, namelen=self.namelenlimit)
                 fieldlist.append(newfield)
+                if majoritytype == 3:
+                    self.datefields.append(fieldindex)
             return fieldlist
 
     def setfields(self, fields):
@@ -155,5 +158,12 @@ class ExcelData(table.Table):
             # get values for a "record"
             for i in xrange(1, sheet.nrows):
                 rowvalues = sheet.row_values(i)
+                # convert dates to a date tuple, then to a str
+                for fieldindex in self.datefields:
+                    try:
+                        rowvalues[fieldindex] = str(xlrd.xldate_as_tuple(rowvalues[fieldindex],
+                                                                         book.datemode))
+                    except xlrd.xldate.XLDateAmbiguous:
+                        pass
                 # create a dictionary of the column names and values
                 yield dict(zip(colnames, rowvalues))

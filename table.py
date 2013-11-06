@@ -71,31 +71,31 @@ class Table(object):
                            ' VALUES (' + qmarks + ');')
             # insert each record from the input file
             useunicode = False
-            try:
-                for record in self:
-                    if useunicode:
-                        values = [unicode(record[fn]) for fn in self.fields]
+            # try:
+            for record in self:
+                if useunicode:
+                    values = [unicode(record[fn]) for fn in self.fields]
+                else:
+                    values = [record[fn] for fn in self.fields]
+                try:
+                    cur.execute(insertquery, values)
+                # on Windows it doesn't like ascii byte strings
+                except sqlite3.ProgrammingError:
+                    values = [unicode(record[fn]) for fn in self.fields]
+                    cur.execute(insertquery, values)
+                    useunicode = True
+                i += 1
+                # Take a break so the gui can be used
+                if i % 250 == 0:
+                    if recordcount is None:
+                        yield 'pulse'
                     else:
-                        values = [record[fn] for fn in self.fields]
-                    try:
-                        cur.execute(insertquery, values)
-                    # on Windows it doesn't like ascii byte strings
-                    except sqlite3.ProgrammingError:
-                        values = [unicode(record[fn]) for fn in self.fields]
-                        cur.execute(insertquery, values)
-                        useunicode = True
-                    i += 1
-                    # Take a break so the gui can be used
-                    if i % 250 == 0:
-                        if recordcount is None:
-                            yield 'pulse'
-                        else:
-                            yield float(i) / recordcount
+                        yield float(i) / recordcount
             # raised if the file is closed during conversion
-            except ValueError:
-                cur.execute('DROP TABLE ' + self.sqlname)
-                conn.commit()
-                raise FileClosedError
+            # except ValueError:
+            #     cur.execute('DROP TABLE ' + self.sqlname)
+            #     conn.commit()
+            #     raise FileClosedError
             conn.commit()
 
     def buildindex(self, indexfield):
