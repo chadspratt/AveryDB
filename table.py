@@ -129,3 +129,10 @@ class TableExistsError(Exception):
 class FileClosedError(Exception):
     def __init__(self):
         pass
+
+class AmbiguousFieldTypesError(Exception):
+    """docstring for AmbiguousFieldTypesError"""
+    def __init__(self, fieldnames, fieldvalues, fieldtypes):
+        self.fieldnames = fieldnames
+        self.fieldvalues = fieldvalues
+        self.fieldtypes = fieldtypes

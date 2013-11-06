@@ -43,6 +43,7 @@ class GUI(object):
         handlers['adddatabutton_clicked_cb'] = hfuncs.selectandaddfile
         handlers['mainwindow_drag_data_received_cb'] = hfuncs.dropfiles
         handlers['tabledialog_delete_event_cb'] = hfuncs.closetabledialog
+        handlers['configinputdialog_delete_event_cb'] = hfuncs.closeconfiginputdialog
         handlers['removedatabutton_clicked_cb'] = hfuncs.removefile
         handlers['targetcombo_changed_cb'] = hfuncs.changetarget
         handlers['browsetooutputbutton_clicked_cb'] = hfuncs.browsetooutput
@@ -246,7 +247,7 @@ class GUI(object):
                 newcell.set_property('text-column', 0)
                 newcell.connect('changed',
                                 self.handlerfunctions.updatefieldtype,
-                                fieldtypelist, self[storename])
+                                fieldtypelist, self[storename], i)
                 newcolumn = gtk.TreeViewColumn(colname, newcell, text=1)
             else:
                 newcell = gtk.CellRendererText()
@@ -256,6 +257,68 @@ class GUI(object):
                                 self[storename], i)
                 newcolumn = gtk.TreeViewColumn(colname, newcell, text=i)
             view.append_column(newcolumn)
+
+    def initconfiginputwindow(self, fieldnames, fieldvalues, fieldtypes):
+        dialog = gtk.Dialog('Define input', self['mainwindow'],
+                            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                             gtk.STOCK_OK, gtk.RESPONSE_OK))
+        dialog.set_modal(True)
+        dialog.set_default_size(500, 400)
+        contentarea = dialog.get_content_area()
+        dialogvbox = gtk.VBox()
+        contentarea.pack_start(dialogvbox, True, True, 0)
+        # label at the top
+        dialoglabel = gtk.Label('Define field types')
+        dialogvbox.pack_start(dialoglabel, False, False, 0)
+        # scrolled window for everything else
+        dialogscrolledwindow = gtk.ScrolledWindow()
+        dialogvbox.pack_start(dialogscrolledwindow, True, True)
+        # viewport to hold everything in the scrolled window
+        dialogviewport = gtk.Viewport()
+        dialogscrolledwindow.add(dialogviewport)
+        # hbox to hold the stuff for each field
+        scrollhbox = gtk.HBox()
+        dialogviewport.add(scrollhbox)
+
+        inputtypelist = gtk.ListStore(gobject.TYPE_STRING)
+        for fieldtype in fieldtypes:
+            inputtypelist.append([fieldtype])
+
+        # store references to the comboboxes in the GUI object so their
+        # values can be retrieved from gui_files
+        self.typecomboboxes = []
+
+        # for each field
+        for i in range(len(fieldnames)):
+            # create a box to hold everything
+            inputfieldvbox = gtk.VBox()
+            # store the sample values in a list
+            inputfieldvaluelist = gtk.ListStore(gobject.TYPE_STRING)
+            for record in fieldvalues:
+                inputfieldvaluelist.append([record[i]])
+            # create a view to hold the field name and a sample of values
+            inputfieldview = gtk.TreeView(inputfieldvaluelist)
+            # add a cell in a column to the listview to display the values
+            inputfieldcell = gtk.CellRendererText()
+            inputfieldcolumn = gtk.TreeViewColumn(fieldnames[i], inputfieldcell,
+                                                  text=0)
+            inputfieldview.append_column(inputfieldcolumn)
+            # add a combobox for selecting field type
+            inputfieldtypecombo = gtk.ComboBox(inputtypelist)
+            inputtypecell = gtk.CellRendererText()
+            inputfieldtypecombo.pack_start(inputtypecell, expand=True)
+            inputfieldtypecombo.add_attribute(cell=inputtypecell,
+                                              attribute='text',
+                                              column=0)
+            self.typecomboboxes.append(inputfieldtypecombo)
+            # pack the two main objects
+            inputfieldvbox.pack_start(inputfieldview, expand=True)
+            inputfieldvbox.pack_start(inputfieldtypecombo, expand=False)
+            # pack the box itself
+            scrollhbox.pack_start(inputfieldvbox, expand=False)
+        dialog.show_all()
+        return dialog
 
     def setprogress(self, progress=-1, text='', lockgui=True):
         """Updates the progress bar immediately.

@@ -23,6 +23,7 @@ from collections import OrderedDict
 
 from table import NeedTableError
 from table import InvalidDataError
+from table import AmbiguousFieldTypesError
 
 
 class FileManager(object):
@@ -81,7 +82,7 @@ class FileManager(object):
         registryfile.close()
         os.chdir('..')
 
-    def addfile(self, filename, tablename=None):
+    def addfile(self, filename, tablename=None, fieldtypes=None):
         """Open a new file. If file is already open, add an alias for it."""
         # check if file is already opened. files are referenced by filepath or
         # by path_tablename if the file contains multiple tables
@@ -100,62 +101,74 @@ class FileManager(object):
         alias = self.createalias(filename, tablename)
         # create new file
         fileext = '.' + filename.split('.')[-1]
-        # a table name was not passed
-        if tablename is None:
-            # try opening the file as if it only contains one table of data
-            try:
-                newfile = self.filehandlers[fileext.upper()](filename)
-            # if it contains more than one table, return the list of tables
-            except NeedTableError as e:
-                if len(e.tablelist) == 0:
-                    print 'No data in file.'
-                    return None
-                return e.tablelist
-            # invalid dbf data
-            except InvalidDataError as e:
-                print 'Data not readable'
+        try:
+            if tablename is None:
+                if fieldtypes is None:
+                    newfile = self.filehandlers[fileext.upper()](filename)
+                else:
+                    newfile = self.filehandlers[fileext.upper()](filename,
+                                                                 fieldtypes=fieldtypes)
+            else:
+                if fieldtypes is None:
+                    newfile = self.filehandlers[fileext.upper()](filename,
+                                                                 tablename)
+                else:
+                    newfile = self.filehandlers[fileext.upper()](filename,
+                                                                 tablename,
+                                                                 fieldtypes=fieldtypes)
+        # if it contains more than one table, return the list of tables
+        except NeedTableError as e:
+            if len(e.tablelist) == 0:
+                print 'No data in file.'
                 return None
-            # any other errors that might occur
-            except Exception:
-                # try all the other file handlers
-                for fileext in self.filehandlers:
-                    try:
-                        newfile = self.filehandlers[fileext](filename)
-                    # found the right format, but missing a table name
-                    except NeedTableError as e:
-                        if len(e.tablelist) == 0:
-                            print 'No data in file.'
-                            return None
-                        return e.tablelist
-                    # haven't found the right format, move to the next
-                    except Exception:
-                        continue
-                    # if it opened successfully, stop
-                    print filename + ' is actually of type ' + fileext
-                    break
-                # if none of them worked, give up
-                else:
-                    print 'Unsupported data format'
+            return e.tablelist
+        except AmbiguousFieldTypesError as e:
+            return (e.fieldnames, e.fieldvalues, e.fieldtypes)
+        # invalid dbf data
+        except InvalidDataError as e:
+            print 'Data not readable'
+            return None
+        # any other errors that might occur
+        except Exception:
+            # try all the other file handlers
+            for fileext in self.filehandlers:
+                try:
+                    if tablename is None:
+                        if fieldtypes is None:
+                            newfile = self.filehandlers[fileext](filename)
+                        else:
+                            newfile = self.filehandlers[fileext](filename,
+                                                                 fieldtypes=fieldtypes)
+                    else:
+                        if fieldtypes is None:
+                            newfile = self.filehandlers[fileext](filename,
+                                                                 tablename)
+                        else:
+                            newfile = self.filehandlers[fileext](filename,
+                                                                 tablename,
+                                                                 fieldtypes=fieldtypes)
+                # found the right format, but missing a table name
+                except NeedTableError as e:
+                    if len(e.tablelist) == 0:
+                        print 'No data in file.'
+                        return None
+                    return e.tablelist
+                except AmbiguousFieldTypesError as e:
+                    return (e.fieldnames, e.fieldvalues, e.fieldtypes)
+                # invalid dbf data
+                except InvalidDataError as e:
+                    print 'Data not readable'
                     return None
-        # a table name was passed
-        else:
-            # if a table name was passed, then open that table
-            try:
-                newfile = self.filehandlers[fileext.upper()](filename, tablename)
-            except Exception:
-                # try all the other file handlers
-                for fileext in self.filehandlers:
-                    try:
-                        newfile = self.filehandlers[fileext](filename, tablename)
-                    # if it doesn't work, move to the next
-                    except Exception:
-                        continue
-                    # if it does work, stop
-                    break
-                # if none of them worked, give up
-                else:
-                    print 'Unsupported data format'
-                    return None
+                # haven't found the right format, move to the next
+                except Exception:
+                    continue
+                # if it opened successfully, stop
+                print filename + ' is actually of type ' + fileext
+                break
+            # if none of them worked, give up
+            else:
+                print 'Unsupported data format'
+                return None
 
         self.filesbyfilename[fullfilename] = newfile
         self.filenamesbyalias[alias] = fullfilename

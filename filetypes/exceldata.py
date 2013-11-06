@@ -16,6 +16,9 @@
 # wrapper for xlrd and xlwt libraries
 from collections import OrderedDict
 import os
+from datetime import datetime
+from datetime import time
+
 
 from filetypes.libraries import xlrd
 from filetypes.libraries import xlwt
@@ -27,7 +30,7 @@ import field
 # GenericFile is just an interface
 class ExcelData(table.Table):
     """Wraps the x library with a set of standard functions."""
-    def __init__(self, filename, tablename=None, mode='r'):
+    def __init__(self, filename, tablename=None, mode='r', fieldtypes=None):
         super(ExcelData, self).__init__(filename, tablename)
 
         # If no table name was passed
@@ -43,7 +46,21 @@ class ExcelData(table.Table):
 
         # check that the data opens
         if mode == 'r':
-            xlrd.open_workbook(filename)
+            with xlrd.open_workbook(self.filename, on_demand=True) as book:
+                if fieldtypes is None:
+                    sheet = book.sheet_by_name(self.tablename)
+                    fieldnames = sheet.row_values(0)
+                    fieldvalues = []
+                    for i in range(1, 10):
+                        try:
+                            fieldvalues.append(sheet.row_values(i))
+                        # fewer than 9 records in the file
+                        except IndexError:
+                            break
+                    fieldtypes = ['Text', 'Numeric', 'Date', 'Logical']
+                    raise table.AmbiguousFieldTypesError(fieldnames,
+                                                         fieldvalues,
+                                                         fieldtypes)
 
         self.fieldattrorder = ['Name', 'Value']
         self.types = {0: 'EMPTY', 1: 'TEXT', 2: 'NUMERIC', 3: 'DATE',
@@ -52,44 +69,26 @@ class ExcelData(table.Table):
                       'LOGICAL': 4, 'ERROR': 5, 'BLANK': 6}
         self.blankvalues = OrderedDict([('TEXT', ''), ('NUMERIC', 0),
                                         ('DATE', (0, 0, 0)), ('LOGICAL', -1)])
-        self.namelenlimit = 255  # not sure about this
+        self.namelenlimit = 255 # for Excel 2003
 
         self.book = None
-        self.datefields = []
+        self.fieldtypes = fieldtypes
 
     def getfields(self):
         """Get the fields from the csv file as a list of Field objects"""
         with xlrd.open_workbook(self.filename, on_demand=True) as book:
-            print 'self.tablename:', self.tablename
+            # print 'self.tablename:', self.tablename
             sheet = book.sheet_by_name(self.tablename)
             # get column names from first row, hope they're unique
             fieldnames = sheet.row_values(0)
 
-            fieldcandidates = {}
+            # fieldcandidates = {}
             fieldlist = []
             for fieldindex in xrange(len(fieldnames)):
-                # check 50 records to determine the type of the field
-                coltypes = sheet.col_types(fieldindex, 1, 50)
-                # Use the type that occurs most frequently
-                for coltype in coltypes:
-                    if coltype in fieldcandidates:
-                        fieldcandidates[coltype] += 1
-                    else:
-                        fieldcandidates[coltype] = 1
-                majoritytype = self.types['TEXT']
-                majoritycount = -1
-                for fieldtype in fieldcandidates:
-                    if fieldcandidates[fieldtype] > majoritycount:
-                        if fieldtype not in [0, 5, 6]:
-                            majoritytype = fieldtype
-
                 fieldname = fieldnames[fieldindex]
-                print 'fieldname:', fieldname
-                attributes = {'type': self.types[majoritytype]}
+                attributes = {'type': self.fieldtypes[fieldindex].upper()}
                 newfield = field.Field(fieldname, attributes, namelen=self.namelenlimit)
                 fieldlist.append(newfield)
-                if majoritytype == 3:
-                    self.datefields.append(fieldindex)
             return fieldlist
 
     def setfields(self, fields):
@@ -159,11 +158,19 @@ class ExcelData(table.Table):
             for i in xrange(1, sheet.nrows):
                 rowvalues = sheet.row_values(i)
                 # convert dates to a date tuple, then to a str
-                for fieldindex in self.datefields:
-                    try:
-                        rowvalues[fieldindex] = str(xlrd.xldate_as_tuple(rowvalues[fieldindex],
-                                                                         book.datemode))
-                    except xlrd.xldate.XLDateAmbiguous:
-                        pass
+                for fieldindex in range(len(rowvalues)):
+                    if self.fieldtypes[fieldindex] == 'Date':
+                        fieldval = rowvalues[fieldindex]
+                        try:
+                            fieldval = xlrd.xldate_as_tuple(rowvalues[fieldindex],
+                                                            book.datemode)
+                        except xlrd.xldate.XLDateAmbiguous:
+                            pass
+                        try:
+                            rowvalues[fieldindex] = str(datetime(*fieldval))
+                        except ValueError:
+                            rowvalues[fieldindex] = str(time(*fieldval[3:]))
+                    elif self.fieldtypes[fieldindex] == 'Logical':
+                        rowvalues[fieldindex] = rowvalues[fieldindex] == 1
                 # create a dictionary of the column names and values
                 yield dict(zip(colnames, rowvalues))

@@ -30,12 +30,12 @@ class GUI_FieldView(object):
         # update the output sample
         self.processtasks(('sample', None))
 
-    def updatefieldtype(self, _combo, row, new_iter, typelist, fieldlist):
+    def updatefieldtype(self, _combo, row, new_iter, typelist, fieldlist, column):
         newvalue = typelist[new_iter][0]
-        # update the view. 'type' is always the second column, if present
-        fieldlist[row][1] = newvalue
+        # update the view
+        fieldlist[row][column] = newvalue
         # update the field
-        self.outputs[row][1] = newvalue
+        self.outputs[row][column] = newvalue
         # update the output sample
         self.processtasks(('sample', None))
         self.gui['fieldview'].grab_focus()

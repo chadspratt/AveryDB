@@ -36,7 +36,6 @@ class GUI_FieldToolbar(object):
                                                tablename)
         self.outputs.setoutputfile(outputfile)
 
-        # needs to go before replacecolumns so that the types will be right
         fieldtypes = outputfile.getfieldtypes()
         fieldtypelist = self.gui['fieldtypelist']
         fieldtypelist.clear()

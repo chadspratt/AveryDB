@@ -78,8 +78,8 @@ class GDBData(table.Table):
         fieldlist = []
         for curfield in fields:
             fieldattributes = OrderedDict()
-            fieldattributes['type'] = curfield.type
             fieldattributes['alias'] = curfield.aliasName
+            fieldattributes['type'] = curfield.type
             fieldattributes['domain'] = curfield.domain
             fieldattributes['editable'] = curfield.editable
             fieldattributes['nullable'] = curfield.isNullable

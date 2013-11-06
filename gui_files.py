@@ -37,6 +37,8 @@ class GUI_Files(object):
         newfilealias = self.files.addfile(filename)
         if type(newfilealias) in (list, dict):
             self.addtables(filename, newfilealias)
+        elif type(newfilealias) == tuple:
+            self.clarifyfieldtypes(filename, newfilealias)
         # will be None if data was already added or the data isn't readable
         elif newfilealias is not None:
             newfile = self.files[newfilealias]
@@ -94,6 +96,10 @@ class GUI_Files(object):
             for row in selectedrows:
                 tablename = tablelist.get_value(tablelist.get_iter(row), 0)
                 newfilealias = self.files.addfile(filename, tablename)
+                if type(newfilealias) == tuple:
+                    newfilealias = self.clarifyfieldtypes(filename, newfilealias, tablename)
+                    if newfilealias is None:
+                        continue
                 newfile = self.files[newfilealias]
                 newfile.initfields()
                 sqlconverter = newfile.convertdata(newfilealias)
@@ -111,7 +117,24 @@ class GUI_Files(object):
                     self.reloadfields(None)
         self.processtasks()
 
+    def clarifyfieldtypes(self, filename, fielddata, tablename=None):
+        fieldnames, fieldvalues, fieldtypes = fielddata
+        dialog = self.gui.initconfiginputwindow(fieldnames, fieldvalues, fieldtypes)
+        response = dialog.run()
+        dialog.destroy()
+        if response == gtk.RESPONSE_OK:
+            typecombos = self.gui.typecomboboxes
+            inputfieldtypes = []
+            for typecombo in typecombos:
+                inputfieldtypes.append(typecombo.get_active_text())
+            return self.files.addfile(filename, tablename, inputfieldtypes)
+        
     def closetabledialog(self, widget, _data=None):
+        """Close the table dialog when the window manager closes it."""
+        widget.response(0)
+        
+    def closeconfiginputdialog(self, widget, _data=None):
+        """Close the config input dialog when the window manager closes it."""
         widget.response(0)
 
     def removefile(self, _widget, _data=None):
