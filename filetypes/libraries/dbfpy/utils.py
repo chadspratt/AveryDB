@@ -17,7 +17,11 @@ import datetime
 import time
 import re
 
+DATEPATTERN = r'[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'
+TIMEPATTERN = r'[0-2][0-9]:[0-5][0-9]:[0-5][0-9]'
+DATETIMEPATTERN = r'[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]'
 
+         
 def unzfill(str):
     """Return a string without ASCII NULs.
 
@@ -31,10 +35,10 @@ def unzfill(str):
         return str
 
 
-def getDate(date=None):
+def getDate(value=None):
     """Return `datetime.date` instance.
 
-    Type of the ``date`` argument could be one of the following:
+    Type of the ``value`` argument could be one of the following:
         None:
             use current date value;
         datetime.date:
@@ -42,48 +46,47 @@ def getDate(date=None):
         datetime.datetime:
             the result of the date.date() will be returned;
         string:
-            assuming "%Y%m%d" or "%y%m%dd" format;
+            assuming "%Y%m%d" or "%y%m%d" format;
         number:
             assuming it's a timestamp (returned for example
             by the time.time() call;
         sequence:
             assuming (year, month, day, ...) sequence;
 
-    Additionaly, if ``date`` has callable ``ticks`` attribute,
+    Additionaly, if ``value`` has callable ``ticks`` attribute,
     it will be used and result of the called would be treated
     as a timestamp value.
 
     """
-    if date is None:
+    if value is None:
         # use current value
         return datetime.date.today()
-    if isinstance(date, datetime.date):
-        return date
-    if isinstance(date, datetime.datetime):
-        return date.date()
-    if isinstance(date, (int, long, float)):
+    if isinstance(value, datetime.date):
+        return value
+    if isinstance(value, datetime.datetime):
+        return value.date()
+    if isinstance(value, (int, long, float)):
         # date is a timestamp
-        return datetime.date.fromtimestamp(date)
-    if isinstance(date, basestring):
-        try:
+        return datetime.date.fromtimestamp(value)
+    if isinstance(value, basestring):
+        # check if the string begins with a date
+        if re.match(DATEPATTERN, value):
             # '2005-05-05 00:00:00'
-            datestr = date.split()[0]
+            datestr = value.split()[0]
             # '2005-05-05'
             justdate = time.strptime(datestr, "%Y-%m-%d")[:3]
             # (2005, 5, 5)
             return datetime.date(*justdate)
-        except ValueError:
-            pass
-        date = date.replace(" ", "0")
-        if len(date) == 6:
+        value = value.replace(" ", "0")
+        if len(value) == 6:
             # yymmdd
-            return datetime.date(*time.strptime(date, "%y%m%d")[:3])
+            return datetime.date(*time.strptime(value, "%y%m%d")[:3])
         # yyyymmdd
-        return datetime.date(*time.strptime(date, "%Y%m%d")[:3])
-    if hasattr(date, "__getitem__"):
+        return datetime.date(*time.strptime(value, "%Y%m%d")[:3])
+    if hasattr(value, "__getitem__"):
         # a sequence (assuming date/time tuple)
-        return datetime.date(*date[:3])
-    return datetime.date.fromtimestamp(date.ticks())
+        return datetime.date(*value[:3])
+    return datetime.date.fromtimestamp(value.ticks())
 
 
 def getDateTime(value=None):
@@ -98,8 +101,9 @@ def getDateTime(value=None):
         datetime.datetime:
             ``value`` will be returned as is;
         string:
-            supports '2005-05-05 16:20:00' (full datetime)
-            or '16:20:00' (time with 1900-1-1 date)
+            datetime: '2005-05-05 16:20:00'
+            date: '2005-05-05'
+            time: '16:20:00'
         number:
             assuming it's a timestamp (returned for example
             by the time.time() call;
@@ -122,15 +126,20 @@ def getDateTime(value=None):
         # value is a timestamp
         return datetime.datetime.fromtimestamp(value)
     if isinstance(value, basestring):
-        if re.match('[0-2][0-9]:[0-5][0-9]:[0-5][0-9]', value):
+        if re.match(DATETIMEPATTERN, value):
+            # '2005-05-05 16:20:01'
+            structtime = time.strptime(value, "%Y-%m-%d %H:%M:%S")[:6]
+            # (2005, 5, 5, 16, 20, 1)
+            return datetime.datetime(*structtime)
+        elif re.match(DATEPATTERN, value):
+            # '2005-05-05 16:20:01'
+            structtime = time.strptime(value, "%Y-%m-%d")[:6]
+            # (2005, 5, 5, 16, 20, 1)
+            return datetime.datetime(*structtime)
+        elif re.match(TIMEPATTERN, value):
             # '16:20:01'
             structtime = time.strptime(value, "%H:%M:%S")[:6]
             # (1900, 1, 1, 16, 20, 1)
-            return datetime.datetime(*structtime)
-        elif re.match('[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]', value):
-            # '2005-05-05 16:20:01'
-            structtime = time.strptime(value, "%Y-%m-%d %H:%M:%S")
-            # (2005, 5, 5, 16, 20, 1)
             return datetime.datetime(*structtime)
     if hasattr(value, "__getitem__"):
         # a sequence (assuming date/time tuple)
