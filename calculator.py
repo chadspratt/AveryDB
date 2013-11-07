@@ -180,10 +180,13 @@ class Calculator(object):
     # this is only used for custom functions defined in a fieldcalcs module
     def _getlibtext(self, libname):
         """Returns the text of a python library file as a list of lines."""
-        if libname == 'builtins':
-            return
         os.chdir('fieldcalcs')
-        libfile = open(libname + '.py', 'r')
+        try:
+            libfile = open(libname + '.py', 'r')
+        except IOError:
+            # not a fieldcalcs module
+            os.chdir('..')
+            return None
         os.chdir('..')
         libtext = libfile.readlines()
         libfile.close()
