@@ -117,6 +117,9 @@ class GUI_Files(object):
                     self.reloadfields(None)
         self.processtasks()
 
+    def tabledoubleclicked(self, _treeview, _path, _view_column, _data=None):
+        self.gui['tabledialog'].response(1)
+
     def clarifyfieldtypes(self, filename, fielddata, tablename=None):
         fieldnames, fieldvalues, fieldtypes = fielddata
         dialog = self.gui.initconfiginputwindow(fieldnames, fieldvalues, fieldtypes)

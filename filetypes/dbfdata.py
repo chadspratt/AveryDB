@@ -40,15 +40,15 @@ class DBFData(table.Table):
         self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
         # used to convert between dbf library and sqlite types
         self.types = {'C': 'TEXT', 'N': 'NUMERIC', 'F': 'REAL',
-                      'T': 'TIME', 'L': 'LOGICAL', 'M': 'MEMOTEXT',
+                      'T': 'DATETIME', 'L': 'LOGICAL', 'M': 'MEMOTEXT',
                       'D': 'DATE', 'I': 'INTEGER', 'Y': 'CURRENCY',
                       'TEXT': 'C', 'NUMERIC': 'N', 'REAL': 'F',
-                      'TIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
+                      'DATETIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
                       'DATE': 'D', 'INTEGER': 'I', 'CURRENCY': 'C'}
         # These are abitrary values to use for fields in unmatched rows
-        self.blankvalues = OrderedDict([('TEXT', ''), ('DATE', (0, 0, 0)), ('TIME', None),
+        self.blankvalues = OrderedDict([('TEXT', ''), ('DATE', (0, 0, 0)), ('DATETIME', None),
                                         ('INTEGER', 0), ('NUMERIC', 0), ('REAL', 0.0),
-                                        ('LOGICAL', -1), ('MEMOTEXT', ' '*5), ('CURRENCY', 0.0)])
+                                        ('LOGICAL', ' '), ('MEMOTEXT', ' '*10), ('CURRENCY', 0.0)])
         self.namelenlimit = 10
 
     def getfields(self):

@@ -15,6 +15,7 @@ __date__ = "$Date: 2007/02/11 08:57:17 $"[7:-2]
 
 import datetime
 import time
+import re
 
 
 def unzfill(str):
@@ -64,6 +65,15 @@ def getDate(date=None):
         # date is a timestamp
         return datetime.date.fromtimestamp(date)
     if isinstance(date, basestring):
+        try:
+            # '2005-05-05 00:00:00'
+            datestr = date.split()[0]
+            # '2005-05-05'
+            justdate = time.strptime(datestr, "%Y-%m-%d")[:3]
+            # (2005, 5, 5)
+            return datetime.date(*justdate)
+        except ValueError:
+            pass
         date = date.replace(" ", "0")
         if len(date) == 6:
             # yymmdd
@@ -88,7 +98,8 @@ def getDateTime(value=None):
         datetime.datetime:
             ``value`` will be returned as is;
         string:
-            *** CURRENTLY NOT SUPPORTED ***;
+            supports '2005-05-05 16:20:00' (full datetime)
+            or '16:20:00' (time with 1900-1-1 date)
         number:
             assuming it's a timestamp (returned for example
             by the time.time() call;
@@ -111,7 +122,16 @@ def getDateTime(value=None):
         # value is a timestamp
         return datetime.datetime.fromtimestamp(value)
     if isinstance(value, basestring):
-        raise NotImplementedError("Strings aren't currently implemented")
+        if re.match('[0-2][0-9]:[0-5][0-9]:[0-5][0-9]', value):
+            # '16:20:01'
+            structtime = time.strptime(value, "%H:%M:%S")[:6]
+            # (1900, 1, 1, 16, 20, 1)
+            return datetime.datetime(*structtime)
+        elif re.match('[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]', value):
+            # '2005-05-05 16:20:01'
+            structtime = time.strptime(value, "%Y-%m-%d %H:%M:%S")
+            # (2005, 5, 5, 16, 20, 1)
+            return datetime.datetime(*structtime)
     if hasattr(value, "__getitem__"):
         # a sequence (assuming date/time tuple)
         return datetime.datetime(*tuple(value)[:6])

@@ -43,6 +43,7 @@ class GUI(object):
         handlers['adddatabutton_clicked_cb'] = hfuncs.selectandaddfile
         handlers['mainwindow_drag_data_received_cb'] = hfuncs.dropfiles
         handlers['tabledialog_delete_event_cb'] = hfuncs.closetabledialog
+        handlers['tableview_row_activated_cb'] = hfuncs.tabledoubleclicked
         handlers['configinputdialog_delete_event_cb'] = hfuncs.closeconfiginputdialog
         handlers['removedatabutton_clicked_cb'] = hfuncs.removefile
         handlers['targetcombo_changed_cb'] = hfuncs.changetarget

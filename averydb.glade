@@ -2246,6 +2246,14 @@
   </object>
   <object class="GtkTextBuffer" id="progresstext"/>
   <object class="GtkListStore" id="sampleoutputlist"/>
+  <object class="GtkTreeStore" id="tabletree">
+    <columns>
+      <!-- column-name tablename -->
+      <column type="gchararray"/>
+      <!-- column-name tabletype -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkDialog" id="tabledialog">
     <property name="width_request">350</property>
     <property name="height_request">300</property>
@@ -2360,6 +2368,7 @@
                 <property name="headers_clickable">False</property>
                 <property name="search_column">0</property>
                 <property name="enable_tree_lines">True</property>
+                <signal name="row-activated" handler="tableview_row_activated_cb" swapped="no"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="tablenamecolumn">
                     <property name="title" translatable="yes">namecolumn</property>
@@ -2401,14 +2410,6 @@
   <object class="GtkListStore" id="tablelist">
     <columns>
       <!-- column-name tablename -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkTreeStore" id="tabletree">
-    <columns>
-      <!-- column-name tablename -->
-      <column type="gchararray"/>
-      <!-- column-name tabletype -->
       <column type="gchararray"/>
     </columns>
   </object>
