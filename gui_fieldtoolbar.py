@@ -70,6 +70,9 @@ class GUI_FieldToolbar(object):
     # 'add field' button
     def addfield(self, _widget, _data=None):
         """Add a new field after the last selected. Append if none selected."""
+        # ignore press if no files are loaded
+        if self.joins.gettarget() == '':
+            return
         # get the selected row from the output list
         selection = self.gui['fieldview'].get_selection()
         # (model, [(path0,), (path1,), ...])
