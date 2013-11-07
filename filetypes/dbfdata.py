@@ -39,16 +39,16 @@ class DBFData(table.Table):
         # fieldattrorder, types, and blankvalues make up the format spec
         self.fieldattrorder = ['Name', 'Type', 'Length', 'Decimals', 'Value']
         # used to convert between dbf library and sqlite types
-        self.types = {'C': 'TEXT', 'N': 'NUMERIC', 'F': 'REAL',
-                      'T': 'DATETIME', 'L': 'LOGICAL', 'M': 'MEMOTEXT',
-                      'D': 'DATE', 'I': 'INTEGER', 'Y': 'CURRENCY',
+        self.types = {'C': 'TEXT', 'N': 'NUMERIC', 'F': 'REAL', 'D': 'DATE',
+                      'I': 'INTEGER', 'T': 'DATETIME', 'L': 'LOGICAL',
                       'TEXT': 'C', 'NUMERIC': 'N', 'REAL': 'F',
-                      'DATETIME': 'T', 'LOGICAL': 'L', 'MEMOTEXT': 'M',
-                      'DATE': 'D', 'INTEGER': 'I', 'CURRENCY': 'C'}
+                      'DATETIME': 'T', 'LOGICAL': 'L',
+                      'DATE': 'D', 'INTEGER': 'I'}
         # These are abitrary values to use for fields in unmatched rows
-        self.blankvalues = OrderedDict([('TEXT', ''), ('DATE', (0, 0, 0)), ('DATETIME', None),
-                                        ('INTEGER', 0), ('NUMERIC', 0), ('REAL', 0.0),
-                                        ('LOGICAL', ' '), ('MEMOTEXT', ' '*10), ('CURRENCY', 0.0)])
+        self.blankvalues = OrderedDict([('TEXT', ''), ('DATE', (0, 0, 0)),
+                                        ('DATETIME', None), ('INTEGER', 0),
+                                        ('NUMERIC', 0), ('REAL', 0.0),
+                                        ('LOGICAL', ' ')])
         self.namelenlimit = 10
 
     def getfields(self):

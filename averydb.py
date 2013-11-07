@@ -231,7 +231,7 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
         # loop through target file
         i = 0
         recordcount = self.joins.getrecordcount()
-        print 'total records:', recordcount
+        # print 'total records:', recordcount
         starttime = time.time()
         while i < recordcount:
             # calculate and update the progress
@@ -246,7 +246,7 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
                                      self.timetostring(timeremaining), '/',
                                      self.timetostring(timetotal),  '/',
                                      time.strftime('%I:%M %p', timeend)])
-            print progresstext
+            # print progresstext
             self.gui.setprogress(progress, progresstext)
 
             if self.joinaborted:

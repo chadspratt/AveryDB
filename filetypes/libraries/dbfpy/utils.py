@@ -69,7 +69,7 @@ def getDate(value=None):
         # date is a timestamp
         return datetime.date.fromtimestamp(value)
     if isinstance(value, basestring):
-        # check if the string begins with a date
+        # check if the string is a date or datetime
         if re.match(DATEPATTERN, value):
             # '2005-05-05 00:00:00'
             datestr = value.split()[0]

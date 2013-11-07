@@ -54,12 +54,17 @@ class Calculator(object):
         templib.close()
         os.chdir('..')
 
+        # stores text of libraries to detect changes
+        # this allows an external editor to be used to make changes
+        self.libtext = {}
+
         # import everything from the fieldcalcs directory
         customfuncs = os.listdir('fieldcalcs')
         for funcname in customfuncs:
             if funcname.endswith('.py'):
                 name = funcname.split('.')[0]
                 if self._importlib(name):
+                    self.libtext[name] = self._getlibtext(name)
                     self.custommodules.append(name)
 
     def clear(self):
@@ -115,6 +120,8 @@ class Calculator(object):
             return
         if libname not in self.moremodules:
             self._importlib(libname)
+        # check if file has been updated and reload it
+        self._getlibtext(libname)
         libfuncs = []
         # get a list of all the names defined in the function
         names = dir(self.moremodules[libname])
@@ -129,11 +136,10 @@ class Calculator(object):
         return libfuncs
 
     # this is only used for custom functions defined in a fieldcalcs module
-    @classmethod
-    def getfunctext(cls, libname, funcname):
+    def getfunctext(self, libname, funcname):
         """Parse a library file and get the full text of a given function."""
-        libtext = cls._getlibtext(libname)
-        funcstart, funcend = cls._getfuncbounds(libtext, funcname)
+        libtext = self._getlibtext(libname)
+        funcstart, funcend = self._getfuncbounds(libtext, funcname)
         # return the function as a single string
         return ''.join(libtext[funcstart:funcend + 1])
 
@@ -159,10 +165,8 @@ class Calculator(object):
             return (None, None)
         # move to the first indented line
         i += 1
-        # find the end of the function (a non-indented line)
-        # XXX foreseeable issue with this and comments
-#         like this. not a high priority though
-        endpattern = re.compile(r'    ')
+        # find the end of the function (an unindented, uncommented line)
+        endpattern = re.compile(r'[ #]{4}')
         while i < len(libtext):
             if endpattern.match(libtext[i]):
                 funcend = i
@@ -174,14 +178,31 @@ class Calculator(object):
         return (funcstart, funcend)
 
     # this is only used for custom functions defined in a fieldcalcs module
-    @classmethod
-    def _getlibtext(cls, libname):
+    def _getlibtext(self, libname):
         """Returns the text of a python library file as a list of lines."""
+        if libname == 'builtins':
+            return
         os.chdir('fieldcalcs')
         libfile = open(libname + '.py', 'r')
         os.chdir('..')
         libtext = libfile.readlines()
         libfile.close()
+        if libname not in self.libtext:
+            self.libtext[libname] = libtext
+        elif self.libtext[libname] != libtext:
+            # reload the module so the new function can be used
+            # this could cause interesting sequences of events when called
+            # from writefunctext, hopefully only if the user does unusual
+            # things like adding a broken function then saving
+            try:
+                self.moremodules[libname] = reload(self.moremodules[libname])
+                self.libtext[libname] = libtext
+            except:
+                print "Exception in user code:"
+                print '-'*60
+                traceback.print_exc(file=sys.stdout)
+                print '-'*60
+                return None
         return libtext
 
     def codeisvalid(self, codeblock):
@@ -200,6 +221,9 @@ class Calculator(object):
     def writefunctext(self, libname, text):
         """Save a function written in the gui to a file."""
         curtext = self._getlibtext(libname)
+        if curtext is None:
+            print 'Error in library, function not saved.'
+            return
         # replace any tabs with four spaces
         spacedtext = re.sub(r'\t', '    ', text)
         # this formats the input string like readlines() does for files
