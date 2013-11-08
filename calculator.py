@@ -39,11 +39,9 @@ class Calculator(object):
         self.moremodules = {}
         # list of all the modules the user can edit
         self.custommodules = []
-
-        # load all the libraries set to load by default
-        for libname in DEFAULT_LIBRARIES:
-            self._importlib(libname)
-        self.moremodules['builtins'] = __builtins__
+        # stores text of libraries to detect changes
+        # this allows an external editor to be used to make changes
+        self.libtext = {}
 
         # reset the file for storing temporary functions. resetting when the
         # program starts means the functions will remain available in case
@@ -54,9 +52,10 @@ class Calculator(object):
         templib.close()
         os.chdir('..')
 
-        # stores text of libraries to detect changes
-        # this allows an external editor to be used to make changes
-        self.libtext = {}
+        # load all the libraries set to load by default
+        for libname in DEFAULT_LIBRARIES:
+            self._importlib(libname)
+        self.moremodules['builtins'] = __builtins__
 
         # import everything from the fieldcalcs directory
         customfuncs = os.listdir('fieldcalcs')
@@ -81,18 +80,21 @@ class Calculator(object):
                 # try this way in case it's a python library module
                 self.moremodules[libname] = __import__(libname)
             except ImportError:
-                # assume it's a fieldcals module
-                try:
-                    self.moremodules[libname] = __import__('fieldcalcs.' +
-                                                           libname,
-                                                           globals(),
-                                                           locals(),
-                                                           [libname])
-                except:
-                    print "Exception in user code:"
-                    print '-'*60
-                    traceback.print_exc(file=sys.stdout)
-                    print '-'*60
+                # check if it's a file in fieldcalcs
+                if self._getlibtext(libname) is not None:
+                    try:
+                        self.moremodules[libname] = __import__('fieldcalcs.' +
+                                                               libname,
+                                                               globals(),
+                                                               locals(),
+                                                               [libname])
+                    except:
+                        print "Exception in user code:"
+                        print '-'*60
+                        traceback.print_exc(file=sys.stdout)
+                        print '-'*60
+                        return False
+                else:
                     return False
         return True
 
@@ -119,7 +121,8 @@ class Calculator(object):
         if libname is '':
             return
         if libname not in self.moremodules:
-            self._importlib(libname)
+            if self._importlib(libname) == False:
+                return []
         # check if file has been updated and reload it
         self._getlibtext(libname)
         libfuncs = []
