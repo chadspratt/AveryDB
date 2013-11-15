@@ -104,8 +104,8 @@ class GUI_FieldToolbar(object):
             for row in selectedrows:
                 insertindex = row[0] + 1
                 fieldcopy = self.outputs[row[0]].copy()
-                self.outputs.addfield(fieldcopy, fieldindex=insertindex)
-                fieldlist.insert(insertindex, fieldcopy.getattributes())
+                newfield = self.outputs.addfield(fieldcopy, fieldindex=insertindex)
+                fieldlist.insert(insertindex, newfield.getattributes())
                 selection.select_path(insertindex)
             self.gui['fieldview'].scroll_to_cell(insertindex)
         self.processtasks(('sample', None))
