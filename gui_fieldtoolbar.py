@@ -104,7 +104,8 @@ class GUI_FieldToolbar(object):
             for row in selectedrows:
                 insertindex = row[0] + 1
                 fieldcopy = self.outputs[row[0]].copy()
-                newfield = self.outputs.addfield(fieldcopy, fieldindex=insertindex)
+                newfield = self.outputs.addfield(fieldcopy,
+                                                 fieldindex=insertindex)
                 fieldlist.insert(insertindex, newfield.getattributes())
                 selection.select_path(insertindex)
             self.gui['fieldview'].scroll_to_cell(insertindex)
@@ -137,7 +138,7 @@ class GUI_FieldToolbar(object):
             moveindex = 0
             for row in selectedrows:
                 fieldlist.move_before(fieldlist.get_iter(row),
-                                       fieldlist.get_iter(moveindex))
+                                      fieldlist.get_iter(moveindex))
                 self.outputs.movefield(row[0], moveindex)
                 moveindex += 1
             selection.select_range(0, selectedcount - 1)
@@ -158,14 +159,14 @@ class GUI_FieldToolbar(object):
                 # check if the field is already as far up as possible
                 if row[0] > startindex:
                     fieldlist.swap(fieldlist.get_iter(row),
-                                    fieldlist.get_iter(row[0] - 1))
+                                   fieldlist.get_iter(row[0] - 1))
                     self.outputs.movefield(row[0], row[0] - 1)
                     selection.select_path(row[0] - 1)
                 else:
                     selection.select_path(row[0])
                 startindex += 1
             self.gui['fieldview'].scroll_to_cell(max(selectedrows[0][0] - 1,
-                                                      0))
+                                                     0))
         self.processtasks(('sample', None))
 
     # 'move down' button
@@ -181,12 +182,12 @@ class GUI_FieldToolbar(object):
             endindex = len(self.outputs.outputfields) - 1
             # scroll the view now since the right values to use are available
             self.gui['fieldview'].scroll_to_cell(min(selectedrows[0][0] + 1,
-                                                      endindex))
+                                                     endindex))
             for row in selectedrows:
                 # check if the field is already as far down as possible
                 if row[0] < endindex:
                     fieldlist.swap(fieldlist.get_iter(row),
-                                    fieldlist.get_iter(row[0] + 1))
+                                   fieldlist.get_iter(row[0] + 1))
                     self.outputs.movefield(row[0], row[0] + 1)
                     selection.select_path(row[0] + 1)
                 else:
@@ -207,7 +208,7 @@ class GUI_FieldToolbar(object):
             moveindex = endindex
             for row in selectedrows:
                 fieldlist.move_after(fieldlist.get_iter(row),
-                                      fieldlist.get_iter(moveindex))
+                                     fieldlist.get_iter(moveindex))
                 self.outputs.movefield(row[0], moveindex)
                 moveindex -= 1
             selection.select_range(moveindex + 1, endindex)

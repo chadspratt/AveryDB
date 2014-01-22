@@ -294,7 +294,6 @@ class Calculator(object):
             argpos += 1
             newfuncbody = re.sub(arg, internalname, newfuncbody)
 
-
         # Convert all the function calls to callable references
         funcs = re.findall(r'([a-zA-Z]+[a-zA-Z0-9\._]*)\(', newfuncbody)
         for funcname in funcs:
@@ -341,10 +340,12 @@ class Calculator(object):
             # cast to str in case it's unicode. sqlite3.Row uses ascii keys
             # and the dictionary of input values is an sqlite3.Row
             args[i] = str(re.sub(r'\.', '_', args[i][1:-1]))
-        self.outputfuncs[newfuncname] = (tempcontext['func_' + newfuncname], args)
+        self.outputfuncs[newfuncname] = (tempcontext['func_' + newfuncname],
+                                         args)
 
     # needs to be speedy
-    # inputvalues is an sqlite3.Row, which is like a dict but doesn't support 'in'
+    # inputvalues is an sqlite3.Row, which is like a dict but
+    # doesn't support 'in'
     def calculateoutput(self, inputvalues):
         """Takes all the input records and computes the output record.
 
@@ -373,8 +374,8 @@ class Calculator(object):
                 try:
                     outputvalue = outputfunc(self, argvalues)
                 except:
-                    # This will be shown in the sample output so it should be ample
-                    # feedback on when something is not working and hopefully '!error!'
+                    # This will be shown in the sample output. Should be enough
+                    # feedback on when something is not working so '##ERROR##'
                     # won't get written to [m]any output files
                     print "Exception in user code:"
                     print '-'*60

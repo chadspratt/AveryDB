@@ -59,7 +59,7 @@ class GDBData(table.Table):
                                'Precision', 'Value']
         self.blankvalues = OrderedDict([('SMALLINT', 0), ('INTEGER', 0),
                                         ('SINGLE', 0.0), ('DOUBLE', 0),
-                                        ('TEXT', ''), ('DATE', 0), 
+                                        ('TEXT', ''), ('DATE', 0),
                                         ('NUMERIC', 0), ('REAL', 0.0)])
 
         # format specific output stuff

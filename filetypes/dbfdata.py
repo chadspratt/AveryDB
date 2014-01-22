@@ -118,7 +118,7 @@ class DBFData(table.Table):
     def getfieldtypes(self):
         """Return a list of field types to populate a combo box."""
         return self.blankvalues.keys()
-        
+
     def getblankvalue(self, outputfield):
         """Get a blank value that matches the type of a field."""
         return self.blankvalues[outputfield['type']]

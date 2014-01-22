@@ -13,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 ##
-import re
 import sqlite3
 
 
@@ -30,7 +29,8 @@ class GUI_FieldView(object):
         # update the output sample
         self.processtasks(('sample', None))
 
-    def updatefieldtype(self, _combo, row, new_iter, typelist, fieldlist, column):
+    def updatefieldtype(self, _combo, row, new_iter, typelist, fieldlist,
+                        column):
         newvalue = typelist[new_iter][0]
         # update the view
         fieldlist[row][column] = newvalue
@@ -89,7 +89,8 @@ class GUI_FieldView(object):
             for fieldname in newlengths:
                 fieldindex = textfieldindices[fieldname]
                 fieldlength = newlengths[fieldname] + extralength
-                self.updatefieldattribute(None, fieldindex, fieldlength, fieldlist, attrposition)
+                self.updatefieldattribute(None, fieldindex, fieldlength,
+                                          fieldlist, attrposition)
 
     def addjoinedfields(self, filealias):
         fieldlist = self.gui['fieldlist']
@@ -124,12 +125,12 @@ class GUI_FieldView(object):
             fieldlist.remove(fieldlist.get_iter(index))
         self.processtasks(('sample', None))
 
-    # XXX dragging dropping columns to reorder attributes, mostly incomplete
+    # XXX dragging dropping columns to reorder attributes, barely started
     def reordercols(self, widget):
         """Update the column order when they are drug around in the GUI."""
         return
         columns = widget.get_columns()
         columnnames = [col.get_title() for col in columns]
-        fieldlist = self.gui['fieldlist']
+        # fieldlist = self.gui['fieldlist']
         for i in range(len(columnnames)):
             pass

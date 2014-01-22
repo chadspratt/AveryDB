@@ -107,7 +107,7 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
         # if the target is being replaced, parse the outputfilename to get type
         if self.gui['replacetargetcheckbox'].get_active():
             # use the extension from the filename, outputtypecombo is unused
-            outputfilename, outputfiletype  = outputfilename.split('.')
+            outputfilename, outputfiletype = outputfilename.split('.')
             outputfiletype = '.' + outputfiletype
         else:
             # check if the location is specificed or just the filename
@@ -118,9 +118,10 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
                     targetdir = os.path.dirname(targetpath)
                     outputfilename = os.path.join(targetdir, outputfilename)
                 else:
-                # if no forward or backward slashes, append the default output path
-                    outputfilename = os.path.join(self.options['default_output_dir'],
-                                                  outputfilename)
+                # if no forward or backward slash, append default output path
+                    outputfilename = os.path.join(
+                        self.options['default_output_dir'],
+                        outputfilename)
             outputfiletype = self.gui['outputtypecombo'].get_active_text()
 
         if self.gui['outputtablenameentry'].get_sensitive():
@@ -218,7 +219,7 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
         conn = sqlite3.connect('temp.db')
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        # create the table
+        # query for the joined input values
         cur.execute(joinquery)
         # restrict one-to-many joins from creating extra records
         # the ROWID of the target table with joins is checked against the
@@ -262,12 +263,13 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
                 # check id of the joined record against the control query
                 if restrictjoins:
                     checkvalue = rcur.fetchone()
-                    # end of file reached, the current and remaining records in the
-                    # main query must be duplicates
+                    # end of file reached, the current and remaining records
+                    # in the main query must be duplicates
                     if checkvalue is None:
                         break
                     # if the values don't match, this is an extra record
-                    while inputvalues['restrictjoins'] != checkvalue['restrictjoins']:
+                    while (inputvalues['restrictjoins'] !=
+                           checkvalue['restrictjoins']):
                         # keep fetching until it matches
                         # XXX could optionally prompt user for choice
                         inputvalues = cur.fetchone()

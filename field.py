@@ -67,7 +67,9 @@ class Field(object):
 
     def resetname(self):
         """Resets the field name, though it will be changed if it conflicts."""
-        self.name = self.originalname[:self.namelenlimit]
+        # trim name in case length limit has changed
+        self.name = self.name[:self.namelenlimit]
+        # reset the name generator
         self.namegen = self.namegenerator(self.namelenlimit)
 
     # Not currently used
@@ -79,7 +81,8 @@ class Field(object):
         """Creates a deep copy of the field."""
         fieldcopy = Field(self.name, self.attributes, self.value)
         for dataformat in self.attributesbyformat:
-            fieldcopy.attributesbyformat[dataformat] = self.attributesbyformat[dataformat].copy()
+            fieldcopy.attributesbyformat[dataformat] = (
+                self.attributesbyformat[dataformat].copy())
         fieldcopy.originalname = self.originalname
         fieldcopy.originalvalue = self.originalvalue
         fieldcopy.source = self.source
@@ -94,7 +97,7 @@ class Field(object):
         for key in self.attributes:
             if attributename.lower() == key.lower():
                 return self.attributes[key]
-        # If the field doesn't have the attribute, return None. 
+        # If the field doesn't have the attribute, return None.
         # possible ambiguity if an attribute had the value of None
         return None
 

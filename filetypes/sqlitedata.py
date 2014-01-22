@@ -45,9 +45,9 @@ class SQLiteData(table.Table):
         # check that the data opens
         if mode == 'r':
             sqlite3.connect(self.filename)
-            
+
         self.fieldattrorder = ['Name', 'Affinity', 'Value']
-        self.blankvalues = OrderedDict([('TEXT', ''), ('INTEGER', 0), 
+        self.blankvalues = OrderedDict([('TEXT', ''), ('INTEGER', 0),
                                         ('NUMERIC', 0), ('REAL', 0.0)])
 
         # format specific output stuff

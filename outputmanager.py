@@ -111,8 +111,12 @@ class OutputManager(object):
                 newname = self.getuniquename(newname)
             # Apply the updated name
             self.outputorder[fieldindex] = newname
-            self.outputfields[newname.upper()] = self.outputfields[oldname.upper()]
+            self.outputfields[newname.upper()] = (
+                self.outputfields[oldname.upper()])
             del self.outputfields[oldname.upper()]
+        # case of some letters may have changed
+        else:
+            self.outputorder[fieldindex] = newname
         return newname
 
     def __getitem__(self, key):
@@ -122,6 +126,9 @@ class OutputManager(object):
             return self.outputfields[self.outputorder[int(key)].upper()]
         else:
             return self.outputfields[key.upper()]
+
+    # def __setitem__(self, key, value):
+    #     """Set a field or a property of a field
 
     def __iter__(self):
         """Return all output fields in order"""
