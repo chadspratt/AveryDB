@@ -76,7 +76,11 @@ def getDate(value=None):
             # '2005-05-05'
             justdate = time.strptime(datestr, "%Y-%m-%d")[:3]
             # (2005, 5, 5)
-            return datetime.date(*justdate)
+            datevalue = datetime.date(*justdate)
+            # XXX not sure if this should be overriding like this
+            if datevalue.year < 1900:
+                return datevalue.replace(1900, datevalue.month, datevalue.day)
+            return datevalue
         value = value.replace(" ", "0")
         if len(value) == 6:
             # yymmdd
