@@ -127,12 +127,14 @@ class JoinManager(object):
             selectfieldaliases.append(sqlname)
         # add fields from all the joined tables
         for curjoin in self.getjoins():
-            for fieldname in curjoin.jointable.fields:
-                sqlname = (curjoin.jointable.sqlname + '.' +
-                           curjoin.jointable.fields[fieldname].sqlname)
-                selectstr = (sqlname + ' AS ' +
-                             curjoin.joinalias + '_' + fieldname)
-                selectfieldaliases.append(selectstr)
+            # check that join table has been loaded into the database
+            if curjoin.joinfield.sqlname is not None:
+                for fieldname in curjoin.jointable.fields:
+                    sqlname = (curjoin.jointable.sqlname + '.' +
+                               curjoin.jointable.fields[fieldname].sqlname)
+                    selectstr = (sqlname + ' AS ' +
+                                 curjoin.joinalias + '_' + fieldname)
+                    selectfieldaliases.append(selectstr)
         # add the target table rowid, used to check for extra records created
         # by a one-to-many left join, which causes problems in some circumstances
         if restrictjoins:
@@ -140,16 +142,18 @@ class JoinManager(object):
         query.append(', '.join(selectfieldaliases))
         query.append('FROM table_' + self.targetalias)
         for curjoin in self.getjoins():
-            if curjoin.inner:
-                query.append('INNER JOIN ')
-            else:
-                query.append('LEFT OUTER JOIN ')
-            query.append(curjoin.jointable.sqlname +
-                         ' AS table_' + curjoin.joinalias +
-                         ' ON table_' + curjoin.joinalias + '.' +
-                         curjoin.joinfield.sqlname +
-                         '=table_' + curjoin.targetalias + '.' +
-                         curjoin.targetfield.sqlname)
+            # check that join table has been loaded into the database
+            if curjoin.joinfield.sqlname is not None:
+                if curjoin.inner:
+                    query.append('INNER JOIN ')
+                else:
+                    query.append('LEFT OUTER JOIN ')
+                query.append(curjoin.jointable.sqlname +
+                             ' AS table_' + curjoin.joinalias +
+                             ' ON table_' + curjoin.joinalias + '.' +
+                             curjoin.joinfield.sqlname +
+                             '=table_' + curjoin.targetalias + '.' +
+                             curjoin.targetfield.sqlname)
         if sampling is not None:
             query.append('WHERE table_' + self.targetalias + '.ROWID IN ('
                          + ', '.join([str(x) for x in sampling]) + ')')
@@ -164,12 +168,14 @@ class JoinManager(object):
         """Get a query that gives the count of rows in the table."""
         query = ['SELECT COUNT(*) FROM table_' + self.targetalias]
         for curjoin in self.getjoins():
-            query.append('LEFT OUTER JOIN ' + curjoin.jointable.sqlname +
-                         ' AS table_' + curjoin.joinalias +
-                         ' ON table_' + curjoin.joinalias + '.' +
-                         curjoin.joinfield.sqlname +
-                         '=table_' + curjoin.targetalias + '.' +
-                         curjoin.targetfield.sqlname)
+            # check that join table has been loaded into the database
+            if curjoin.joinfield.sqlname is not None:
+                query.append('LEFT OUTER JOIN ' + curjoin.jointable.sqlname +
+                             ' AS table_' + curjoin.joinalias +
+                             ' ON table_' + curjoin.joinalias + '.' +
+                             curjoin.joinfield.sqlname +
+                             '=table_' + curjoin.targetalias + '.' +
+                             curjoin.targetfield.sqlname)
         conn = sqlite3.connect('temp.db')
         cur = conn.cursor()
         cur.execute(' '.join(query))

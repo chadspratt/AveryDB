@@ -40,6 +40,9 @@ class Field(object):
         self.attributes = fieldattributes
         self.namelenlimit = namelen
         self.namegen = self.namegenerator(namelen)
+        # tablename_fieldname used for storage in sqlite
+        # assigned by table during conversion of the data to sqlite
+        self.sqlname = None
 
     def namegenerator(self, lenlimit):
         """Yields alternate field names for when there's a naming conflict."""
