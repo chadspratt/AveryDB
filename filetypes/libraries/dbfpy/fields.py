@@ -25,18 +25,20 @@ TODO:
 15-dec-2005 [yc]    field definitions moved from `dbf`.
 """
 
-__version__ = "$Revision: 1.14 $"[11:-2]
-__date__ = "$Date: 2009/05/26 05:16:51 $"[7:-2]
+__version__ = "$Revision: 1.15 $"[11:-2]
+__date__ = "$Date: 2010/12/14 11:04:49 $"[7:-2]
 
-__all__ = ["lookupFor",] # field classes added at the end of the module
+__all__ = ["lookupFor"]  # field classes added at the end of the module
 
 import datetime
 import struct
 import sys
 
+from memo import MemoData
 import utils
 
 ## abstract definitions
+
 
 class DbfFieldDef(object):
     """Abstract field definition.
@@ -57,7 +59,7 @@ class DbfFieldDef(object):
     """
 
     __slots__ = ("name", "length", "decimalCount",
-        "start", "end", "ignoreErrors")
+                 "start", "end", "ignoreErrors")
 
     # length of the field, None in case of variable-length field,
     # or a number if this field is a fixed-length field
@@ -72,14 +74,16 @@ class DbfFieldDef(object):
     # overriden in child classes
     defaultValue = None
 
+    # True if field data is kept in the Memo file
+    isMemo = property(lambda self: self.typeCode in "GMP")
+
     def __init__(self, name, length=None, decimalCount=None,
-        start=None, stop=None, ignoreErrors=False,
-    ):
+                 start=None, stop=None, ignoreErrors=False):
         """Initialize instance."""
         assert self.typeCode is not None, "Type code must be overriden"
         assert self.defaultValue is not None, "Default value must be overriden"
         ## fix arguments
-        if len(name) >10:
+        if len(name) > 10:
             raise ValueError("Field name \"%s\" is too long" % name)
         name = str(name).upper()
         if self.__class__.length is None:
@@ -88,7 +92,7 @@ class DbfFieldDef(object):
             length = int(length)
             if length <= 0:
                 raise ValueError("[%s] Length must be a positive integer"
-                    % name)
+                                 % name)
         else:
             length = self.length
         if decimalCount is None:
@@ -125,7 +129,7 @@ class DbfFieldDef(object):
         assert len(string) == 32
         _length = ord(string[16])
         return cls(utils.unzfill(string)[:11], _length, ord(string[17]),
-            start, start + _length, ignoreErrors=ignoreErrors)
+                   start, start + _length, ignoreErrors=ignoreErrors)
     fromString = classmethod(fromString)
 
     def toString(self):
@@ -144,8 +148,7 @@ class DbfFieldDef(object):
         return (
             _name +
             self.typeCode +
-            #data address
-            chr(0) * 4 +
+            struct.pack("<L", self.start) +
             chr(self.length) +
             chr(self.decimalCount) +
             chr(0) * 14
@@ -194,8 +197,8 @@ class DbfFieldDef(object):
         """
         raise NotImplementedError
 
-## real classes
 
+## real classes
 class DbfCharacterFieldDef(DbfFieldDef):
     """Definition of the character field."""
 
@@ -254,13 +257,15 @@ class DbfNumericFieldDef(DbfFieldDef):
                 _rv = _rv[:self.length]
             else:
                 raise ValueError("[%s] Numeric overflow: %s (field width: %i)"
-                    % (self.name, _rv, self.length))
+                                 % (self.name, _rv, self.length))
         return _rv
+
 
 class DbfFloatFieldDef(DbfNumericFieldDef):
     """Definition of the float field - same as numeric."""
 
     typeCode = "F"
+
 
 class DbfIntegerFieldDef(DbfFieldDef):
     """Definition of the integer field."""
@@ -277,6 +282,7 @@ class DbfIntegerFieldDef(DbfFieldDef):
         """Return string containing encoded ``value``."""
         return struct.pack("<i", int(value))
 
+
 class DbfCurrencyFieldDef(DbfFieldDef):
     """Definition of the currency field."""
 
@@ -291,6 +297,7 @@ class DbfCurrencyFieldDef(DbfFieldDef):
     def encodeValue(self, value):
         """Return string containing encoded ``value``."""
         return struct.pack("<q", round(value * 10000))
+
 
 class DbfLogicalFieldDef(DbfFieldDef):
     """Definition of the logical field."""
@@ -326,20 +333,23 @@ class DbfLogicalFieldDef(DbfFieldDef):
 
 
 class DbfMemoFieldDef(DbfFieldDef):
-    """Definition of the memo field.
-
-    Note: memos aren't currenly completely supported.
-
-    """
+    """Definition of the memo field."""
 
     typeCode = "M"
-    defaultValue = " " * 10
-    length = 10
+    defaultValue = "\0" * 4
+    length = 4
+    # MemoFile instance.  Must be set before reading or writing to the field.
+    file = None
+    # MemoData type for strings written to the memo file
+    memoType = MemoData.TYPE_MEMO
 
     def decodeValue(self, value):
-        """Return int .dbt block number decoded from the string object."""
-        #return int(value)
-        raise NotImplementedError
+        """Return MemoData instance containing field data."""
+        _block = struct.unpack("<L", value)[0]
+        if _block:
+            return self.file.read(_block)
+        else:
+            return MemoData("", self.memoType)
 
     def encodeValue(self, value):
         """Return raw data string encoded from a ``value``.
@@ -347,8 +357,18 @@ class DbfMemoFieldDef(DbfFieldDef):
         Note: this is an internal method.
 
         """
-        #return str(value)[:self.length].ljust(self.length)
-        raise NotImplementedError
+        if value:
+            return struct.pack("<L",
+                               self.file.write(MemoData(value, self.memoType)))
+        else:
+            return self.defaultValue
+
+
+class DbfGeneralFieldDef(DbfFieldDef):
+    """Definition of the general (OLE object) field."""
+
+    typeCode = "G"
+    memoType = MemoData.TYPE_OBJECT
 
 
 class DbfDateFieldDef(DbfFieldDef):
@@ -414,7 +434,9 @@ class DbfDateTimeFieldDef(DbfFieldDef):
             value = utils.getDateTime(value)
             # LE byteorder
             _rv = struct.pack("<2I", value.toordinal() + self.JDN_GDN_DIFF,
-                (value.hour * 3600 + value.minute * 60 + value.second) * 1000)
+                              (value.hour * 3600 +
+                               value.minute * 60 +
+                               value.second) * 1000)
         else:
             _rv = "\0" * self.length
         assert len(_rv) == self.length
@@ -422,6 +444,7 @@ class DbfDateTimeFieldDef(DbfFieldDef):
 
 
 _fieldsRegistry = {}
+
 
 def registerField(fieldCls):
     """Register field definition class.
@@ -457,8 +480,9 @@ def lookupFor(typeCode):
 ## register generic types
 
 for (_name, _val) in globals().items():
-    if isinstance(_val, type) and issubclass(_val, DbfFieldDef) \
-    and (_name != "DbfFieldDef"):
+    if (isinstance(_val, type) and
+            issubclass(_val, DbfFieldDef) and
+            _name != "DbfFieldDef"):
         __all__.append(_name)
         registerField(_val)
 del _name, _val
