@@ -45,11 +45,15 @@ class GUI_JoinConfig(object):
     def matchtargetfield(self, widget, _data=None):
         """Sets the target field if there is one with a matching name."""
         value = widget.get_active_text()
+        if value is not None:
+            value = value.lower()
         targetfieldlist = self.gui['targetfieldlist']
         for row in targetfieldlist:
-            if value in row:
+            if value == row[0].lower():
                 self.gui['targetfieldcombo'].set_active_iter(row.iter)
                 return
+        # clear selection if no match
+        self.gui['targetfieldcombo'].set_active(-1)
 
     # 'apply' join choice button
     def addjoin(self, _widget, _data=None):
