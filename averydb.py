@@ -184,6 +184,7 @@ class AveryDB(GUI_Files, GUI_JoinConfig, GUI_FieldToolbar, GUI_FieldView,
         # if the target is being replaced, rename it as a backup
         if self.gui['replacetargetcheckbox'].get_active():
             if self.gui['backupcheckbox'].get_active():
+                self.joins.targetdata.close()
                 self.joins.targetdata.backup()
 
         # call this to set the filename for the output
